@@ -15,7 +15,7 @@ const Login = () => {
   const loading = useSelector(selectAuthLoading);
   const error = useSelector(selectAuthError);
 
-  // 如果已经登录，重定向到首页
+  // 如果已经登录，重定向到首
   useEffect(() => {
     if (isAuthenticated) {
       navigate('/');
