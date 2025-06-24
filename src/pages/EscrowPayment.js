@@ -1,382 +1,250 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
-import { 
-  Card, Typography, Steps, Divider, Button, Form, InputNumber, 
-  Radio, Alert, Spin, Row, Col, Statistic, Descriptions, Result, Modal, Input, Space 
+import {
+  Card, Button, Spin, Alert, Descriptions, Steps, Divider, message, Result, Space
 } from 'antd';
 import { 
-  ShoppingCartOutlined, WalletOutlined, SafetyOutlined, 
-  CheckCircleOutlined, CloseCircleOutlined, ExclamationCircleOutlined,
-  QrcodeOutlined, DollarOutlined
+  CheckCircleOutlined, CloseCircleOutlined, WalletOutlined, 
+  ShoppingCartOutlined, CarOutlined, SmileOutlined
 } from '@ant-design/icons';
-import { getEscrowByOrderId, createEscrow, payEscrow } from '../store/actions/escrowActions';
-import { getOrderById } from '../store/actions/orderActions';
+import { fetchOrderById, confirmReceipt } from '../store/actions/orderActions';
 import { 
-  selectEscrowDetail, selectPaymentInfo, 
-  selectEscrowLoading, selectEscrowError 
-} from '../store/slices/escrowSlice';
-import { selectOrderDetail } from '../store/slices/orderSlice';
-import QRCode from 'qrcode.react';
+  getEscrowByOrderId, payEscrow, releaseEscrow, refundEscrow 
+} from '../store/actions/escrowActions';
+import { selectCurrentOrder, selectOrderLoading } from '../store/slices/orderSlice';
+import { selectEscrowDetail, selectPaymentQRCode, selectEscrowLoading } from '../store/slices/escrowSlice';
+import { QRCodeSVG } from 'qrcode.react';
 
-const { Title, Text, Paragraph } = Typography;
 const { Step } = Steps;
-const { confirm } = Modal;
 
 const EscrowPayment = () => {
   const { orderId } = useParams();
-  const navigate = useNavigate();
   const dispatch = useDispatch();
+  const navigate = useNavigate();
   
-  const escrowDetail = useSelector(selectEscrowDetail);
-  const paymentInfo = useSelector(selectPaymentInfo);
-  const loading = useSelector(selectEscrowLoading);
-  const error = useSelector(selectEscrowError);
-  const orderDetail = useSelector(selectOrderDetail);
+  const order = useSelector(selectCurrentOrder);
+  const escrow = useSelector(selectEscrowDetail);
+  const paymentQRCode = useSelector(selectPaymentQRCode);
+  const orderLoading = useSelector(selectOrderLoading);
+  const escrowLoading = useSelector(selectEscrowLoading);
   
   const [currentStep, setCurrentStep] = useState(0);
-  const [form] = Form.useForm();
   
-  // 加载订单信息和托管信息
   useEffect(() => {
     if (orderId) {
-      dispatch(getOrderById(orderId));
+      dispatch(fetchOrderById(orderId));
       dispatch(getEscrowByOrderId(orderId));
     }
   }, [dispatch, orderId]);
   
-  // 根据托管状态设置当前步骤
   useEffect(() => {
-    if (escrowDetail) {
-      switch (escrowDetail.status) {
-        case 1: // 未支付
+    if (escrow) {
+      // 根据托管状态设置当前步骤
+      switch (escrow.status) {
+        case 'PENDING':
+          setCurrentStep(0);
+          break;
+        case 'PAID':
           setCurrentStep(1);
           break;
-        case 2: // 已支付，交易中
+        case 'RELEASED':
           setCurrentStep(2);
           break;
-        case 3: // 已释放给卖家
-        case 4: // 已退还给买家
-        case 5: // 已过期
-          setCurrentStep(3);
+        case 'REFUNDED':
+          setCurrentStep(3); // 退款状态
           break;
         default:
           setCurrentStep(0);
       }
-    } else {
-      setCurrentStep(0);
     }
-  }, [escrowDetail]);
+  }, [escrow]);
   
-  // 创建托管
-  const handleCreateEscrow = (values) => {
-    dispatch(createEscrow({
-      orderId,
-      escrowAmount: values.escrowAmount,
-      expireTime: values.expireTime
-    }));
-  };
-  
-  // 支付托管
-  const handlePayEscrow = (paymentMethod) => {
-    if (!escrowDetail) return;
-    
-    dispatch(payEscrow({
-      escrowId: escrowDetail.id,
-      paymentMethod
-    }));
-  };
-  
-  // 渲染托管状态
-  const renderEscrowStatus = () => {
-    if (!escrowDetail) return null;
-    
-    switch (escrowDetail.status) {
-      case 1:
-        return <Alert message="托管已创建，等待支付" type="info" showIcon />;
-      case 2:
-        return <Alert message="托管已支付，等待交易完成" type="success" showIcon />;
-      case 3:
-        return <Alert message="托管已释放给卖家，交易完成" type="success" showIcon />;
-      case 4:
-        return <Alert message="托管已退还给买家，交易取消" type="warning" showIcon />;
-      case 5:
-        return <Alert message="托管已过期" type="error" showIcon />;
-      default:
-        return null;
+  // 支付定金
+  const handlePayEscrow = () => {
+    if (escrow && escrow.id) {
+      dispatch(payEscrow(escrow.id))
+        .then(() => {
+          message.success('定金支付成功');
+        })
+        .catch((error) => {
+          message.error(`支付失败: ${error.message}`);
+        });
     }
   };
   
-  // 渲染步骤1：创建托管
-  const renderStep1 = () => {
-    if (!orderDetail) return <Spin tip="加载订单信息..." />;
-    
-    return (
-      <div>
-        <Title level={4}>第一步：创建定金托管</Title>
-        <Paragraph>
-          创建定金托管可以保障买卖双方的权益。买家支付定金后，卖家确认收到定金，双方线下完成交易，确认无误后释放定金给卖家。
-        </Paragraph>
-        
-        <Descriptions title="订单信息" bordered column={1}>
-          <Descriptions.Item label="订单编号">{orderDetail.orderNo}</Descriptions.Item>
-          <Descriptions.Item label="物品名称">{orderDetail.itemName}</Descriptions.Item>
-          <Descriptions.Item label="物品价格">¥{orderDetail.itemPrice?.toFixed(2)}</Descriptions.Item>
-          <Descriptions.Item label="卖家">{orderDetail.sellerName}</Descriptions.Item>
-          <Descriptions.Item label="买家">{orderDetail.buyerName}</Descriptions.Item>
-          <Descriptions.Item label="交易地点">{orderDetail.tradeLocation || '未指定'}</Descriptions.Item>
-        </Descriptions>
-        
-        <Divider />
-        
-        <Form
-          form={form}
-          layout="vertical"
-          onFinish={handleCreateEscrow}
-          initialValues={{
-            escrowAmount: orderDetail.itemPrice * 0.2, // 默认为总价的20%
-            expireTime: 24 // 默认24小时
-          }}
-        >
-          <Form.Item
-            name="escrowAmount"
-            label="托管金额"
-            rules={[
-              { required: true, message: '请输入托管金额' },
-              { type: 'number', min: 1, message: '托管金额必须大于0' },
-              { type: 'number', max: orderDetail.itemPrice, message: '托管金额不能超过物品价格' }
-            ]}
-          >
-            <InputNumber
-              style={{ width: '100%' }}
-              formatter={value => `¥ ${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
-              parser={value => value.replace(/\¥\s?|(,*)/g, '')}
-              placeholder="建议为总价的20%"
-            />
-          </Form.Item>
-          
-          <Form.Item
-            name="expireTime"
-            label="过期时间"
-            rules={[{ required: true, message: '请选择过期时间' }]}
-          >
-            <Radio.Group>
-              <Radio value={12}>12小时</Radio>
-              <Radio value={24}>24小时</Radio>
-              <Radio value={48}>48小时</Radio>
-              <Radio value={72}>72小时</Radio>
-            </Radio.Group>
-          </Form.Item>
-          
-          <Form.Item>
-            <Button type="primary" htmlType="submit" icon={<SafetyOutlined />} loading={loading}>
-              创建托管
-            </Button>
-          </Form.Item>
-        </Form>
-      </div>
-    );
+  // 释放定金
+  const handleReleaseEscrow = () => {
+    if (escrow && escrow.id) {
+      dispatch(releaseEscrow(escrow.id))
+        .then(() => {
+          message.success('定金已释放给卖家');
+          dispatch(getEscrowByOrderId(orderId));
+        })
+        .catch((error) => {
+          message.error(`释放失败: ${error.message}`);
+        });
+    }
   };
   
-  // 渲染步骤2：支付定金
-  const renderStep2 = () => {
-    if (!escrowDetail) return <Spin tip="加载托管信息..." />;
-    
-    return (
-      <div>
-        <Title level={4}>第二步：支付定金</Title>
-        <Paragraph>
-          请选择支付方式，支付定金。支付成功后，卖家将收到通知，双方可以进行线下交易。
-        </Paragraph>
-        
-        <Descriptions title="托管信息" bordered column={1}>
-          <Descriptions.Item label="托管编号">{escrowDetail.id}</Descriptions.Item>
-          <Descriptions.Item label="订单编号">{escrowDetail.orderNo}</Descriptions.Item>
-          <Descriptions.Item label="托管金额">¥{escrowDetail.escrowAmount?.toFixed(2)}</Descriptions.Item>
-          <Descriptions.Item label="总金额">¥{escrowDetail.totalAmount?.toFixed(2)}</Descriptions.Item>
-          <Descriptions.Item label="过期时间">{escrowDetail.expireTime}</Descriptions.Item>
-        </Descriptions>
-        
-        <Divider />
-        
-        {paymentInfo ? (
-          <div style={{ textAlign: 'center' }}>
-            <Title level={4}>请扫码支付</Title>
-            <div style={{ margin: '20px 0' }}>
-              <QRCode value={paymentInfo.qrCodeContent || 'https://example.com'} size={200} />
-            </div>
-            <Statistic
-              title="支付金额"
-              value={paymentInfo.amount}
-              precision={2}
-              prefix="¥"
-              style={{ marginBottom: 20 }}
-            />
-            <Paragraph type="secondary">
-              请在 {Math.floor(paymentInfo.expireSeconds / 60)} 分钟内完成支付，超时订单将自动取消
-            </Paragraph>
-            <Button type="primary" onClick={() => window.location.reload()}>
-              我已完成支付
-            </Button>
-          </div>
-        ) : (
-          <div>
-            <Title level={5}>选择支付方式</Title>
-            <Space size="large" style={{ marginTop: 20 }}>
-              <Button
-                type="primary"
-                icon={<QrcodeOutlined />}
-                onClick={() => handlePayEscrow(1)}
-                loading={loading}
-              >
-                支付宝
-              </Button>
-              <Button
-                type="primary"
-                icon={<QrcodeOutlined />}
-                onClick={() => handlePayEscrow(2)}
-                loading={loading}
-              >
-                微信支付
-              </Button>
-            </Space>
-          </div>
-        )}
-      </div>
-    );
+  // 退还定金
+  const handleRefundEscrow = () => {
+    if (escrow && escrow.id) {
+      dispatch(refundEscrow(escrow.id))
+        .then(() => {
+          message.success('定金已退还给买家');
+          dispatch(getEscrowByOrderId(orderId));
+        })
+        .catch((error) => {
+          message.error(`退还失败: ${error.message}`);
+        });
+    }
   };
   
-  // 渲染步骤3：交易状态
-  const renderStep3 = () => {
-    if (!escrowDetail) return <Spin tip="加载托管信息..." />;
-    
-    const renderResult = () => {
-      switch (escrowDetail.status) {
-        case 2: // 已支付，交易中
-          return (
-            <Result
-              status="info"
-              title="定金已支付，等待交易完成"
-              subTitle={`交易编号: ${escrowDetail.orderNo} | 托管编号: ${escrowDetail.id}`}
-              extra={[
-                <Button key="back" onClick={() => navigate('/orders')}>
-                  查看我的订单
-                </Button>
-              ]}
-            />
-          );
-        case 3: // 已释放给卖家
-          return (
-            <Result
-              status="success"
-              title="交易成功，定金已释放给卖家"
-              subTitle={`交易编号: ${escrowDetail.orderNo} | 托管编号: ${escrowDetail.id}`}
-              extra={[
-                <Button type="primary" key="home" onClick={() => navigate('/')}>
-                  返回首页
-                </Button>
-              ]}
-            />
-          );
-        case 4: // 已退还给买家
-          return (
-            <Result
-              status="warning"
-              title="交易已取消，定金已退还"
-              subTitle={`交易编号: ${escrowDetail.orderNo} | 托管编号: ${escrowDetail.id}`}
-              extra={[
-                <Button type="primary" key="home" onClick={() => navigate('/')}>
-                  返回首页
-                </Button>
-              ]}
-            />
-          );
-        case 5: // 已过期
-          return (
-            <Result
-              status="error"
-              title="交易已过期"
-              subTitle={`交易编号: ${escrowDetail.orderNo} | 托管编号: ${escrowDetail.id}`}
-              extra={[
-                <Button type="primary" key="home" onClick={() => navigate('/')}>
-                  返回首页
-                </Button>
-              ]}
-            />
-          );
-        default:
-          return null;
-      }
-    };
-    
-    return (
-      <div>
-        <Title level={4}>第三步：完成交易</Title>
-        {renderResult()}
-        
-        <Divider />
-        
-        <Descriptions title="托管详情" bordered column={1}>
-          <Descriptions.Item label="托管编号">{escrowDetail.id}</Descriptions.Item>
-          <Descriptions.Item label="订单编号">{escrowDetail.orderNo}</Descriptions.Item>
-          <Descriptions.Item label="托管金额">¥{escrowDetail.escrowAmount?.toFixed(2)}</Descriptions.Item>
-          <Descriptions.Item label="总金额">¥{escrowDetail.totalAmount?.toFixed(2)}</Descriptions.Item>
-          <Descriptions.Item label="托管状态">
-            {escrowDetail.status === 1 && '未支付'}
-            {escrowDetail.status === 2 && '已支付，交易中'}
-            {escrowDetail.status === 3 && '已释放给卖家'}
-            {escrowDetail.status === 4 && '已退还给买家'}
-            {escrowDetail.status === 5 && '已过期'}
-          </Descriptions.Item>
-          <Descriptions.Item label="支付方式">
-            {escrowDetail.paymentMethod === 1 && '支付宝'}
-            {escrowDetail.paymentMethod === 2 && '微信支付'}
-            {!escrowDetail.paymentMethod && '未支付'}
-          </Descriptions.Item>
-          <Descriptions.Item label="支付时间">{escrowDetail.paymentTime || '未支付'}</Descriptions.Item>
-          <Descriptions.Item label="过期时间">{escrowDetail.expireTime}</Descriptions.Item>
-          <Descriptions.Item label="智能合约地址">{escrowDetail.contractAddress}</Descriptions.Item>
-          <Descriptions.Item label="交易哈希">{escrowDetail.transactionHash || '未生成'}</Descriptions.Item>
-          <Descriptions.Item label="备注">{escrowDetail.remark || '无'}</Descriptions.Item>
-        </Descriptions>
-      </div>
-    );
+  // 确认收货
+  const handleConfirmReceipt = () => {
+    if (orderId) {
+      dispatch(confirmReceipt(orderId))
+        .then(() => {
+          message.success('已确认收货');
+          dispatch(fetchOrderById(orderId));
+        })
+        .catch((error) => {
+          message.error(`确认收货失败: ${error.message}`);
+        });
+    }
   };
   
-  if (loading && !escrowDetail && !orderDetail) {
+  if (orderLoading || escrowLoading) {
     return (
-      <div style={{ textAlign: 'center', padding: '50px 0' }}>
+      <div style={{ textAlign: 'center', padding: '50px' }}>
         <Spin size="large" />
       </div>
     );
   }
   
-  if (error) {
+  if (!order) {
     return (
-      <div className="container" style={{ padding: '20px 0' }}>
-        <Alert message="错误" description={error} type="error" showIcon />
-      </div>
+      <Result
+        status="404"
+        title="订单不存在"
+        subTitle="抱歉，您查找的订单不存在或已被删除。"
+        extra={
+          <Button type="primary" onClick={() => navigate('/my-orders')}>
+            返回我的订单
+          </Button>
+        }
+      />
     );
   }
   
   return (
-    <div className="container" style={{ padding: '20px 0' }}>
-      <Card>
-        <Title level={2}>定金托管交易</Title>
+    <div className="escrow-payment-container">
+      <Card title="交易托管服务" bordered={false}>
+        <Alert
+          message="交易安全提示"
+          description="通过托管服务，您的交易将更加安全。卖家发货后，买家确认收货满意再释放货款给卖家。"
+          type="info"
+          showIcon
+          style={{ marginBottom: '20px' }}
+        />
         
-        {renderEscrowStatus()}
-        
-        <Steps current={currentStep} style={{ margin: '30px 0' }}>
-          <Step title="创建托管" icon={<ShoppingCartOutlined />} />
+        <Steps current={currentStep}>
           <Step title="支付定金" icon={<WalletOutlined />} />
-          <Step title="完成交易" icon={<CheckCircleOutlined />} />
+          <Step title="等待发货" icon={<ShoppingCartOutlined />} />
+          <Step title="确认收货" icon={<CarOutlined />} />
+          <Step title="交易完成" icon={<SmileOutlined />} />
         </Steps>
         
         <Divider />
         
-        {currentStep === 0 && renderStep1()}
-        {currentStep === 1 && renderStep2()}
-        {currentStep >= 2 && renderStep3()}
+        {escrow ? (
+          <Descriptions title="托管详情" bordered>
+            <Descriptions.Item label="托管ID">{escrow.id}</Descriptions.Item>
+            <Descriptions.Item label="关联订单">{escrow.orderId}</Descriptions.Item>
+            <Descriptions.Item label="托管金额">￥{escrow.amount}</Descriptions.Item>
+            <Descriptions.Item label="创建时间">{escrow.createdAt}</Descriptions.Item>
+            <Descriptions.Item label="状态" span={2}>
+              {escrow.status === 'PENDING' && <span style={{ color: '#faad14' }}>待支付</span>}
+              {escrow.status === 'PAID' && <span style={{ color: '#1890ff' }}>已支付</span>}
+              {escrow.status === 'RELEASED' && <span style={{ color: '#52c41a' }}>已释放</span>}
+              {escrow.status === 'REFUNDED' && <span style={{ color: '#ff4d4f' }}>已退款</span>}
+            </Descriptions.Item>
+          </Descriptions>
+        ) : (
+          <Alert
+            message="托管信息不存在"
+            description="该订单尚未创建托管服务，请联系卖家或客服。"
+            type="warning"
+            showIcon
+          />
+        )}
+        
+        <Divider />
+        
+        {/* 根据当前步骤和角色显示不同操作 */}
+        <div className="escrow-actions">
+          {escrow && escrow.status === 'PENDING' && (
+            <div className="escrow-payment">
+              <h3>支付定金</h3>
+              {paymentQRCode ? (
+                <div className="qrcode-container" style={{ textAlign: 'center' }}>
+                  <QRCodeSVG value={paymentQRCode} size={200} />
+                  <p style={{ marginTop: '10px' }}>请使用支付宝/微信扫码支付</p>
+                </div>
+              ) : (
+                <Button type="primary" onClick={handlePayEscrow}>
+                  立即支付定金
+                </Button>
+              )}
+            </div>
+          )}
+          
+          {escrow && escrow.status === 'PAID' && order.status === 'DELIVERED' && (
+            <div className="escrow-release">
+              <Space>
+                <Button type="primary" onClick={handleConfirmReceipt}>
+                  确认收货并释放货款
+                </Button>
+                <Button danger onClick={handleRefundEscrow}>
+                  申请退款
+                </Button>
+              </Space>
+            </div>
+          )}
+          
+          {escrow && escrow.status === 'RELEASED' && (
+            <Result
+              status="success"
+              title="交易已完成"
+              subTitle="感谢您使用我们的托管服务，货款已成功释放给卖家。"
+              extra={[
+                <Button type="primary" key="home" onClick={() => navigate('/')}>
+                  继续购物
+                </Button>,
+                <Button key="orders" onClick={() => navigate('/my-orders')}>
+                  查看我的订单
+                </Button>,
+              ]}
+            />
+          )}
+          
+          {escrow && escrow.status === 'REFUNDED' && (
+            <Result
+              status="info"
+              title="货款已退还"
+              subTitle="您的货款已退还，如有问题请联系客服。"
+              extra={[
+                <Button type="primary" key="home" onClick={() => navigate('/')}>
+                  返回首页
+                </Button>,
+                <Button key="orders" onClick={() => navigate('/my-orders')}>
+                  查看我的订单
+                </Button>,
+              ]}
+            />
+          )}
+        </div>
       </Card>
     </div>
   );

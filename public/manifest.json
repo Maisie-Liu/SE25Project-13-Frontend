@@ -1,0 +1,9 @@
+{
+  "short_name": "校园二手交易",
+  "name": "校园二手交易平台",
+  "icons": [],
+  "start_url": ".",
+  "display": "standalone",
+  "theme_color": "#000000",
+  "background_color": "#ffffff"
+} 
