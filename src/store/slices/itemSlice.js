@@ -266,6 +266,7 @@ export const {
 // 选择器
 export const selectItems = (state) => state.item.items;
 export const selectCurrentItem = (state) => state.item.item;
+export const selectItemDetail = (state) => state.item.item;
 export const selectRecommendedItems = (state) => state.item.recommendedItems;
 export const selectItemPagination = (state) => state.item.pagination;
 export const selectItemLoading = (state) => state.item.loading;

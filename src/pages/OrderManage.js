@@ -10,12 +10,11 @@ import {
   DollarCircleOutlined, CommentOutlined, InfoCircleOutlined
 } from '@ant-design/icons';
 import { 
-  fetchBuyerOrders, fetchSellerOrders, confirmOrder, 
-  rejectOrder, completeOrder, cancelOrder 
+  fetchUserOrders, fetchSellerOrders, updateOrder, 
+  cancelOrder, confirmReceipt, rateOrder 
 } from '../store/actions/orderActions';
 import { 
-  selectBuyerOrders, selectSellerOrders, 
-  selectOrderLoading, selectOrderCounts 
+  selectOrders, selectOrderLoading, selectOrderPagination
 } from '../store/slices/orderSlice';
 
 const { Title, Text } = Typography;
@@ -26,10 +25,9 @@ const OrderManage = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
   
-  const buyerOrders = useSelector(selectBuyerOrders);
-  const sellerOrders = useSelector(selectSellerOrders);
+  const orders = useSelector(selectOrders);
   const loading = useSelector(selectOrderLoading);
-  const orderCounts = useSelector(selectOrderCounts);
+  const pagination = useSelector(selectOrderPagination);
   
   const [activeKey, setActiveKey] = useState('buyer');
   const [sellerRemark, setSellerRemark] = useState('');
@@ -43,7 +41,7 @@ const OrderManage = () => {
   // 加载订单数据
   useEffect(() => {
     if (activeKey === 'buyer') {
-      dispatch(fetchBuyerOrders({ pageNum: 1, pageSize: 10 }));
+      dispatch(fetchUserOrders({ pageNum: 1, pageSize: 10 }));
     } else {
       dispatch(fetchSellerOrders({ pageNum: 1, pageSize: 10 }));
     }
@@ -78,10 +76,10 @@ const OrderManage = () => {
   const handleCompleteOrder = async (order) => {
     setSubmitting(true);
     try {
-      await dispatch(completeOrder(order.id)).unwrap();
+      await dispatch(confirmReceipt(order.id)).unwrap();
       message.success('订单已完成');
       if (activeKey === 'buyer') {
-        dispatch(fetchBuyerOrders({ pageNum: 1, pageSize: 10 }));
+        dispatch(fetchUserOrders({ pageNum: 1, pageSize: 10 }));
       } else {
         dispatch(fetchSellerOrders({ pageNum: 1, pageSize: 10 }));
       }
@@ -103,7 +101,7 @@ const OrderManage = () => {
           await dispatch(cancelOrder(order.id)).unwrap();
           message.success('订单已取消');
           if (activeKey === 'buyer') {
-            dispatch(fetchBuyerOrders({ pageNum: 1, pageSize: 10 }));
+            dispatch(fetchUserOrders({ pageNum: 1, pageSize: 10 }));
           } else {
             dispatch(fetchSellerOrders({ pageNum: 1, pageSize: 10 }));
           }
@@ -123,10 +121,10 @@ const OrderManage = () => {
     setSubmitting(true);
     try {
       if (actionType === 'confirm') {
-        await dispatch(confirmOrder({ id: currentOrder.id, sellerRemark })).unwrap();
+        await dispatch(updateOrder({ orderId: currentOrder.id, status: 'ACCEPTED', remark: sellerRemark })).unwrap();
         message.success('订单已确认');
       } else if (actionType === 'reject') {
-        await dispatch(rejectOrder({ id: currentOrder.id, sellerRemark })).unwrap();
+        await dispatch(updateOrder({ orderId: currentOrder.id, status: 'REJECTED', remark: sellerRemark })).unwrap();
         message.success('订单已拒绝');
       }
       
@@ -346,7 +344,7 @@ const OrderManage = () => {
             <Card>
               <Statistic
                 title="待处理订单"
-                value={orderCounts.pending || 0}
+                value={pagination.totalPending || 0}
                 valueStyle={{ color: '#1890ff' }}
                 prefix={<FieldTimeOutlined />}
               />
@@ -356,7 +354,7 @@ const OrderManage = () => {
             <Card>
               <Statistic
                 title="已完成订单"
-                value={orderCounts.completed || 0}
+                value={pagination.totalCompleted || 0}
                 valueStyle={{ color: '#52c41a' }}
                 prefix={<CheckCircleOutlined />}
               />
@@ -366,7 +364,7 @@ const OrderManage = () => {
             <Card>
               <Statistic
                 title="已取消订单"
-                value={orderCounts.cancelled || 0}
+                value={pagination.totalCancelled || 0}
                 valueStyle={{ color: '#faad14' }}
                 prefix={<CloseCircleOutlined />}
               />
@@ -376,7 +374,7 @@ const OrderManage = () => {
             <Card>
               <Statistic
                 title="交易总额"
-                value={orderCounts.totalAmount || 0}
+                value={pagination.totalAmount || 0}
                 precision={2}
                 valueStyle={{ color: '#cf1322' }}
                 prefix="¥"
@@ -388,33 +386,33 @@ const OrderManage = () => {
         
         <Tabs activeKey={activeKey} onChange={handleTabChange}>
           <TabPane 
-            tab={<span><Badge count={orderCounts.buyerPending || 0} offset={[10, 0]}>我买到的</Badge></span>} 
+            tab={<span><Badge count={pagination.totalBuyerPending || 0} offset={[10, 0]}>我买到的</Badge></span>} 
             key="buyer"
           >
             <Table 
               columns={buyerColumns} 
-              dataSource={buyerOrders} 
+              dataSource={orders} 
               rowKey="id" 
               loading={loading}
               pagination={{ 
-                pageSize: 10,
-                total: buyerOrders?.length,
+                pageSize: pagination.pageSize,
+                total: pagination.total,
                 hideOnSinglePage: true,
               }}
             />
           </TabPane>
           <TabPane 
-            tab={<span><Badge count={orderCounts.sellerPending || 0} offset={[10, 0]}>我卖出的</Badge></span>} 
+            tab={<span><Badge count={pagination.totalSellerPending || 0} offset={[10, 0]}>我卖出的</Badge></span>} 
             key="seller"
           >
             <Table 
               columns={sellerColumns} 
-              dataSource={sellerOrders} 
+              dataSource={orders} 
               rowKey="id" 
               loading={loading}
               pagination={{ 
-                pageSize: 10,
-                total: sellerOrders?.length,
+                pageSize: pagination.pageSize,
+                total: pagination.total,
                 hideOnSinglePage: true,
               }}
             />

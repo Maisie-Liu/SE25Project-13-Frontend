@@ -242,4 +242,61 @@ export const fetchRecommendedItems = createAsyncThunk(
       );
     }
   }
+);
+
+// 获取当前用户的物品列表
+export const fetchMyItems = createAsyncThunk(
+  'item/fetchMyItems',
+  async ({ pageNum = 1, pageSize = 10 }, { getState, rejectWithValue }) => {
+    try {
+      const { token } = getState().auth;
+      const { currentUser } = getState().auth;
+      const response = await axios.get(`/items/user/${currentUser.id}?pageNum=${pageNum}&pageSize=${pageSize}`, {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
+      return response.data.data;
+    } catch (error) {
+      return rejectWithValue(
+        error.response?.data?.message || '获取我的物品列表失败'
+      );
+    }
+  }
+);
+
+// 更新物品状态
+export const updateItemStatus = createAsyncThunk(
+  'item/updateItemStatus',
+  async ({ id, status }, { getState, rejectWithValue }) => {
+    try {
+      const { token } = getState().auth;
+      let endpoint = '';
+      
+      switch (status) {
+        case 'PUBLISHED':
+          endpoint = `/items/${id}/publish`;
+          break;
+        case 'UNPUBLISHED':
+          endpoint = `/items/${id}/unpublish`;
+          break;
+        case 'SOLD':
+          endpoint = `/items/${id}/mark-sold`;
+          break;
+        default:
+          endpoint = `/items/${id}/status`;
+      }
+      
+      const response = await axios.put(endpoint, { status }, {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
+      return response.data.data;
+    } catch (error) {
+      return rejectWithValue(
+        error.response?.data?.message || '更新物品状态失败'
+      );
+    }
+  }
 ); 

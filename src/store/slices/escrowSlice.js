@@ -8,6 +8,9 @@ import {
 const initialState = {
   escrowDetail: null,
   paymentInfo: null,
+  transactions: [],
+  currentTransaction: null,
+  paymentQRCode: null,
   loading: false,
   error: null,
 };
@@ -17,6 +20,13 @@ const escrowSlice = createSlice({
   name: 'escrow',
   initialState,
   reducers: {
+    setEscrowLoading: (state, action) => {
+      state.loading = action.payload;
+    },
+    setEscrowError: (state, action) => {
+      state.error = action.payload;
+      state.loading = false;
+    },
     clearEscrowError: (state) => {
       state.error = null;
     },
@@ -26,6 +36,32 @@ const escrowSlice = createSlice({
     clearPaymentInfo: (state) => {
       state.paymentInfo = null;
     },
+    setTransactions: (state, action) => {
+      state.transactions = action.payload;
+      state.loading = false;
+    },
+    setCurrentTransaction: (state, action) => {
+      state.currentTransaction = action.payload;
+      state.loading = false;
+    },
+    setPaymentQRCode: (state, action) => {
+      state.paymentQRCode = action.payload;
+      state.loading = false;
+    },
+    clearCurrentTransaction: (state) => {
+      state.currentTransaction = null;
+    },
+    updateTransactionStatus: (state, action) => {
+      const { transactionId, status } = action.payload;
+      if (state.currentTransaction && state.currentTransaction.id === transactionId) {
+        state.currentTransaction.status = status;
+      }
+      
+      state.transactions = state.transactions.map(transaction => 
+        transaction.id === transactionId ? { ...transaction, status } : transaction
+      );
+      state.loading = false;
+    }
   },
   extraReducers: (builder) => {
     // 创建托管
@@ -127,11 +163,25 @@ const escrowSlice = createSlice({
 });
 
 // 导出Action
-export const { clearEscrowError, clearEscrowDetail, clearPaymentInfo } = escrowSlice.actions;
+export const {
+  setEscrowLoading,
+  setEscrowError,
+  clearEscrowError,
+  clearEscrowDetail,
+  clearPaymentInfo,
+  setTransactions,
+  setCurrentTransaction,
+  setPaymentQRCode,
+  clearCurrentTransaction,
+  updateTransactionStatus
+} = escrowSlice.actions;
 
 // 导出Selector
 export const selectEscrowDetail = (state) => state.escrow.escrowDetail;
 export const selectPaymentInfo = (state) => state.escrow.paymentInfo;
+export const selectTransactions = (state) => state.escrow.transactions;
+export const selectCurrentTransaction = (state) => state.escrow.currentTransaction;
+export const selectPaymentQRCode = (state) => state.escrow.paymentQRCode;
 export const selectEscrowLoading = (state) => state.escrow.loading;
 export const selectEscrowError = (state) => state.escrow.error;
 

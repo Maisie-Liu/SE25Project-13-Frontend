@@ -12,7 +12,7 @@ import {
 } from '@ant-design/icons';
 import { fetchItemById } from '../store/actions/itemActions';
 import { createOrder } from '../store/actions/orderActions';
-import { addToFavorites, removeFromFavorites } from '../store/actions/favoriteActions';
+import { addToFavorite, removeFromFavorite } from '../store/actions/favoriteActions';
 import { selectIsAuthenticated } from '../store/slices/authSlice';
 import { selectItemDetail, selectItemLoading } from '../store/slices/itemSlice';
 
@@ -95,11 +95,11 @@ const ItemDetail = () => {
     
     try {
       if (isFavorite) {
-        await dispatch(removeFromFavorites(id)).unwrap();
+        await dispatch(removeFromFavorite(id)).unwrap();
         setIsFavorite(false);
         message.success('取消收藏成功');
       } else {
-        await dispatch(addToFavorites(id)).unwrap();
+        await dispatch(addToFavorite(id)).unwrap();
         setIsFavorite(true);
         message.success('收藏成功');
       }

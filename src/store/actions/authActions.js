@@ -1,5 +1,5 @@
 import { createAsyncThunk } from '@reduxjs/toolkit';
-import axios from 'axios';
+import axios from '../../utils/axios';
 
 // 登录
 export const login = createAsyncThunk(
@@ -115,6 +115,26 @@ export const uploadAvatar = createAsyncThunk(
     } catch (error) {
       return rejectWithValue(
         error.response?.data?.message || '上传头像失败'
+      );
+    }
+  }
+);
+
+// 修改用户密码
+export const changePassword = createAsyncThunk(
+  'auth/changePassword',
+  async ({ oldPassword, newPassword }, { getState, rejectWithValue }) => {
+    try {
+      const { token } = getState().auth;
+      const response = await axios.put('/users/password', { oldPassword, newPassword }, {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
+      return response.data.data;
+    } catch (error) {
+      return rejectWithValue(
+        error.response?.data?.message || '修改密码失败'
       );
     }
   }
