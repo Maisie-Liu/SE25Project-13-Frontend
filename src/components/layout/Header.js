@@ -1,25 +1,30 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import { 
   Layout, 
   Menu, 
   Button, 
-  Input, 
   Avatar, 
   Dropdown, 
   Space,
-  Badge 
+  Badge,
+  Tooltip,
+  Input,
+  Tag
 } from 'antd';
 import { 
   UserOutlined, 
   ShoppingOutlined, 
   LogoutOutlined, 
-  SettingOutlined,
-  SearchOutlined,
-  PlusOutlined,
   BellOutlined,
-  DownOutlined
+  HeartOutlined,
+  MessageOutlined,
+  HomeOutlined,
+  AppstoreOutlined,
+  QuestionCircleOutlined,
+  ShoppingCartOutlined,
+  SearchOutlined
 } from '@ant-design/icons';
 import { selectIsAuthenticated, selectUser } from '../../store/slices/authSlice';
 import { logout } from '../../store/actions/authActions';
@@ -32,8 +37,10 @@ const Header = () => {
   const dispatch = useDispatch();
   const isAuthenticated = useSelector(selectIsAuthenticated);
   const user = useSelector(selectUser);
-  const [searchKeyword, setSearchKeyword] = useState('');
-
+  
+  // 热门搜索关键词
+  const hotKeywords = ['电子产品', '教材', '自行车', '运动鞋', '手机配件'];
+  
   // 处理搜索
   const handleSearch = (value) => {
     navigate(`/items?keyword=${encodeURIComponent(value)}`);
@@ -42,132 +49,136 @@ const Header = () => {
   // 处理登出
   const handleLogout = () => {
     dispatch(logout());
-    navigate('/');
+    navigate('/login');
   };
 
   // 用户下拉菜单
-  const userMenu = [
-    {
-      key: 'profile',
-      icon: <UserOutlined />,
-      label: '个人中心',
-      onClick: () => navigate('/profile')
-    },
-    {
-      key: 'myItems',
-      icon: <ShoppingOutlined />,
-      label: '我的物品',
-      onClick: () => navigate('/my/items')
-    },
-    {
-      key: 'myOrders',
-      icon: <ShoppingOutlined />,
-      label: '我的订单',
-      onClick: () => navigate('/my/orders')
-    },
-    {
-      key: 'settings',
-      icon: <SettingOutlined />,
-      label: '设置',
-      onClick: () => navigate('/profile')
-    },
-    {
-      type: 'divider'
-    },
-    {
-      key: 'logout',
-      icon: <LogoutOutlined />,
-      label: '退出登录',
-      onClick: handleLogout
-    }
-  ];
+  const userMenu = (
+    <Menu>
+      <Menu.Item key="profile" onClick={() => navigate('/profile')}>
+        <UserOutlined /> 个人中心
+      </Menu.Item>
+      <Menu.Item key="myItems" onClick={() => navigate('/my/items')}>
+        <ShoppingOutlined /> 我的物品
+      </Menu.Item>
+      <Menu.Item key="myOrders" onClick={() => navigate('/my/orders')}>
+        <ShoppingCartOutlined /> 我的订单
+      </Menu.Item>
+      <Menu.Divider />
+      <Menu.Item key="logout" onClick={handleLogout}>
+        <LogoutOutlined /> 退出登录
+      </Menu.Item>
+    </Menu>
+  );
 
   return (
-    <AntHeader className="header">
-      <div className="container">
-        <div className="flex-between" style={{ height: '100%' }}>
-          <div className="logo" style={{ width: 120 }}>
-            <Link to="/" style={{ color: '#1890ff', fontSize: '18px', fontWeight: 'bold' }}>
-              校园二手
+    <div className="header-wrapper">
+      <AntHeader className="header">
+        <div className="container" style={{ display: 'flex', alignItems: 'center', height: '100%', padding: '0 4px' }}>
+          <div className="logo" style={{ marginRight: '24px' }}>
+            <Link to="/" style={{ display: 'flex', alignItems: 'center' }}>
+              <img 
+                src="/logo.png" 
+                alt="校园二手" 
+                style={{ height: '38px', marginRight: '12px' }}
+                onError={(e) => {e.target.style.display = 'none'}}
+              />
+              <span className="logo-text">校园二手</span>
             </Link>
           </div>
           
-          <div className="search-box" style={{ width: '40%' }}>
+          {/* 搜索栏 */}
+          <div className="header-search">
             <Search
-              placeholder="搜索物品..."
-              value={searchKeyword}
-              onChange={(e) => setSearchKeyword(e.target.value)}
+              placeholder="搜索闲置"
+              enterButton={<><SearchOutlined /> 搜索</>}
+              size="large"
               onSearch={handleSearch}
-              enterButton={<SearchOutlined />}
+              className="header-search-box"
+              style={{ maxWidth: '450px' }}
             />
+            <div className="hot-search-tags">
+              {hotKeywords.map((keyword, index) => (
+                <Tag 
+                  key={index} 
+                  onClick={() => handleSearch(keyword)}
+                  className="hot-search-tag"
+                >
+                  {keyword}
+                </Tag>
+              ))}
+            </div>
           </div>
           
-          <Menu mode="horizontal" style={{ border: 'none', flex: 1, justifyContent: 'center' }}>
-            <Menu.Item key="home" onClick={() => navigate('/')}>
+          <Menu mode="horizontal" theme="dark" className="main-menu" style={{ flex: 1, background: 'transparent', border: 'none', justifyContent: 'flex-end' }}>
+            <Menu.Item key="home" icon={<HomeOutlined />} onClick={() => navigate('/')}>
               首页
             </Menu.Item>
-            <Menu.Item key="items" onClick={() => navigate('/items')}>
+            <Menu.Item key="items" icon={<AppstoreOutlined />} onClick={() => navigate('/items')}>
               全部物品
             </Menu.Item>
-            <Menu.Item key="categories">
-              <Dropdown
-                menu={{
-                  items: [
-                    { key: '1', label: <Link to="/items?category=1">电子产品</Link> },
-                    { key: '2', label: <Link to="/items?category=2">图书教材</Link> },
-                    { key: '3', label: <Link to="/items?category=3">生活用品</Link> },
-                    { key: '4', label: <Link to="/items?category=4">服装鞋帽</Link> },
-                    { key: '5', label: <Link to="/items?category=5">运动户外</Link> },
-                    { key: '6', label: <Link to="/items?category=6">其他物品</Link> },
-                  ]
-                }}
-              >
-                <Space>
-                  分类
-                  <DownOutlined />
-                </Space>
-              </Dropdown>
+            <Menu.Item key="publish" icon={<ShoppingOutlined />} onClick={() => navigate('/items/publish')}>
+              发布物品
+            </Menu.Item>
+            <Menu.Item key="help" icon={<QuestionCircleOutlined />} onClick={() => navigate('/help')}>
+              帮助中心
             </Menu.Item>
           </Menu>
           
-          <div className="user-actions">
-            {isAuthenticated ? (
-              <Space size="middle">
-                <Button 
-                  type="primary" 
-                  icon={<PlusOutlined />}
-                  onClick={() => navigate('/items/publish')}
-                >
-                  发布物品
-                </Button>
-                <Badge count={0} dot>
-                  <Button 
-                    shape="circle" 
-                    icon={<BellOutlined />} 
-                    onClick={() => navigate('/notifications')}
-                  />
-                </Badge>
-                <Dropdown menu={{ items: userMenu }} placement="bottomRight">
-                  <Space className="cursor-pointer">
-                    <Avatar 
-                      src={user?.avatar} 
-                      icon={!user?.avatar && <UserOutlined />}
+          <div className="header-actions">
+            <Space size="large">
+              {isAuthenticated ? (
+                <>
+                  <Badge count={3} size="small">
+                    <Button 
+                      type="text" 
+                      icon={<BellOutlined />} 
+                      className="icon-button"
+                      style={{ color: '#fff' }}
+                      onClick={() => navigate('/notifications')}
                     />
-                    <span>{user?.nickname || user?.username || '用户'}</span>
-                    <DownOutlined />
-                  </Space>
-                </Dropdown>
-              </Space>
-            ) : (
-              <Space>
-                <Button onClick={() => navigate('/login')}>登录</Button>
-                <Button type="primary" onClick={() => navigate('/register')}>注册</Button>
-              </Space>
-            )}
+                  </Badge>
+                  <Badge count={2} size="small">
+                    <Button 
+                      type="text" 
+                      icon={<MessageOutlined />} 
+                      className="icon-button"
+                      style={{ color: '#fff' }}
+                      onClick={() => navigate('/messages')}
+                    />
+                  </Badge>
+                  <Badge count={5} size="small">
+                    <Button 
+                      type="text" 
+                      icon={<HeartOutlined />} 
+                      className="icon-button"
+                      style={{ color: '#fff' }}
+                      onClick={() => navigate('/favorites')}
+                    />
+                  </Badge>
+                  <Dropdown overlay={userMenu} placement="bottomRight" arrow>
+                    <div className="user-avatar-container" style={{ cursor: 'pointer' }}>
+                      <Avatar 
+                        src={user?.avatar} 
+                        icon={<UserOutlined />} 
+                        size="default" 
+                        className="user-avatar"
+                      />
+                      <span className="username" style={{ color: '#fff' }}>{user?.username || '用户'}</span>
+                    </div>
+                  </Dropdown>
+                </>
+              ) : (
+                <Space>
+                  <Button ghost onClick={() => navigate('/login')}>登录</Button>
+                  <Button type="primary" onClick={() => navigate('/register')}>注册</Button>
+                </Space>
+              )}
+            </Space>
           </div>
         </div>
-      </div>
-    </AntHeader>
+      </AntHeader>
+    </div>
   );
 };
 

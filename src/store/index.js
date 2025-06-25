@@ -1,4 +1,4 @@
-import { configureStore } from '@reduxjs/toolkit';
+import { configureStore, combineReducers } from '@reduxjs/toolkit';
 import { persistStore, persistReducer } from 'redux-persist';
 import storage from 'redux-persist/lib/storage';
 import authReducer from './slices/authSlice';
@@ -15,14 +15,15 @@ const persistConfig = {
   whitelist: ['auth'], // 只持久化auth状态
 };
 
-const rootReducer = {
+// 使用combineReducers创建根reducer
+const rootReducer = combineReducers({
   auth: authReducer,
   item: itemReducer,
   order: orderReducer,
   category: categoryReducer,
   favorite: favoriteReducer,
   escrow: escrowReducer,
-};
+});
 
 const persistedReducer = persistReducer(persistConfig, rootReducer);
 
