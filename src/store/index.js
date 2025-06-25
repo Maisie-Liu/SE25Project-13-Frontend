@@ -1,4 +1,4 @@
-import { configureStore } from '@reduxjs/toolkit';
+import { configureStore, combineReducers } from '@reduxjs/toolkit';
 import { persistStore, persistReducer } from 'redux-persist';
 import storage from 'redux-persist/lib/storage';
 import authReducer from './slices/authSlice';
@@ -7,7 +7,6 @@ import orderReducer from './slices/orderSlice';
 import categoryReducer from './slices/categorySlice';
 import favoriteReducer from './slices/favoriteSlice';
 import escrowReducer from './slices/escrowSlice';
-import { combineReducers } from 'redux';
 
 // 配置持久化存储
 const persistConfig = {
@@ -16,6 +15,7 @@ const persistConfig = {
   whitelist: ['auth'], // 只持久化auth状态
 };
 
+// 使用combineReducers创建根reducer
 const rootReducer = combineReducers({
   auth: authReducer,
   item: itemReducer,

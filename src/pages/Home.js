@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { Link, useNavigate } from 'react-router-dom';
 import { 
@@ -12,14 +12,37 @@ import {
   Divider,
   Spin,
   Empty,
-  Tag
+  Tag,
+  Avatar,
+  Statistic,
+  Badge,
+  List
 } from 'antd';
 import { 
   SearchOutlined, 
   FireOutlined, 
   ClockCircleOutlined,
   ShoppingOutlined,
-  RightOutlined
+  RightOutlined,
+  MobileOutlined,
+  BookOutlined,
+  HomeOutlined,
+  SkinOutlined,
+  TrophyOutlined,
+  GiftOutlined,
+  UserOutlined,
+  HeartOutlined,
+  SafetyCertificateOutlined,
+  RocketOutlined,
+  StarOutlined,
+  NotificationOutlined,
+  QuestionCircleOutlined,
+  TeamOutlined,
+  InfoCircleOutlined,
+  PlusOutlined,
+  ShoppingCartOutlined,
+  MessageOutlined,
+  CloseOutlined
 } from '@ant-design/icons';
 import { fetchItems, fetchRecommendedItems } from '../store/actions/itemActions';
 import { 
@@ -28,9 +51,27 @@ import {
   selectItemLoading 
 } from '../store/slices/itemSlice';
 
-const { Title, Paragraph } = Typography;
+const { Title, Text, Paragraph } = Typography;
 const { Search } = Input;
 const { Meta } = Card;
+
+// 模拟热门商品数据
+const hotItems = [
+  { id: 1, name: 'MacBook Pro 2021款', price: 8999, image: 'https://via.placeholder.com/60x60?text=MacBook' },
+  { id: 2, name: '全新AirPods Pro', price: 1299, image: 'https://via.placeholder.com/60x60?text=AirPods' },
+  { id: 3, name: '二手自行车，九成新', price: 399, image: 'https://via.placeholder.com/60x60?text=Bike' },
+  { id: 4, name: '高等数学教材，配习题集', price: 45, image: 'https://via.placeholder.com/60x60?text=Book' },
+  { id: 5, name: 'Nike运动鞋，43码', price: 299, image: 'https://via.placeholder.com/60x60?text=Shoes' }
+];
+
+// 模拟公告数据
+const announcements = [
+  { id: 1, title: '平台使用指南', link: '/help' },
+  { id: 2, title: '关于禁止发布违禁物品的通知', link: '/notice/1' },
+  { id: 3, title: '交易安全须知', link: '/safety' },
+  { id: 4, title: '五一假期客服安排', link: '/notice/2' },
+  { id: 5, title: '新版本功能介绍', link: '/news/1' }
+];
 
 const Home = () => {
   const dispatch = useDispatch();
@@ -38,6 +79,9 @@ const Home = () => {
   const items = useSelector(selectItems);
   const recommendedItems = useSelector(selectRecommendedItems);
   const loading = useSelector(selectItemLoading);
+  const [showPublishMenu, setShowPublishMenu] = useState(false);
+  const menuRef = useRef(null);
+  const btnRef = useRef(null);
 
   // 加载最新物品和推荐物品
   useEffect(() => {
@@ -45,37 +89,88 @@ const Home = () => {
     dispatch(fetchRecommendedItems({ pageNum: 1, pageSize: 4 }));
   }, [dispatch]);
 
+  // 处理点击外部关闭菜单
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (
+        showPublishMenu && 
+        menuRef.current && 
+        !menuRef.current.contains(event.target) &&
+        btnRef.current &&
+        !btnRef.current.contains(event.target)
+      ) {
+        setShowPublishMenu(false);
+      }
+    };
+    
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showPublishMenu]);
+
   // 处理搜索
   const handleSearch = (value) => {
     navigate(`/items?keyword=${encodeURIComponent(value)}`);
   };
 
+  // 悬浮按钮相关函数
+  const togglePublishMenu = () => {
+    setShowPublishMenu(!showPublishMenu);
+  };
+  
+  const handlePublishItem = () => {
+    navigate('/items/publish');
+    setShowPublishMenu(false);
+  };
+  
+  const handleRequestItem = () => {
+    navigate('/requests/publish');
+    setShowPublishMenu(false);
+  };
+
   // 渲染物品卡片
   const renderItemCard = (item) => (
-    <Col xs={24} sm={12} md={8} lg={6} key={item.id} style={{ marginBottom: 16 }}>
+    <Col xs={12} sm={12} md={12} lg={8} key={item.id} style={{ marginBottom: 16 }}>
       <Link to={`/items/${item.id}`}>
         <Card
           hoverable
           className="item-card"
           cover={
-            <img
-              alt={item.name}
-              src={item.images && item.images.length > 0 ? item.images[0] : 'https://via.placeholder.com/300x200?text=No+Image'}
-              className="item-image"
-            />
+            <div style={{ position: 'relative' }}>
+              <img
+                alt={item.name}
+                src={item.images && item.images.length > 0 ? item.images[0] : 'https://via.placeholder.com/300x200?text=No+Image'}
+                className="item-image"
+              />
+              {item.isNew && (
+                <div className="custom-badge">新上架</div>
+              )}
+            </div>
           }
+          bodyStyle={{ padding: '12px' }}
         >
           <Meta
-            title={item.name}
+            title={
+              <div className="text-ellipsis" style={{ fontWeight: 'bold' }}>{item.name}</div>
+            }
             description={
               <>
-                <div className="item-price">¥{item.price}</div>
-                <div>
-                  {item.condition === 1 && <Tag color="green">全新</Tag>}
-                  {item.condition > 1 && item.condition <= 3 && <Tag color="cyan">几乎全新</Tag>}
-                  {item.condition > 3 && item.condition <= 6 && <Tag color="blue">轻度使用</Tag>}
-                  {item.condition > 6 && item.condition <= 9 && <Tag color="orange">中度使用</Tag>}
-                  {item.condition === 10 && <Tag color="red">重度使用</Tag>}
+                <div className="price-tag">{item.price ? `¥${item.price}` : '面议'}</div>
+                <div className="flex-between" style={{ marginTop: '8px' }}>
+                  <div>
+                    {item.condition === 1 && <Tag color="green">全新</Tag>}
+                    {item.condition > 1 && item.condition <= 3 && <Tag color="cyan">几乎全新</Tag>}
+                    {item.condition > 3 && item.condition <= 6 && <Tag color="blue">轻度使用</Tag>}
+                    {item.condition > 6 && item.condition <= 9 && <Tag color="orange">中度使用</Tag>}
+                    {item.condition === 10 && <Tag color="red">重度使用</Tag>}
+                  </div>
+                  <div className="flex" style={{ alignItems: 'center' }}>
+                    <Avatar size="small" icon={<UserOutlined />} src={item.userAvatar} className="user-avatar" />
+                    <span style={{ marginLeft: '4px', fontSize: '12px', color: 'var(--lighter-text-color)' }}>
+                      {item.username}
+                    </span>
+                  </div>
                 </div>
               </>
             }
@@ -87,206 +182,266 @@ const Home = () => {
 
   return (
     <>
-      {/* 轮播图 */}
-      <Carousel autoplay style={{ marginBottom: 24 }}>
-        <div>
-          <div style={{ height: 400, background: '#364d79', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <div style={{ color: '#fff', textAlign: 'center' }}>
-              <Title level={2} style={{ color: '#fff' }}>校园二手交易平台</Title>
-              <Paragraph style={{ color: '#fff' }}>让闲置物品流通起来，让校园生活更加便利</Paragraph>
-              <Button type="primary" size="large" onClick={() => navigate('/items')}>
-                开始浏览
-              </Button>
+      {/* 背景遮罩 */}
+      <div className={`overlay ${showPublishMenu ? 'active' : ''}`} onClick={() => setShowPublishMenu(false)}></div>
+      
+      {/* 悬浮发布按钮 */}
+      <div className="floating-publish-wrapper">
+        <button 
+          ref={btnRef}
+          className={`floating-publish-btn ${showPublishMenu ? 'active' : ''}`} 
+          onClick={togglePublishMenu}
+        >
+          <PlusOutlined />
+        </button>
+        <div 
+          ref={menuRef}
+          className={`floating-publish-menu ${showPublishMenu ? 'active' : ''}`}
+        >
+          <div className="floating-menu-item" onClick={handlePublishItem}>
+            <div className="floating-menu-circle">
+              <ShoppingOutlined className="icon" />
             </div>
+            <span className="text">发布闲置</span>
+          </div>
+          <div className="floating-menu-item" onClick={handleRequestItem}>
+            <div className="floating-menu-circle">
+              <MessageOutlined className="icon" />
+            </div>
+            <span className="text">发布求购</span>
           </div>
         </div>
-        <div>
-          <div style={{ height: 400, background: '#2f54eb', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <div style={{ color: '#fff', textAlign: 'center' }}>
-              <Title level={2} style={{ color: '#fff' }}>发布闲置物品</Title>
-              <Paragraph style={{ color: '#fff' }}>一键发布，快速售出</Paragraph>
-              <Button type="primary" size="large" onClick={() => navigate('/items/publish')}>
-                立即发布
-              </Button>
-            </div>
-          </div>
-        </div>
-      </Carousel>
+      </div>
 
+      {/* 主体内容区 - 两栏布局 */}
       <div className="container">
-        {/* 搜索区域 */}
-        <div style={{ textAlign: 'center', marginBottom: 48 }}>
-          <Title level={2}>搜索你想要的物品</Title>
-          <Search
-            placeholder="输入关键词搜索"
-            enterButton={<><SearchOutlined /> 搜索</>}
-            size="large"
-            onSearch={handleSearch}
-            style={{ maxWidth: 600, width: '100%' }}
-          />
-        </div>
-
-        {/* 分类导航 */}
-        <div style={{ marginBottom: 48 }}>
-          <Title level={3}>物品分类</Title>
-          <Row gutter={[16, 16]}>
-            <Col xs={12} sm={8} md={6} lg={4}>
-              <Card hoverable onClick={() => navigate('/items?category=1')}>
-                <div className="text-center">
-                  <div style={{ fontSize: 32, marginBottom: 8 }}>📱</div>
-                  <div>电子产品</div>
+        <Row gutter={[8, 24]}>
+          {/* 左侧分类导航 */}
+          <Col xs={24} md={7} lg={6} xl={5}>
+            <div className="left-sidebar-fixed">
+              <div className="category-menu">
+                <div className="category-menu-title">
+                  物品分类
                 </div>
-              </Card>
-            </Col>
-            <Col xs={12} sm={8} md={6} lg={4}>
-              <Card hoverable onClick={() => navigate('/items?category=2')}>
-                <div className="text-center">
-                  <div style={{ fontSize: 32, marginBottom: 8 }}>📚</div>
-                  <div>图书教材</div>
+                <div className="category-menu-list">
+                  <div className="category-menu-item">
+                    <MobileOutlined className="icon" />
+                    <span className="text">电子产品</span>
+                    <span className="count">28</span>
+                  </div>
+                  <div className="category-menu-item">
+                    <BookOutlined className="icon" />
+                    <span className="text">图书教材</span>
+                    <span className="count">45</span>
+                  </div>
+                  <div className="category-menu-item">
+                    <HomeOutlined className="icon" />
+                    <span className="text">生活用品</span>
+                    <span className="count">36</span>
+                  </div>
+                  <div className="category-menu-item">
+                    <SkinOutlined className="icon" />
+                    <span className="text">服装鞋帽</span>
+                    <span className="count">19</span>
+                  </div>
+                  <div className="category-menu-item">
+                    <TrophyOutlined className="icon" />
+                    <span className="text">运动户外</span>
+                    <span className="count">24</span>
+                  </div>
+                  <div className="category-menu-item">
+                    <GiftOutlined className="icon" />
+                    <span className="text">其他物品</span>
+                    <span className="count">31</span>
+                  </div>
                 </div>
-              </Card>
-            </Col>
-            <Col xs={12} sm={8} md={6} lg={4}>
-              <Card hoverable onClick={() => navigate('/items?category=3')}>
-                <div className="text-center">
-                  <div style={{ fontSize: 32, marginBottom: 8 }}>🏠</div>
-                  <div>生活用品</div>
+              </div>
+              
+              {/* 平台特色 - 移动到左侧侧边栏 */}
+              <div className="sidebar-module">
+                <div className="sidebar-module-title">
+                  <SearchOutlined className="icon" /> 平台特色
                 </div>
-              </Card>
-            </Col>
-            <Col xs={12} sm={8} md={6} lg={4}>
-              <Card hoverable onClick={() => navigate('/items?category=4')}>
-                <div className="text-center">
-                  <div style={{ fontSize: 32, marginBottom: 8 }}>👕</div>
-                  <div>服装鞋帽</div>
+                <div className="sidebar-module-content">
+                  <div className="feature-item">
+                    <div className="feature-icon">
+                      <SearchOutlined style={{ fontSize: 24, color: 'var(--primary-color)' }} />
+                    </div>
+                    <div className="feature-info">
+                      <div className="feature-title">智能搜索</div>
+                      <div className="feature-desc">快速找到心仪物品</div>
+                    </div>
+                  </div>
+                  <div className="feature-item">
+                    <div className="feature-icon">
+                      <RocketOutlined style={{ fontSize: 24, color: 'var(--primary-color)' }} />
+                    </div>
+                    <div className="feature-info">
+                      <div className="feature-title">AI描述生成</div>
+                      <div className="feature-desc">发布物品更轻松</div>
+                    </div>
+                  </div>
+                  <div className="feature-item">
+                    <div className="feature-icon">
+                      <SafetyCertificateOutlined style={{ fontSize: 24, color: 'var(--primary-color)' }} />
+                    </div>
+                    <div className="feature-info">
+                      <div className="feature-title">安全交易</div>
+                      <div className="feature-desc">保障双方权益</div>
+                    </div>
+                  </div>
                 </div>
-              </Card>
-            </Col>
-            <Col xs={12} sm={8} md={6} lg={4}>
-              <Card hoverable onClick={() => navigate('/items?category=5')}>
-                <div className="text-center">
-                  <div style={{ fontSize: 32, marginBottom: 8 }}>⚽</div>
-                  <div>运动户外</div>
-                </div>
-              </Card>
-            </Col>
-            <Col xs={12} sm={8} md={6} lg={4}>
-              <Card hoverable onClick={() => navigate('/items?category=6')}>
-                <div className="text-center">
-                  <div style={{ fontSize: 32, marginBottom: 8 }}>🎁</div>
-                  <div>其他物品</div>
-                </div>
-              </Card>
-            </Col>
-          </Row>
-        </div>
-
-        {/* 最新物品 */}
-        <div style={{ marginBottom: 48 }}>
-          <div className="flex-between mb-16">
-            <Title level={3}><ClockCircleOutlined /> 最新上架</Title>
-            <Button type="link" onClick={() => navigate('/items')}>
-              查看更多 <RightOutlined />
-            </Button>
-          </div>
-          
-          {loading ? (
-            <div className="text-center" style={{ padding: 40 }}>
-              <Spin size="large" />
+              </div>
             </div>
-          ) : items.length > 0 ? (
-            <Row gutter={[16, 16]}>
-              {items.map(item => renderItemCard(item))}
-            </Row>
-          ) : (
-            <Empty description="暂无物品" />
-          )}
-        </div>
+          </Col>
 
-        {/* 推荐物品 */}
-        <div style={{ marginBottom: 48 }}>
-          <div className="flex-between mb-16">
-            <Title level={3}><FireOutlined /> 推荐物品</Title>
-            <Button type="link" onClick={() => navigate('/items')}>
-              查看更多 <RightOutlined />
-            </Button>
-          </div>
-          
-          {loading ? (
-            <div className="text-center" style={{ padding: 40 }}>
-              <Spin size="large" />
+          {/* 中间主内容区域 */}
+          <Col xs={24} md={17} lg={13} xl={14}>
+            {/* 轮播图 */}
+            <Carousel autoplay className="home-carousel">
+              <div>
+                <div className="carousel-item" style={{ background: 'linear-gradient(135deg, #00b8a9 0%, #1de9b6 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <div style={{ color: '#fff', textAlign: 'center' }}>
+                    <Title level={2} style={{ color: '#fff', marginBottom: '24px' }}>发布闲置物品</Title>
+                    <Paragraph style={{ color: '#fff', fontSize: '16px', marginBottom: '24px' }}>一键发布，快速售出</Paragraph>
+                    <Button type="primary" size="large" onClick={() => navigate('/items/publish')} style={{ borderRadius: '22px', height: '44px', padding: '0 32px', background: '#fff', color: 'var(--primary-color)' }}>
+                      立即发布
+                    </Button>
+                  </div>
+                </div>
+              </div>
+              <div>
+                <div className="carousel-item" style={{ background: 'linear-gradient(135deg, #00b8a9 0%, #1de9b6 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <div style={{ color: '#fff', textAlign: 'center' }}>
+                    <Title level={2} style={{ color: '#fff', marginBottom: '24px' }}>校园二手交易平台</Title>
+                    <Paragraph style={{ color: '#fff', fontSize: '16px', marginBottom: '24px' }}>让闲置物品流通起来，让校园生活更加便利</Paragraph>
+                    <Button type="primary" size="large" onClick={() => navigate('/items')} style={{ borderRadius: '22px', height: '44px', padding: '0 32px', background: '#fff', color: 'var(--primary-color)' }}>
+                      开始浏览
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            </Carousel>
+
+            {/* 平台数据统计 */}
+            <div className="feature-block" style={{ marginTop: '24px' }}>
+              <Row gutter={[16, 16]}>
+                <Col xs={24} sm={8}>
+                  <Statistic 
+                    title={<Text strong style={{ fontSize: '16px' }}>平台商品</Text>} 
+                    value={1234} 
+                    prefix={<ShoppingOutlined />} 
+                    valueStyle={{ color: 'var(--primary-color)', fontWeight: 'bold' }}
+                  />
+                </Col>
+                <Col xs={24} sm={8}>
+                  <Statistic 
+                    title={<Text strong style={{ fontSize: '16px' }}>成交订单</Text>} 
+                    value={568} 
+                    prefix={<SafetyCertificateOutlined />} 
+                    valueStyle={{ color: 'var(--primary-color)', fontWeight: 'bold' }}
+                  />
+                </Col>
+                <Col xs={24} sm={8}>
+                  <Statistic 
+                    title={<Text strong style={{ fontSize: '16px' }}>注册用户</Text>} 
+                    value={986} 
+                    prefix={<UserOutlined />} 
+                    valueStyle={{ color: 'var(--primary-color)', fontWeight: 'bold' }}
+                  />
+                </Col>
+              </Row>
             </div>
-          ) : recommendedItems.length > 0 ? (
-            <Row gutter={[16, 16]}>
-              {recommendedItems.map(item => renderItemCard(item))}
-            </Row>
-          ) : (
-            <Empty description="暂无推荐物品" />
-          )}
-        </div>
+            
+            {/* 最新物品 */}
+            <div style={{ marginBottom: 24 }}>
+              <div className="flex-between mb-16">
+                <Title level={3} style={{ fontSize: '20px', margin: 0 }}>
+                  <ClockCircleOutlined style={{ marginRight: '8px', color: 'var(--primary-color)' }} /> 最新上架
+                </Title>
+                <Button type="link" onClick={() => navigate('/items')} style={{ color: 'var(--primary-color)' }}>
+                  查看更多 <RightOutlined />
+                </Button>
+              </div>
+              
+              {loading ? (
+                <div className="text-center" style={{ padding: 40 }}>
+                  <Spin size="large" />
+                </div>
+              ) : items.length > 0 ? (
+                <Row gutter={[16, 16]}>
+                  {items.map((item, index) => renderItemCard({...item, isNew: index < 3}))}
+                </Row>
+              ) : (
+                <Empty description="暂无物品" />
+              )}
+            </div>
+            
+            {/* 推荐物品 */}
+            <div style={{ marginBottom: 24 }}>
+              <div className="flex-between mb-16">
+                <Title level={3} style={{ fontSize: '20px', margin: 0 }}>
+                  <FireOutlined style={{ marginRight: '8px', color: 'var(--primary-color)' }} /> 推荐物品
+                </Title>
+                <Button type="link" onClick={() => navigate('/items')} style={{ color: 'var(--primary-color)' }}>
+                  查看更多 <RightOutlined />
+                </Button>
+              </div>
+              
+              {loading ? (
+                <div className="text-center" style={{ padding: 40 }}>
+                  <Spin size="large" />
+                </div>
+              ) : recommendedItems.length > 0 ? (
+                <Row gutter={[16, 16]}>
+                  {recommendedItems.map(item => renderItemCard(item))}
+                </Row>
+              ) : (
+                <Empty description="暂无推荐物品" />
+              )}
+            </div>
+          </Col>
 
-        {/* 平台特色 */}
-        <div style={{ marginBottom: 48 }}>
-          <Title level={3} className="text-center">平台特色</Title>
-          <Row gutter={[24, 24]}>
-            <Col xs={24} sm={8}>
-              <Card>
-                <div className="text-center">
-                  <div style={{ fontSize: 40, marginBottom: 16 }}>🔍</div>
-                  <Title level={4}>智能搜索</Title>
-                  <Paragraph>
-                    强大的搜索功能，帮助你快速找到心仪物品
-                  </Paragraph>
+          {/* 右侧栏目 */}
+          <Col xs={24} md={0} lg={5} xl={5} style={{ display: { xs: 'none', lg: 'block' } }}>
+            <div className="right-sidebar-fixed">
+              {/* 热门商品 */}
+              <div className="hot-module">
+                <div className="hot-module-title">
+                  <FireOutlined className="icon" /> 热门商品
                 </div>
-              </Card>
-            </Col>
-            <Col xs={24} sm={8}>
-              <Card>
-                <div className="text-center">
-                  <div style={{ fontSize: 40, marginBottom: 16 }}>🤖</div>
-                  <Title level={4}>AI描述生成</Title>
-                  <Paragraph>
-                    上传图片，AI自动生成物品描述，发布更轻松
-                  </Paragraph>
+                <div className="hot-module-content">
+                  {hotItems.map(item => (
+                    <div className="hot-item" key={item.id}>
+                      <img src={item.image} alt={item.name} className="hot-item-image" />
+                      <div className="hot-item-info">
+                        <div className="hot-item-title">{item.name}</div>
+                        <div className="hot-item-price">¥{item.price}</div>
+                      </div>
+                    </div>
+                  ))}
                 </div>
-              </Card>
-            </Col>
-            <Col xs={24} sm={8}>
-              <Card>
-                <div className="text-center">
-                  <div style={{ fontSize: 40, marginBottom: 16 }}>🔒</div>
-                  <Title level={4}>安全交易</Title>
-                  <Paragraph>
-                    校园内交易，安全便捷，支持线下当面交易
-                  </Paragraph>
+              </div>
+                
+              {/* 平台公告 */}
+              <div className="platform-notice">
+                <div className="platform-notice-title">
+                  <NotificationOutlined className="icon" /> 平台公告
                 </div>
-              </Card>
-            </Col>
-          </Row>
-        </div>
-
-        {/* 发布物品引导 */}
-        <div style={{ marginBottom: 48, background: '#f0f7ff', padding: 24, borderRadius: 8 }}>
-          <Row gutter={24} align="middle">
-            <Col xs={24} md={16}>
-              <Title level={3}>有闲置物品要出售？</Title>
-              <Paragraph>
-                快来发布你的闲置物品，让它们找到新的主人！
-                只需简单几步，填写物品信息，上传图片，即可发布。
-              </Paragraph>
-            </Col>
-            <Col xs={24} md={8} className="text-center">
-              <Button 
-                type="primary" 
-                size="large" 
-                icon={<ShoppingOutlined />}
-                onClick={() => navigate('/items/publish')}
-              >
-                立即发布物品
-              </Button>
-            </Col>
-          </Row>
-        </div>
+                <div className="platform-notice-content">
+                  <ul className="announcement-list">
+                    {announcements.map(item => (
+                      <li className="platform-notice-item" key={item.id}>
+                        <InfoCircleOutlined className="icon" />
+                        <a href={item.link}>{item.title}</a>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </Col>
+        </Row>
       </div>
     </>
   );
