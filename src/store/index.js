@@ -7,6 +7,7 @@ import orderReducer from './slices/orderSlice';
 import categoryReducer from './slices/categorySlice';
 import favoriteReducer from './slices/favoriteSlice';
 import escrowReducer from './slices/escrowSlice';
+import { combineReducers } from 'redux';
 
 // 配置持久化存储
 const persistConfig = {
@@ -15,14 +16,14 @@ const persistConfig = {
   whitelist: ['auth'], // 只持久化auth状态
 };
 
-const rootReducer = {
+const rootReducer = combineReducers({
   auth: authReducer,
   item: itemReducer,
   order: orderReducer,
   category: categoryReducer,
   favorite: favoriteReducer,
   escrow: escrowReducer,
-};
+});
 
 const persistedReducer = persistReducer(persistConfig, rootReducer);
 
