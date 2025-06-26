@@ -148,13 +148,13 @@ const ItemDetail = () => {
             <Image.PreviewGroup>
               <div style={{ textAlign: 'center' }}>
                 <Image
-                  src={item.images?.split(',')[0] || 'https://via.placeholder.com/400x400?text=No+Image'}
+                  src={item.images && item.images.length > 0 ? item.images[0] : 'https://via.placeholder.com/400x400?text=No+Image'}
                   alt={item.name}
                   style={{ maxWidth: '100%', maxHeight: '400px', objectFit: 'contain' }}
                 />
               </div>
               <div style={{ display: 'flex', justifyContent: 'center', marginTop: 10 }}>
-                {item.images?.split(',').slice(1).map((img, index) => (
+                {item.images && item.images.slice(1).map((img, index) => (
                   <Image
                     key={index}
                     src={img}
