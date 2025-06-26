@@ -1,10 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { Form, Input, Button, Select, InputNumber, Upload, Card, Typography, message, Row, Col, Spin } from 'antd';
 import { UploadOutlined, RollbackOutlined, SaveOutlined, SyncOutlined } from '@ant-design/icons';
 import { createItem, uploadItemImage, generateItemDescription } from '../store/actions/itemActions';
 import { selectCategories } from '../store/slices/categorySlice';
+import { fetchCategories } from '../store/actions/categoryActions';
 
 const { Title } = Typography;
 const { Option } = Select;
@@ -20,6 +21,10 @@ const ItemPublish = () => {
   const [uploading, setUploading] = useState(false);
   const [imageUrls, setImageUrls] = useState([]);
   const [generatingDescription, setGeneratingDescription] = useState(false);
+  
+  useEffect(() => {
+    dispatch(fetchCategories());
+  }, [dispatch]);
   
   // 处理图片上传
   const handleUpload = async (file) => {
