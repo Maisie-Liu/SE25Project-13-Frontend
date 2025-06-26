@@ -17,7 +17,9 @@ import {
   Statistic,
   Badge,
   List,
-  Space
+  Space,
+  message,
+  Select
 } from 'antd';
 import { 
   SearchOutlined, 
@@ -51,7 +53,8 @@ import {
   selectRecommendedItems, 
   selectItemLoading 
 } from '../store/slices/itemSlice';
-import { formatPrice } from '../utils/helpers';
+import { formatPrice, DEFAULT_IMAGE } from '../utils/helpers';
+import axios from '../utils/axios';
 
 const { Title, Text, Paragraph } = Typography;
 const { Search } = Input;
@@ -77,6 +80,11 @@ const Home = () => {
   const btnRef = useRef(null);
   const [hotItems, setHotItems] = useState([]);
   const [hotItemsLoading, setHotItemsLoading] = useState(false);
+  const [statistics, setStatistics] = useState({
+    totalItems: 0,
+    completedOrders: 0,
+    totalUsers: 0
+  });
 
   // 加载最新物品和推荐物品
   useEffect(() => {
@@ -96,6 +104,26 @@ const Home = () => {
     };
     loadHotItems();
   }, [dispatch]);
+
+  // 获取平台统计数据
+  useEffect(() => {
+    const fetchStatistics = async () => {
+      try {
+        console.log('开始获取统计数据...');
+        const response = await axios.get('/items/statistics');
+        console.log('获取到的统计数据:', response.data);
+        if (response.data.code === 200) {
+          setStatistics(response.data.data);
+          console.log('设置后的统计数据:', response.data.data);
+        }
+      } catch (error) {
+        console.error('获取平台统计数据失败:', error);
+        message.error('获取平台统计数据失败');
+      }
+    };
+
+    fetchStatistics();
+  }, []);
 
   // 处理点击外部关闭菜单
   useEffect(() => {
@@ -148,15 +176,15 @@ const Home = () => {
             <div style={{ position: 'relative' }}>
               <img
                 alt={item.name}
-                src={item.images && item.images.length > 0 ? item.images[0] : 'https://via.placeholder.com/300x200?text=No+Image'}
-                className="item-image"
+                src={item.images && item.images.length > 0 ? item.images[0] : DEFAULT_IMAGE}
+                style={{ objectFit: 'cover', height: '200px' }}
               />
               {item.isNew && (
                 <div className="custom-badge">新上架</div>
               )}
             </div>
           }
-          bodyStyle={{ padding: '12px' }}
+          styles={{ body: { padding: '12px' } }}
         >
           <Meta
             title={
@@ -235,32 +263,26 @@ const Home = () => {
                   <div className="category-menu-item">
                     <MobileOutlined className="icon" />
                     <span className="text">电子产品</span>
-                    <span className="count">28</span>
                   </div>
                   <div className="category-menu-item">
                     <BookOutlined className="icon" />
                     <span className="text">图书教材</span>
-                    <span className="count">45</span>
                   </div>
                   <div className="category-menu-item">
                     <HomeOutlined className="icon" />
                     <span className="text">生活用品</span>
-                    <span className="count">36</span>
                   </div>
                   <div className="category-menu-item">
                     <SkinOutlined className="icon" />
                     <span className="text">服装鞋帽</span>
-                    <span className="count">19</span>
                   </div>
                   <div className="category-menu-item">
                     <TrophyOutlined className="icon" />
                     <span className="text">运动户外</span>
-                    <span className="count">24</span>
                   </div>
                   <div className="category-menu-item">
                     <GiftOutlined className="icon" />
                     <span className="text">其他物品</span>
-                    <span className="count">31</span>
                   </div>
                 </div>
               </div>
@@ -333,30 +355,37 @@ const Home = () => {
 
             {/* 平台数据统计 */}
             <div className="feature-block" style={{ marginTop: '24px' }}>
+              <Title level={4} style={{ marginBottom: '16px' }}>平台数据</Title>
               <Row gutter={[16, 16]}>
                 <Col xs={24} sm={8}>
-                  <Statistic 
-                    title={<Text strong style={{ fontSize: '16px' }}>平台商品</Text>} 
-                    value={1234} 
-                    prefix={<ShoppingOutlined />} 
-                    valueStyle={{ color: 'var(--primary-color)', fontWeight: 'bold' }}
-                  />
+                  <Card>
+                    <Statistic 
+                      title={<Text strong style={{ fontSize: '16px' }}>平台商品</Text>} 
+                      value={statistics.totalItems} 
+                      prefix={<ShoppingOutlined />} 
+                      valueStyle={{ color: 'var(--primary-color)', fontWeight: 'bold' }}
+                    />
+                  </Card>
                 </Col>
                 <Col xs={24} sm={8}>
-                  <Statistic 
-                    title={<Text strong style={{ fontSize: '16px' }}>成交订单</Text>} 
-                    value={568} 
-                    prefix={<SafetyCertificateOutlined />} 
-                    valueStyle={{ color: 'var(--primary-color)', fontWeight: 'bold' }}
-                  />
+                  <Card>
+                    <Statistic 
+                      title={<Text strong style={{ fontSize: '16px' }}>成交订单</Text>} 
+                      value={statistics.completedOrders} 
+                      prefix={<SafetyCertificateOutlined />} 
+                      valueStyle={{ color: 'var(--primary-color)', fontWeight: 'bold' }}
+                    />
+                  </Card>
                 </Col>
                 <Col xs={24} sm={8}>
-                  <Statistic 
-                    title={<Text strong style={{ fontSize: '16px' }}>注册用户</Text>} 
-                    value={986} 
-                    prefix={<UserOutlined />} 
-                    valueStyle={{ color: 'var(--primary-color)', fontWeight: 'bold' }}
-                  />
+                  <Card>
+                    <Statistic 
+                      title={<Text strong style={{ fontSize: '16px' }}>注册用户</Text>} 
+                      value={statistics.totalUsers} 
+                      prefix={<UserOutlined />} 
+                      valueStyle={{ color: 'var(--primary-color)', fontWeight: 'bold' }}
+                    />
+                  </Card>
                 </Col>
               </Row>
             </div>

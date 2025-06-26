@@ -51,6 +51,7 @@ import {
 import { fetchItems } from '../store/actions/itemActions';
 import { selectItems, selectItemLoading, selectItemPagination } from '../store/slices/itemSlice';
 import queryString from 'query-string';
+import { formatPrice, DEFAULT_IMAGE } from '../utils/helpers';
 
 const { Title, Text, Paragraph } = Typography;
 const { Meta } = Card;
@@ -217,8 +218,8 @@ const ItemList = () => {
               <div style={{ position: 'relative' }}>
                 <img
                   alt={item.name}
-                  src={item.images && item.images.length > 0 ? item.images[0] : 'https://via.placeholder.com/300x200?text=No+Image'}
-                  className="item-image"
+                  src={item.images && item.images.length > 0 ? item.images[0] : DEFAULT_IMAGE}
+                  style={{ objectFit: 'cover', height: '200px' }}
                 />
                 {item.isNew && (
                   <div className="custom-badge">新上架</div>
@@ -235,7 +236,7 @@ const ItemList = () => {
                 </div>
               </div>
             }
-            bodyStyle={{ padding: '12px' }}
+            styles={{ body: { padding: '12px' } }}
           >
             {viewMode === 'grid' ? (
               <Meta
@@ -305,8 +306,8 @@ const ItemList = () => {
             <div style={{ position: 'relative' }}>
               <img
                 alt={item.name}
-                src={item.images && item.images.length > 0 ? item.images[0] : 'https://via.placeholder.com/300x200?text=No+Image'}
-                className="item-image"
+                src={item.images && item.images.length > 0 ? item.images[0] : DEFAULT_IMAGE}
+                style={{ objectFit: 'cover', height: '200px' }}
               />
               {item.isNew && (
                 <div className="custom-badge">新上架</div>
@@ -323,7 +324,7 @@ const ItemList = () => {
               </div>
             </div>
           }
-          bodyStyle={{ padding: '12px' }}
+          styles={{ body: { padding: '12px' } }}
         >
           {viewMode === 'grid' ? (
             <Meta
