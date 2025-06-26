@@ -11,15 +11,13 @@ import './index.css';
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
-  <React.StrictMode>
-    <Provider store={store}>
-      <PersistGate loading={null} persistor={persistor}>
-        <BrowserRouter>
-          <ConfigProvider locale={zhCN}>
-            <App />
-          </ConfigProvider>
-        </BrowserRouter>
-      </PersistGate>
-    </Provider>
-  </React.StrictMode>
+  <Provider store={store}>
+    <PersistGate loading={null} persistor={persistor}>
+      <BrowserRouter>
+        <ConfigProvider locale={zhCN}>
+          <App />
+        </ConfigProvider>
+      </BrowserRouter>
+    </PersistGate>
+  </Provider>
 ); 

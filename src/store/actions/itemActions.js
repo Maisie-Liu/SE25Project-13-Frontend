@@ -1,5 +1,7 @@
 import { createAsyncThunk } from '@reduxjs/toolkit';
 import axios from '../../utils/axios';
+import { message } from 'antd';
+import { setLoading, setItems, setTotalItems, setRecommendedItems } from '../slices/itemSlice';
 
 // 获取物品列表
 export const fetchItems = createAsyncThunk(
@@ -291,4 +293,22 @@ export const updateItemStatus = createAsyncThunk(
       );
     }
   }
-); 
+);
+
+// 获取热门商品
+export const fetchHotItems = () => async () => {
+  try {
+    const response = await axios.get('/items/search', {
+      params: {
+        pageSize: 5,
+        sort: 'popularity',
+        order: 'desc',
+        status: 1
+      }
+    });
+    return response.data.data.list || [];
+  } catch (error) {
+    message.error('获取热门商品失败');
+    return [];
+  }
+}; 

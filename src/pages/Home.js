@@ -16,7 +16,8 @@ import {
   Avatar,
   Statistic,
   Badge,
-  List
+  List,
+  Space
 } from 'antd';
 import { 
   SearchOutlined, 
@@ -44,25 +45,17 @@ import {
   MessageOutlined,
   CloseOutlined
 } from '@ant-design/icons';
-import { fetchItems, fetchRecommendedItems } from '../store/actions/itemActions';
+import { fetchItems, fetchRecommendedItems, fetchHotItems } from '../store/actions/itemActions';
 import { 
   selectItems, 
   selectRecommendedItems, 
   selectItemLoading 
 } from '../store/slices/itemSlice';
+import { formatPrice } from '../utils/helpers';
 
 const { Title, Text, Paragraph } = Typography;
 const { Search } = Input;
 const { Meta } = Card;
-
-// 模拟热门商品数据
-const hotItems = [
-  { id: 1, name: 'MacBook Pro 2021款', price: 8999, image: 'https://via.placeholder.com/60x60?text=MacBook' },
-  { id: 2, name: '全新AirPods Pro', price: 1299, image: 'https://via.placeholder.com/60x60?text=AirPods' },
-  { id: 3, name: '二手自行车，九成新', price: 399, image: 'https://via.placeholder.com/60x60?text=Bike' },
-  { id: 4, name: '高等数学教材，配习题集', price: 45, image: 'https://via.placeholder.com/60x60?text=Book' },
-  { id: 5, name: 'Nike运动鞋，43码', price: 299, image: 'https://via.placeholder.com/60x60?text=Shoes' }
-];
 
 // 模拟公告数据
 const announcements = [
@@ -82,11 +75,26 @@ const Home = () => {
   const [showPublishMenu, setShowPublishMenu] = useState(false);
   const menuRef = useRef(null);
   const btnRef = useRef(null);
+  const [hotItems, setHotItems] = useState([]);
+  const [hotItemsLoading, setHotItemsLoading] = useState(false);
 
   // 加载最新物品和推荐物品
   useEffect(() => {
     dispatch(fetchItems({ pageNum: 1, pageSize: 8, sort: 'createTime', order: 'desc' }));
     dispatch(fetchRecommendedItems({ pageNum: 1, pageSize: 4 }));
+  }, [dispatch]);
+
+  useEffect(() => {
+    const loadHotItems = async () => {
+      setHotItemsLoading(true);
+      try {
+        const items = await dispatch(fetchHotItems());
+        setHotItems(items);
+      } finally {
+        setHotItemsLoading(false);
+      }
+    };
+    loadHotItems();
   }, [dispatch]);
 
   // 处理点击外部关闭菜单
@@ -406,22 +414,49 @@ const Home = () => {
           <Col xs={24} md={0} lg={5} xl={5} style={{ display: { xs: 'none', lg: 'block' } }}>
             <div className="right-sidebar-fixed">
               {/* 热门商品 */}
-              <div className="hot-module">
-                <div className="hot-module-title">
-                  <FireOutlined className="icon" /> 热门商品
-                </div>
-                <div className="hot-module-content">
-                  {hotItems.map(item => (
-                    <div className="hot-item" key={item.id}>
-                      <img src={item.image} alt={item.name} className="hot-item-image" />
-                      <div className="hot-item-info">
-                        <div className="hot-item-title">{item.name}</div>
-                        <div className="hot-item-price">¥{item.price}</div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
+              <Card title="热门商品">
+                {hotItemsLoading ? (
+                  <div style={{ textAlign: 'center', padding: '20px 0' }}>
+                    <Spin />
+                  </div>
+                ) : (
+                  <List
+                    itemLayout="horizontal"
+                    dataSource={hotItems}
+                    locale={{ emptyText: '暂无热门商品' }}
+                    renderItem={item => (
+                      <List.Item 
+                        key={item.id}
+                        onClick={() => navigate(`/items/${item.id}`)}
+                        style={{ cursor: 'pointer' }}
+                      >
+                        <List.Item.Meta
+                          avatar={
+                            <img 
+                              src={item.images?.[0] || 'https://via.placeholder.com/60x60?text=No+Image'} 
+                              alt={item.name}
+                              style={{ width: 60, height: 60, objectFit: 'cover' }}
+                            />
+                          }
+                          title={item.name}
+                          description={
+                            <Space>
+                              <Tag color="red">￥{formatPrice(item.price)}</Tag>
+                              <Tag color="blue">热度: {item.popularity || 0}</Tag>
+                              {item.condition === 1 && <Tag color="green">全新</Tag>}
+                              {item.condition > 1 && item.condition <= 3 && <Tag color="cyan">9成新</Tag>}
+                              {item.condition > 3 && item.condition <= 5 && <Tag color="blue">7成新</Tag>}
+                              {item.condition > 5 && item.condition <= 7 && <Tag color="orange">5成新</Tag>}
+                              {item.condition > 7 && item.condition <= 9 && <Tag color="red">3成新</Tag>}
+                              {item.condition > 9 && <Tag color="red">破旧</Tag>}
+                            </Space>
+                          }
+                        />
+                      </List.Item>
+                    )}
+                  />
+                )}
+              </Card>
                 
               {/* 平台公告 */}
               <div className="platform-notice">
