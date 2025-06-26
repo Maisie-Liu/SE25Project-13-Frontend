@@ -55,7 +55,35 @@ import queryString from 'query-string';
 const { Title, Text, Paragraph } = Typography;
 const { Meta } = Card;
 const { Search } = Input;
-const { Option } = Select;
+
+// 分类选项
+const categoryOptions = [
+  { value: '', label: '全部分类' },
+  { value: '1', label: '电子产品', icon: <MobileOutlined /> },
+  { value: '2', label: '图书教材', icon: <BookOutlined /> },
+  { value: '3', label: '生活用品', icon: <HomeOutlined /> },
+  { value: '4', label: '服装鞋帽', icon: <SkinOutlined /> },
+  { value: '5', label: '运动户外', icon: <TrophyOutlined /> },
+  { value: '6', label: '其他物品', icon: <GiftOutlined /> }
+];
+
+// 排序选项
+const sortOptions = [
+  { value: 'createTime-desc', label: '最新发布' },
+  { value: 'price-asc', label: '价格升序' },
+  { value: 'price-desc', label: '价格降序' },
+  { value: 'views-desc', label: '浏览最多' },
+  { value: 'favorites-desc', label: '收藏最多' }
+];
+
+// 校区选项
+const campusOptions = [
+  { value: '', label: '全部校区' },
+  { value: 'main', label: '主校区' },
+  { value: 'south', label: '南校区' },
+  { value: 'north', label: '北校区' },
+  { value: 'east', label: '东校区' }
+];
 
 // 自定义BarsOutlined组件
 const BarsOutlined = () => (
@@ -90,36 +118,21 @@ const ItemList = () => {
   // 处理搜索和筛选参数变化
   useEffect(() => {
     const params = {
-      page: currentPage,
-      size: pageSize,
+      pageNum: currentPage,
+      pageSize: pageSize,
       sort: sortBy,
-      order: sortOrder
+      order: sortOrder,
+      keyword: keyword || undefined,
+      category: category || undefined,
+      condition: condition !== 'all' ? condition : undefined,
+      minPrice: priceRange[0] > 0 ? priceRange[0] : undefined,
+      maxPrice: priceRange[1] < 5000 ? priceRange[1] : undefined,
+      campus: campus || undefined,
+      hasImage: hasImage || undefined
     };
     
-    if (keyword) {
-      params.keyword = keyword;
-    }
-    
-    if (category) {
-      params.category = category;
-    }
-
-    if (condition !== 'all') {
-      params.condition = condition;
-    }
-
-    if (priceRange[0] > 0 || priceRange[1] < 5000) {
-      params.minPrice = priceRange[0];
-      params.maxPrice = priceRange[1];
-    }
-    
-    if (campus) {
-      params.campus = campus;
-    }
-
-    if (hasImage) {
-      params.hasImage = hasImage;
-    }
+    // 移除所有 undefined 的参数
+    Object.keys(params).forEach(key => params[key] === undefined && delete params[key]);
     
     dispatch(fetchItems(params));
   }, [dispatch, currentPage, pageSize, keyword, category, sortBy, sortOrder, condition, priceRange, campus, hasImage]);
@@ -193,12 +206,99 @@ const ItemList = () => {
     setCurrentPage(1);
   };
 
-  const renderItemCard = (item) => (
-    <Col xs={viewMode === 'grid' ? 12 : 24} sm={viewMode === 'grid' ? 8 : 24} md={viewMode === 'grid' ? 6 : 24} lg={viewMode === 'grid' ? 6 : 24} key={item.id} style={{ marginBottom: 16 }}>
-      <Link to={`/items/${item.id}`}>
+  const renderItemCard = (item, index) => (
+    <Col xs={viewMode === 'grid' ? 12 : 24} sm={viewMode === 'grid' ? 8 : 24} md={viewMode === 'grid' ? 6 : 24} lg={viewMode === 'grid' ? 6 : 24} key={item.id || `item-${index}`} style={{ marginBottom: 16 }}>
+      {item.id ? (
+        <Link to={`/items/${item.id}`}>
+          <Card
+            hoverable
+            className="item-card"
+            cover={
+              <div style={{ position: 'relative' }}>
+                <img
+                  alt={item.name}
+                  src={item.images && item.images.length > 0 ? item.images[0] : 'https://via.placeholder.com/300x200?text=No+Image'}
+                  className="item-image"
+                />
+                {item.isNew && (
+                  <div className="custom-badge">新上架</div>
+                )}
+                <div style={{ position: 'absolute', bottom: 8, right: 8 }}>
+                  <Space>
+                    <Badge count={item.viewCount || 0} overflowCount={999} style={{ backgroundColor: 'rgba(0, 0, 0, 0.45)' }}>
+                      <EyeOutlined style={{ color: '#fff', fontSize: 16 }} />
+                    </Badge>
+                    <Badge count={item.favoriteCount || 0} overflowCount={999} style={{ backgroundColor: 'rgba(0, 0, 0, 0.45)' }}>
+                      <HeartOutlined style={{ color: '#fff', fontSize: 16 }} />
+                    </Badge>
+                  </Space>
+                </div>
+              </div>
+            }
+            bodyStyle={{ padding: '12px' }}
+          >
+            {viewMode === 'grid' ? (
+              <Meta
+                title={
+                  <div className="text-ellipsis" style={{ fontWeight: 'bold' }}>{item.name}</div>
+                }
+                description={
+                  <>
+                    <div className="price-tag">{item.price ? `¥${item.price}` : '面议'}</div>
+                    <div className="flex-between" style={{ marginTop: '8px' }}>
+                      <div>
+                        {item.condition === 1 && <Tag color="green">全新</Tag>}
+                        {item.condition > 1 && item.condition <= 3 && <Tag color="cyan">几乎全新</Tag>}
+                        {item.condition > 3 && item.condition <= 6 && <Tag color="blue">轻度使用</Tag>}
+                        {item.condition > 6 && item.condition <= 9 && <Tag color="orange">中度使用</Tag>}
+                        {item.condition === 10 && <Tag color="red">重度使用</Tag>}
+                      </div>
+                      <div className="flex" style={{ alignItems: 'center' }}>
+                        <Avatar size="small" icon={<UserOutlined />} src={item.userAvatar} className="user-avatar" />
+                        <span style={{ marginLeft: '4px', fontSize: '12px', color: 'var(--lighter-text-color)' }}>
+                          {item.username}
+                        </span>
+                      </div>
+                    </div>
+                  </>
+                }
+              />
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column' }}>
+                <div className="flex-between">
+                  <Title level={5} className="text-ellipsis" style={{ marginBottom: '8px', flex: 1 }}>{item.name}</Title>
+                  <div className="price-tag" style={{ marginLeft: '8px' }}>{item.price ? `¥${item.price}` : '面议'}</div>
+                </div>
+                <div style={{ marginBottom: '8px' }}>
+                  {item.condition === 1 && <Tag color="green">全新</Tag>}
+                  {item.condition > 1 && item.condition <= 3 && <Tag color="cyan">几乎全新</Tag>}
+                  {item.condition > 3 && item.condition <= 6 && <Tag color="blue">轻度使用</Tag>}
+                  {item.condition > 6 && item.condition <= 9 && <Tag color="orange">中度使用</Tag>}
+                  {item.condition === 10 && <Tag color="red">重度使用</Tag>}
+                  <Tag color="var(--primary-color)">{getCategoryName(item.category)}</Tag>
+                </div>
+                <Paragraph ellipsis={{ rows: 2 }} style={{ color: 'var(--light-text-color)', marginBottom: '8px' }}>
+                  {item.description || '暂无描述'}
+                </Paragraph>
+                <div className="flex-between">
+                  <div className="flex" style={{ alignItems: 'center' }}>
+                    <Avatar size="small" icon={<UserOutlined />} src={item.userAvatar} className="user-avatar" />
+                    <span style={{ marginLeft: '4px', fontSize: '12px', color: 'var(--lighter-text-color)' }}>
+                      {item.username}
+                    </span>
+                  </div>
+                  <Text style={{ fontSize: '12px', color: 'var(--lighter-text-color)' }}>
+                    发布于 {formatDate(item.createTime)}
+                  </Text>
+                </div>
+              </div>
+            )}
+          </Card>
+        </Link>
+      ) : (
         <Card
-          hoverable
           className="item-card"
+          hoverable
           cover={
             <div style={{ position: 'relative' }}>
               <img
@@ -280,7 +380,7 @@ const ItemList = () => {
             </div>
           )}
         </Card>
-      </Link>
+      )}
     </Col>
   );
 
@@ -307,120 +407,136 @@ const ItemList = () => {
   return (
     <div className="container">
       <div className="item-list-container">
-        {/* 顶部搜索和筛选区 */}
-        <div className="item-detail-container" style={{ marginBottom: '24px', padding: '20px', background: '#fff', borderRadius: '16px', boxShadow: 'var(--card-shadow)' }}>
+        <div className="item-list-header" style={{ marginBottom: 24 }}>
           <Row gutter={[16, 16]} align="middle">
-            <Col xs={24} md={10}>
-              <div style={{ paddingRight: '15px' }}>
-                <Search
-                  placeholder="搜索物品..."
-                  value={keyword}
-                  onChange={(e) => setKeyword(e.target.value)}
-                  onSearch={handleSearch}
-                  enterButton={<><SearchOutlined /> 搜索</>}
-                  className="search-box"
-                  style={{ maxWidth: '100%' }}
-                />
-              </div>
+            <Col xs={24} sm={24} md={12} lg={8}>
+              <Search
+                placeholder="搜索商品名称、描述..."
+                allowClear
+                enterButton={<SearchOutlined />}
+                size="large"
+                value={keyword}
+                onChange={(e) => setKeyword(e.target.value)}
+                onSearch={handleSearch}
+              />
             </Col>
-            <Col xs={12} md={7}>
-              <Space size="middle">
-                <FilterOutlined style={{ color: 'var(--primary-color)', fontSize: '16px' }} />
-                <Text strong>分类:</Text>
-                <Select
-                  value={category || ''}
-                  onChange={handleCategoryChange}
-                  style={{ width: 140 }}
-                  size="middle"
-                  dropdownStyle={{ borderRadius: '8px' }}
+            
+            <Col xs={24} sm={24} md={12} lg={16}>
+              <Space wrap>
+                <Space>
+                  <Select
+                    value={category}
+                    onChange={handleCategoryChange}
+                    placeholder="选择分类"
+                    style={{ width: 120 }}
+                    options={categoryOptions}
+                    styles={{
+                      popup: {
+                        root: {
+                          borderRadius: '8px'
+                        }
+                      }
+                    }}
+                  />
+                </Space>
+                
+                <Space>
+                  <Select
+                    value={sortBy + '-' + sortOrder}
+                    onChange={handleSortChange}
+                    style={{ width: 140 }}
+                    options={sortOptions}
+                    styles={{
+                      popup: {
+                        root: {
+                          borderRadius: '8px'
+                        }
+                      }
+                    }}
+                  />
+                </Space>
+
+                <Space>
+                  <Select
+                    value={campus}
+                    onChange={(value) => setCampus(value)}
+                    placeholder="选择校区"
+                    style={{ width: 120 }}
+                    options={campusOptions}
+                    styles={{
+                      popup: {
+                        root: {
+                          borderRadius: '8px'
+                        }
+                      }
+                    }}
+                  />
+                </Space>
+
+                <Button
+                  icon={<FilterOutlined />}
+                  onClick={toggleFilters}
+                  type={showFilters ? 'primary' : 'default'}
                 >
-                  <Option value="">全部</Option>
-                  <Option value="1">电子产品</Option>
-                  <Option value="2">图书教材</Option>
-                  <Option value="3">生活用品</Option>
-                  <Option value="4">服装鞋帽</Option>
-                  <Option value="5">运动户外</Option>
-                  <Option value="6">其他物品</Option>
-                </Select>
-              </Space>
-            </Col>
-            <Col xs={12} md={7}>
-              <Space size="middle">
-                <SortAscendingOutlined style={{ color: 'var(--primary-color)', fontSize: '16px' }} />
-                <Text strong>排序:</Text>
-                <Select
-                  defaultValue="createTime-desc"
-                  onChange={handleSortChange}
-                  style={{ width: 140 }}
-                  size="middle"
-                  dropdownStyle={{ borderRadius: '8px' }}
-                >
-                  <Option value="createTime-desc">最新发布</Option>
-                  <Option value="price-asc">价格从低到高</Option>
-                  <Option value="price-desc">价格从高到低</Option>
-                  <Option value="viewCount-desc">浏览量最多</Option>
-                </Select>
+                  筛选
+                </Button>
+
+                <Radio.Group value={viewMode} onChange={handleViewModeChange} buttonStyle="solid">
+                  <Radio.Button value="grid"><AppstoreOutlined /></Radio.Button>
+                  <Radio.Button value="list"><BarsOutlined /></Radio.Button>
+                </Radio.Group>
               </Space>
             </Col>
           </Row>
-          
-          <Divider style={{ margin: '16px 0' }} />
-          
-          <div className="flex-between">
-            <Button 
-              type={showFilters ? "primary" : "default"} 
-              icon={<FilterOutlined />} 
-              onClick={toggleFilters}
-              style={{ borderRadius: '20px' }}
-            >
-              高级筛选
-            </Button>
-            
-            <Radio.Group value={viewMode} onChange={handleViewModeChange} buttonStyle="solid">
-              <Tooltip title="网格视图">
-                <Radio.Button value="grid"><AppstoreOutlined /></Radio.Button>
-              </Tooltip>
-              <Tooltip title="列表视图">
-                <Radio.Button value="list"><BarsOutlined /></Radio.Button>
-              </Tooltip>
-            </Radio.Group>
-          </div>
-          
+
           {showFilters && (
-            <div style={{ marginTop: '16px', padding: '16px', background: 'var(--background-color)', borderRadius: '8px' }}>
-              <Row gutter={[24, 16]}>
-                <Col xs={24} md={12}>
-                  <div>
-                    <Text strong>价格范围:</Text>
-                    <Slider
-                      range
-                      min={0}
-                      max={5000}
-                      step={100}
-                      value={priceRange}
-                      onChange={handlePriceRangeChange}
-                      tipFormatter={value => `¥${value}`}
-                    />
-                    <div className="flex-between">
-                      <Text>¥{priceRange[0]}</Text>
-                      <Text>¥{priceRange[1]}</Text>
-                    </div>
-                  </div>
+            <div className="advanced-filters" style={{ marginTop: 16, padding: 16, background: '#f5f5f5', borderRadius: 8 }}>
+              <Row gutter={[16, 16]}>
+                <Col span={24}>
+                  <Title level={5}>价格区间</Title>
+                  <Slider
+                    range
+                    value={priceRange}
+                    onChange={handlePriceRangeChange}
+                    min={0}
+                    max={5000}
+                    marks={{
+                      0: '¥0',
+                      1000: '¥1000',
+                      2000: '¥2000',
+                      3000: '¥3000',
+                      4000: '¥4000',
+                      5000: '¥5000'
+                    }}
+                  />
                 </Col>
-                <Col xs={24} md={12}>
-                  <div>
-                    <Text strong>物品状态:</Text>
-                    <div style={{ marginTop: '8px' }}>
-                      <Radio.Group value={condition} onChange={handleConditionChange}>
-                        <Radio value="all">全部</Radio>
-                        <Radio value="1">全新</Radio>
-                        <Radio value="2-3">几乎全新</Radio>
-                        <Radio value="4-6">轻度使用</Radio>
-                        <Radio value="7-9">中度使用</Radio>
-                        <Radio value="10">重度使用</Radio>
-                      </Radio.Group>
-                    </div>
-                  </div>
+                
+                <Col span={24}>
+                  <Title level={5}>商品成色</Title>
+                  <Radio.Group value={condition} onChange={handleConditionChange}>
+                    <Radio.Button value="all">全部</Radio.Button>
+                    <Radio.Button value="new">全新</Radio.Button>
+                    <Radio.Button value="like_new">几乎全新</Radio.Button>
+                    <Radio.Button value="good">状况良好</Radio.Button>
+                    <Radio.Button value="acceptable">可接受</Radio.Button>
+                  </Radio.Group>
+                </Col>
+
+                <Col span={24}>
+                  <Checkbox checked={hasImage} onChange={(e) => setHasImage(e.target.checked)}>
+                    只看有图片的商品
+                  </Checkbox>
+                </Col>
+
+                <Col span={24}>
+                  <Space>
+                    <Button type="primary" onClick={applyAdvancedFilter}>
+                      应用筛选
+                    </Button>
+                    <Button onClick={resetAdvancedFilter}>
+                      重置
+                    </Button>
+                  </Space>
                 </Col>
               </Row>
             </div>
@@ -447,7 +563,7 @@ const ItemList = () => {
         ) : items.length > 0 ? (
           <>
             <Row gutter={[16, 16]}>
-              {items.map((item, index) => renderItemCard({...item, isNew: index < 3}))}
+              {items.map((item, index) => renderItemCard({...item, isNew: index < 3}, index))}
             </Row>
             
             <div style={{ textAlign: 'center', marginTop: 24 }}>

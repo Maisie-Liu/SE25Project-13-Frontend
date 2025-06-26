@@ -52,24 +52,64 @@ const Header = () => {
     navigate('/login');
   };
 
-  // 用户下拉菜单
-  const userMenu = (
-    <Menu>
-      <Menu.Item key="profile" onClick={() => navigate('/profile')}>
-        <UserOutlined /> 个人中心
-      </Menu.Item>
-      <Menu.Item key="myItems" onClick={() => navigate('/my/items')}>
-        <ShoppingOutlined /> 我的物品
-      </Menu.Item>
-      <Menu.Item key="myOrders" onClick={() => navigate('/my/orders')}>
-        <ShoppingCartOutlined /> 我的订单
-      </Menu.Item>
-      <Menu.Divider />
-      <Menu.Item key="logout" onClick={handleLogout}>
-        <LogoutOutlined /> 退出登录
-      </Menu.Item>
-    </Menu>
-  );
+  // 用户下拉菜单项
+  const userMenuItems = [
+    {
+      key: 'profile',
+      icon: <UserOutlined />,
+      label: '个人中心',
+      onClick: () => navigate('/profile')
+    },
+    {
+      key: 'myItems',
+      icon: <ShoppingOutlined />,
+      label: '我的物品',
+      onClick: () => navigate('/my/items')
+    },
+    {
+      key: 'myOrders',
+      icon: <ShoppingCartOutlined />,
+      label: '我的订单',
+      onClick: () => navigate('/my/orders')
+    },
+    {
+      type: 'divider'
+    },
+    {
+      key: 'logout',
+      icon: <LogoutOutlined />,
+      label: '退出登录',
+      onClick: handleLogout
+    }
+  ];
+
+  // 主菜单项
+  const mainMenuItems = [
+    {
+      key: 'home',
+      icon: <HomeOutlined />,
+      label: '首页',
+      onClick: () => navigate('/')
+    },
+    {
+      key: 'items',
+      icon: <AppstoreOutlined />,
+      label: '全部物品',
+      onClick: () => navigate('/items')
+    },
+    {
+      key: 'publish',
+      icon: <ShoppingOutlined />,
+      label: '发布物品',
+      onClick: () => navigate('/items/publish')
+    },
+    {
+      key: 'help',
+      icon: <QuestionCircleOutlined />,
+      label: '帮助中心',
+      onClick: () => navigate('/help')
+    }
+  ];
 
   return (
     <div className="header-wrapper">
@@ -77,13 +117,7 @@ const Header = () => {
         <div className="container" style={{ display: 'flex', alignItems: 'center', height: '100%', padding: '0 4px' }}>
           <div className="logo" style={{ marginRight: '24px' }}>
             <Link to="/" style={{ display: 'flex', alignItems: 'center' }}>
-              <img 
-                src="/logo.png" 
-                alt="校园二手" 
-                style={{ height: '38px', marginRight: '12px' }}
-                onError={(e) => {e.target.style.display = 'none'}}
-              />
-              <span className="logo-text">校园二手</span>
+              <span className="logo-text" style={{ fontSize: '20px', fontWeight: 'bold', color: '#fff' }}>校园二手</span>
             </Link>
           </div>
           
@@ -110,20 +144,13 @@ const Header = () => {
             </div>
           </div>
           
-          <Menu mode="horizontal" theme="dark" className="main-menu" style={{ flex: 1, background: 'transparent', border: 'none', justifyContent: 'flex-end' }}>
-            <Menu.Item key="home" icon={<HomeOutlined />} onClick={() => navigate('/')}>
-              首页
-            </Menu.Item>
-            <Menu.Item key="items" icon={<AppstoreOutlined />} onClick={() => navigate('/items')}>
-              全部物品
-            </Menu.Item>
-            <Menu.Item key="publish" icon={<ShoppingOutlined />} onClick={() => navigate('/items/publish')}>
-              发布物品
-            </Menu.Item>
-            <Menu.Item key="help" icon={<QuestionCircleOutlined />} onClick={() => navigate('/help')}>
-              帮助中心
-            </Menu.Item>
-          </Menu>
+          <Menu 
+            mode="horizontal" 
+            theme="dark" 
+            items={mainMenuItems}
+            className="main-menu" 
+            style={{ flex: 1, background: 'transparent', border: 'none', justifyContent: 'flex-end' }}
+          />
           
           <div className="header-actions">
             <Space size="large">
@@ -156,7 +183,7 @@ const Header = () => {
                       onClick={() => navigate('/favorites')}
                     />
                   </Badge>
-                  <Dropdown overlay={userMenu} placement="bottomRight" arrow>
+                  <Dropdown menu={{ items: userMenuItems }} placement="bottomRight" arrow>
                     <div className="user-avatar-container" style={{ cursor: 'pointer' }}>
                       <Avatar 
                         src={user?.avatar} 

@@ -1,12 +1,26 @@
 import { createAsyncThunk } from '@reduxjs/toolkit';
-import axios from 'axios';
+import axios from '../../utils/axios';
 
 // 获取物品列表
 export const fetchItems = createAsyncThunk(
   'item/fetchItems',
-  async ({ pageNum = 1, pageSize = 10, sort = 'createTime', order = 'desc' }, { rejectWithValue }) => {
+  async ({ pageNum = 1, pageSize = 10, sort = 'createTime', order = 'desc', keyword, category, condition, minPrice, maxPrice, campus, hasImage }, { rejectWithValue }) => {
     try {
-      const response = await axios.get(`/items?pageNum=${pageNum}&pageSize=${pageSize}&sort=${sort}&order=${order}`);
+      const response = await axios.get(`/items/search`, {
+        params: {
+          pageNum,
+          pageSize,
+          sort,
+          order,
+          keyword,
+          categoryId: category,
+          condition,
+          minPrice,
+          maxPrice,
+          campus,
+          hasImage
+        }
+      });
       return response.data.data;
     } catch (error) {
       return rejectWithValue(
@@ -34,14 +48,9 @@ export const fetchItemById = createAsyncThunk(
 // 创建物品
 export const createItem = createAsyncThunk(
   'item/createItem',
-  async (itemData, { getState, rejectWithValue }) => {
+  async (itemData, { rejectWithValue }) => {
     try {
-      const { token } = getState().auth;
-      const response = await axios.post('/items', itemData, {
-        headers: {
-          Authorization: `Bearer ${token}`
-        }
-      });
+      const response = await axios.post('/items', itemData);
       return response.data.data;
     } catch (error) {
       return rejectWithValue(
@@ -54,14 +63,9 @@ export const createItem = createAsyncThunk(
 // 更新物品
 export const updateItem = createAsyncThunk(
   'item/updateItem',
-  async ({ id, itemData }, { getState, rejectWithValue }) => {
+  async ({ id, itemData }, { rejectWithValue }) => {
     try {
-      const { token } = getState().auth;
-      const response = await axios.put(`/items/${id}`, itemData, {
-        headers: {
-          Authorization: `Bearer ${token}`
-        }
-      });
+      const response = await axios.put(`/items/${id}`, itemData);
       return response.data.data;
     } catch (error) {
       return rejectWithValue(
@@ -74,14 +78,9 @@ export const updateItem = createAsyncThunk(
 // 删除物品
 export const deleteItem = createAsyncThunk(
   'item/deleteItem',
-  async (id, { getState, rejectWithValue }) => {
+  async (id, { rejectWithValue }) => {
     try {
-      const { token } = getState().auth;
-      const response = await axios.delete(`/items/${id}`, {
-        headers: {
-          Authorization: `Bearer ${token}`
-        }
-      });
+      const response = await axios.delete(`/items/${id}`);
       return response.data.data;
     } catch (error) {
       return rejectWithValue(
@@ -94,14 +93,9 @@ export const deleteItem = createAsyncThunk(
 // 上架物品
 export const publishItem = createAsyncThunk(
   'item/publishItem',
-  async (id, { getState, rejectWithValue }) => {
+  async (id, { rejectWithValue }) => {
     try {
-      const { token } = getState().auth;
-      const response = await axios.put(`/items/${id}/publish`, {}, {
-        headers: {
-          Authorization: `Bearer ${token}`
-        }
-      });
+      const response = await axios.put(`/items/${id}/publish`);
       return response.data.data;
     } catch (error) {
       return rejectWithValue(
@@ -114,14 +108,9 @@ export const publishItem = createAsyncThunk(
 // 下架物品
 export const unpublishItem = createAsyncThunk(
   'item/unpublishItem',
-  async (id, { getState, rejectWithValue }) => {
+  async (id, { rejectWithValue }) => {
     try {
-      const { token } = getState().auth;
-      const response = await axios.put(`/items/${id}/unpublish`, {}, {
-        headers: {
-          Authorization: `Bearer ${token}`
-        }
-      });
+      const response = await axios.put(`/items/${id}/unpublish`);
       return response.data.data;
     } catch (error) {
       return rejectWithValue(
@@ -134,12 +123,12 @@ export const unpublishItem = createAsyncThunk(
 // 获取用户物品列表
 export const fetchUserItems = createAsyncThunk(
   'item/fetchUserItems',
-  async ({ userId, pageNum = 1, pageSize = 10 }, { getState, rejectWithValue }) => {
+  async ({ userId, pageNum = 1, pageSize = 10 }, { rejectWithValue }) => {
     try {
-      const { token } = getState().auth;
-      const response = await axios.get(`/items/user/${userId}?pageNum=${pageNum}&pageSize=${pageSize}`, {
-        headers: {
-          Authorization: `Bearer ${token}`
+      const response = await axios.get(`/items/user/${userId}`, {
+        params: {
+          pageNum,
+          pageSize
         }
       });
       return response.data.data;
@@ -156,7 +145,12 @@ export const fetchCategoryItems = createAsyncThunk(
   'item/fetchCategoryItems',
   async ({ categoryId, pageNum = 1, pageSize = 10 }, { rejectWithValue }) => {
     try {
-      const response = await axios.get(`/items/category/${categoryId}?pageNum=${pageNum}&pageSize=${pageSize}`);
+      const response = await axios.get(`/items/category/${categoryId}`, {
+        params: {
+          pageNum,
+          pageSize
+        }
+      });
       return response.data.data;
     } catch (error) {
       return rejectWithValue(
@@ -171,14 +165,19 @@ export const searchItems = createAsyncThunk(
   'item/searchItems',
   async ({ keyword, categoryId, minPrice, maxPrice, condition, pageNum = 1, pageSize = 10, sort = 'createTime', order = 'desc' }, { rejectWithValue }) => {
     try {
-      let url = `/items/search?pageNum=${pageNum}&pageSize=${pageSize}&sort=${sort}&order=${order}`;
-      if (keyword) url += `&keyword=${encodeURIComponent(keyword)}`;
-      if (categoryId) url += `&categoryId=${categoryId}`;
-      if (minPrice) url += `&minPrice=${minPrice}`;
-      if (maxPrice) url += `&maxPrice=${maxPrice}`;
-      if (condition) url += `&condition=${condition}`;
-
-      const response = await axios.get(url);
+      const response = await axios.get('/items/search', {
+        params: {
+          keyword,
+          categoryId,
+          minPrice,
+          maxPrice,
+          condition,
+          pageNum,
+          pageSize,
+          sort,
+          order
+        }
+      });
       return response.data.data;
     } catch (error) {
       return rejectWithValue(
@@ -191,13 +190,11 @@ export const searchItems = createAsyncThunk(
 // 上传物品图片
 export const uploadItemImage = createAsyncThunk(
   'item/uploadItemImage',
-  async (formData, { getState, rejectWithValue }) => {
+  async (formData, { rejectWithValue }) => {
     try {
-      const { token } = getState().auth;
       const response = await axios.post('/items/upload-image', formData, {
         headers: {
-          'Content-Type': 'multipart/form-data',
-          Authorization: `Bearer ${token}`
+          'Content-Type': 'multipart/form-data'
         }
       });
       return response.data.data;
@@ -212,14 +209,9 @@ export const uploadItemImage = createAsyncThunk(
 // 生成物品描述
 export const generateItemDescription = createAsyncThunk(
   'item/generateItemDescription',
-  async (imageUrl, { getState, rejectWithValue }) => {
+  async (imageUrl, { rejectWithValue }) => {
     try {
-      const { token } = getState().auth;
-      const response = await axios.post('/items/generate-description', { imageUrl }, {
-        headers: {
-          Authorization: `Bearer ${token}`
-        }
-      });
+      const response = await axios.post('/items/generate-description', { imageUrl });
       return response.data.data;
     } catch (error) {
       return rejectWithValue(
@@ -234,7 +226,12 @@ export const fetchRecommendedItems = createAsyncThunk(
   'item/fetchRecommendedItems',
   async ({ pageNum = 1, pageSize = 10 }, { rejectWithValue }) => {
     try {
-      const response = await axios.get(`/items/recommended?pageNum=${pageNum}&pageSize=${pageSize}`);
+      const response = await axios.get('/items/recommended', {
+        params: {
+          pageNum,
+          pageSize
+        }
+      });
       return response.data.data;
     } catch (error) {
       return rejectWithValue(
@@ -249,11 +246,11 @@ export const fetchMyItems = createAsyncThunk(
   'item/fetchMyItems',
   async ({ pageNum = 1, pageSize = 10 }, { getState, rejectWithValue }) => {
     try {
-      const { token } = getState().auth;
       const { currentUser } = getState().auth;
-      const response = await axios.get(`/items/user/${currentUser.id}?pageNum=${pageNum}&pageSize=${pageSize}`, {
-        headers: {
-          Authorization: `Bearer ${token}`
+      const response = await axios.get(`/items/user/${currentUser.id}`, {
+        params: {
+          pageNum,
+          pageSize
         }
       });
       return response.data.data;
@@ -268,9 +265,8 @@ export const fetchMyItems = createAsyncThunk(
 // 更新物品状态
 export const updateItemStatus = createAsyncThunk(
   'item/updateItemStatus',
-  async ({ id, status }, { getState, rejectWithValue }) => {
+  async ({ id, status }, { rejectWithValue }) => {
     try {
-      const { token } = getState().auth;
       let endpoint = '';
       
       switch (status) {
@@ -287,11 +283,7 @@ export const updateItemStatus = createAsyncThunk(
           endpoint = `/items/${id}/status`;
       }
       
-      const response = await axios.put(endpoint, { status }, {
-        headers: {
-          Authorization: `Bearer ${token}`
-        }
-      });
+      const response = await axios.put(endpoint, { status });
       return response.data.data;
     } catch (error) {
       return rejectWithValue(
