@@ -38,9 +38,8 @@ const UserProfile = () => {
         phone: user.phone,
         bio: user.bio,
       });
-      
-      if (user.avatar) {
-        setAvatarUrl(user.avatar);
+      if (user.avatarUrl) {
+        setAvatarUrl(user.avatarUrl);
       }
     }
   }, [user, profileForm]);
@@ -48,9 +47,8 @@ const UserProfile = () => {
   const handleProfileUpdate = (values) => {
     const updatedProfile = {
       ...values,
-      avatar: avatarUrl || user.avatar,
+      avatarUrl: avatarUrl || user.avatarUrl,
     };
-    
     dispatch(updateUserProfile(updatedProfile))
       .then(() => {
         message.success('个人资料更新成功');
@@ -81,8 +79,8 @@ const UserProfile = () => {
 
   const handleAvatarUpload = (info) => {
     if (info.file.status === 'done') {
-      if (info.file.response && info.file.response.url) {
-        setAvatarUrl(info.file.response.url);
+      if (info.file.response) {
+        setAvatarUrl(info.file.response);
         message.success('头像上传成功');
       } else {
         message.error('头像上传失败');
@@ -106,13 +104,13 @@ const UserProfile = () => {
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: 24 }}>
               <Avatar 
                 size={100} 
-                src={avatarUrl || user.avatar} 
+                src={avatarUrl || user.avatarUrl} 
                 icon={<UserOutlined />} 
                 style={{ marginBottom: 16 }}
               />
               <Upload
                 name="avatar"
-                action="/api/users/avatar"
+                action="/api/image/upload"
                 showUploadList={false}
                 onChange={handleAvatarUpload}
                 headers={{

@@ -105,13 +105,15 @@ export const uploadAvatar = createAsyncThunk(
   async (formData, { getState, rejectWithValue }) => {
     try {
       const { token } = getState().auth;
-      const response = await axios.post('/users/avatar', formData, {
+      const response = await axios.post('/image/upload', formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
           Authorization: `Bearer ${token}`
         }
       });
-      return response.data.data;
+      const imageId = response.data;
+      const imageUrl = `/api/image/${imageId}`;
+      return imageUrl;
     } catch (error) {
       return rejectWithValue(
         error.response?.data?.message || '上传头像失败'

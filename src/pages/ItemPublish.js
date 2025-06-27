@@ -32,10 +32,10 @@ const ItemPublish = () => {
     try {
       const formData = new FormData();
       formData.append('file', file);
-      const result = await dispatch(uploadItemImage(formData)).unwrap();
-      setImageUrls([...imageUrls, result]);
+      const imageUrl = await dispatch(uploadItemImage(formData)).unwrap();
+      setImageUrls([...imageUrls, imageUrl]);
       message.success('图片上传成功');
-      return result;
+      return imageUrl;
     } catch (error) {
       message.error('图片上传失败: ' + error);
     } finally {
@@ -73,7 +73,7 @@ const ItemPublish = () => {
     // 准备提交数据
     const itemData = {
       ...values,
-      images: imageUrls.join(',')
+      imageUrls // 直接传递图片URL数组
     };
     
     try {
