@@ -51,6 +51,7 @@ import {
 import { fetchItems } from '../store/actions/itemActions';
 import { selectItems, selectItemLoading, selectItemPagination } from '../store/slices/itemSlice';
 import queryString from 'query-string';
+import AuthImage from '../components/AuthImage';
 
 const { Title, Text, Paragraph } = Typography;
 const { Meta } = Card;
@@ -215,9 +216,9 @@ const ItemList = () => {
             className="item-card"
             cover={
               <div style={{ position: 'relative' }}>
-                <img
+                <AuthImage
                   alt={item.name}
-                  src={item.images && item.images.length > 0 ? item.images[0] : 'https://via.placeholder.com/300x200?text=No+Image'}
+                  src={item.images && item.images.length > 0 ? item.images[0] : undefined}
                   className="item-image"
                 />
                 {item.isNew && (
@@ -301,9 +302,9 @@ const ItemList = () => {
           hoverable
           cover={
             <div style={{ position: 'relative' }}>
-              <img
+              <AuthImage
                 alt={item.name}
-                src={item.images && item.images.length > 0 ? item.images[0] : 'https://via.placeholder.com/300x200?text=No+Image'}
+                src={item.images && item.images.length > 0 ? item.images[0] : undefined}
                 className="item-image"
               />
               {item.isNew && (
