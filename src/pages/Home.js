@@ -16,7 +16,10 @@ import {
   Avatar,
   Statistic,
   Badge,
-  List
+  List,
+  Space,
+  message,
+  Select
 } from 'antd';
 import { 
   SearchOutlined, 
@@ -44,25 +47,18 @@ import {
   MessageOutlined,
   CloseOutlined
 } from '@ant-design/icons';
-import { fetchItems, fetchRecommendedItems } from '../store/actions/itemActions';
+import { fetchItems, fetchRecommendedItems, fetchHotItems } from '../store/actions/itemActions';
 import { 
   selectItems, 
   selectRecommendedItems, 
   selectItemLoading 
 } from '../store/slices/itemSlice';
+import { formatPrice, DEFAULT_IMAGE } from '../utils/helpers';
+import axios from '../utils/axios';
 
 const { Title, Text, Paragraph } = Typography;
 const { Search } = Input;
 const { Meta } = Card;
-
-// 模拟热门商品数据
-const hotItems = [
-  { id: 1, name: 'MacBook Pro 2021款', price: 8999, image: 'https://via.placeholder.com/60x60?text=MacBook' },
-  { id: 2, name: '全新AirPods Pro', price: 1299, image: 'https://via.placeholder.com/60x60?text=AirPods' },
-  { id: 3, name: '二手自行车，九成新', price: 399, image: 'https://via.placeholder.com/60x60?text=Bike' },
-  { id: 4, name: '高等数学教材，配习题集', price: 45, image: 'https://via.placeholder.com/60x60?text=Book' },
-  { id: 5, name: 'Nike运动鞋，43码', price: 299, image: 'https://via.placeholder.com/60x60?text=Shoes' }
-];
 
 // 模拟公告数据
 const announcements = [
@@ -82,12 +78,52 @@ const Home = () => {
   const [showPublishMenu, setShowPublishMenu] = useState(false);
   const menuRef = useRef(null);
   const btnRef = useRef(null);
+  const [hotItems, setHotItems] = useState([]);
+  const [hotItemsLoading, setHotItemsLoading] = useState(false);
+  const [statistics, setStatistics] = useState({
+    totalItems: 0,
+    completedOrders: 0,
+    totalUsers: 0
+  });
 
   // 加载最新物品和推荐物品
   useEffect(() => {
     dispatch(fetchItems({ pageNum: 1, pageSize: 8, sort: 'createTime', order: 'desc' }));
     dispatch(fetchRecommendedItems({ pageNum: 1, pageSize: 4 }));
   }, [dispatch]);
+
+  useEffect(() => {
+    const loadHotItems = async () => {
+      setHotItemsLoading(true);
+      try {
+        const items = await dispatch(fetchHotItems());
+        setHotItems(items);
+      } finally {
+        setHotItemsLoading(false);
+      }
+    };
+    loadHotItems();
+  }, [dispatch]);
+
+  // 获取平台统计数据
+  useEffect(() => {
+    const fetchStatistics = async () => {
+      try {
+        console.log('开始获取统计数据...');
+        const response = await axios.get('/items/statistics');
+        console.log('获取到的统计数据:', response.data);
+        if (response.data.code === 200) {
+          setStatistics(response.data.data);
+          console.log('设置后的统计数据:', response.data.data);
+        }
+      } catch (error) {
+        console.error('获取平台统计数据失败:', error);
+        message.error('获取平台统计数据失败');
+      }
+    };
+
+    fetchStatistics();
+  }, []);
 
   // 处理点击外部关闭菜单
   useEffect(() => {
@@ -140,15 +176,15 @@ const Home = () => {
             <div style={{ position: 'relative' }}>
               <img
                 alt={item.name}
-                src={item.images && item.images.length > 0 ? item.images[0] : 'https://via.placeholder.com/300x200?text=No+Image'}
-                className="item-image"
+                src={item.images && item.images.length > 0 ? item.images[0] : DEFAULT_IMAGE}
+                style={{ objectFit: 'cover', height: '200px' }}
               />
               {item.isNew && (
                 <div className="custom-badge">新上架</div>
               )}
             </div>
           }
-          bodyStyle={{ padding: '12px' }}
+          styles={{ body: { padding: '12px' } }}
         >
           <Meta
             title={
@@ -227,32 +263,26 @@ const Home = () => {
                   <div className="category-menu-item">
                     <MobileOutlined className="icon" />
                     <span className="text">电子产品</span>
-                    <span className="count">28</span>
                   </div>
                   <div className="category-menu-item">
                     <BookOutlined className="icon" />
                     <span className="text">图书教材</span>
-                    <span className="count">45</span>
                   </div>
                   <div className="category-menu-item">
                     <HomeOutlined className="icon" />
                     <span className="text">生活用品</span>
-                    <span className="count">36</span>
                   </div>
                   <div className="category-menu-item">
                     <SkinOutlined className="icon" />
                     <span className="text">服装鞋帽</span>
-                    <span className="count">19</span>
                   </div>
                   <div className="category-menu-item">
                     <TrophyOutlined className="icon" />
                     <span className="text">运动户外</span>
-                    <span className="count">24</span>
                   </div>
                   <div className="category-menu-item">
                     <GiftOutlined className="icon" />
                     <span className="text">其他物品</span>
-                    <span className="count">31</span>
                   </div>
                 </div>
               </div>
@@ -325,30 +355,37 @@ const Home = () => {
 
             {/* 平台数据统计 */}
             <div className="feature-block" style={{ marginTop: '24px' }}>
+              <Title level={4} style={{ marginBottom: '16px' }}>平台数据</Title>
               <Row gutter={[16, 16]}>
                 <Col xs={24} sm={8}>
-                  <Statistic 
-                    title={<Text strong style={{ fontSize: '16px' }}>平台商品</Text>} 
-                    value={1234} 
-                    prefix={<ShoppingOutlined />} 
-                    valueStyle={{ color: 'var(--primary-color)', fontWeight: 'bold' }}
-                  />
+                  <Card>
+                    <Statistic 
+                      title={<Text strong style={{ fontSize: '16px' }}>平台商品</Text>} 
+                      value={statistics.totalItems} 
+                      prefix={<ShoppingOutlined />} 
+                      valueStyle={{ color: 'var(--primary-color)', fontWeight: 'bold' }}
+                    />
+                  </Card>
                 </Col>
                 <Col xs={24} sm={8}>
-                  <Statistic 
-                    title={<Text strong style={{ fontSize: '16px' }}>成交订单</Text>} 
-                    value={568} 
-                    prefix={<SafetyCertificateOutlined />} 
-                    valueStyle={{ color: 'var(--primary-color)', fontWeight: 'bold' }}
-                  />
+                  <Card>
+                    <Statistic 
+                      title={<Text strong style={{ fontSize: '16px' }}>成交订单</Text>} 
+                      value={statistics.completedOrders} 
+                      prefix={<SafetyCertificateOutlined />} 
+                      valueStyle={{ color: 'var(--primary-color)', fontWeight: 'bold' }}
+                    />
+                  </Card>
                 </Col>
                 <Col xs={24} sm={8}>
-                  <Statistic 
-                    title={<Text strong style={{ fontSize: '16px' }}>注册用户</Text>} 
-                    value={986} 
-                    prefix={<UserOutlined />} 
-                    valueStyle={{ color: 'var(--primary-color)', fontWeight: 'bold' }}
-                  />
+                  <Card>
+                    <Statistic 
+                      title={<Text strong style={{ fontSize: '16px' }}>注册用户</Text>} 
+                      value={statistics.totalUsers} 
+                      prefix={<UserOutlined />} 
+                      valueStyle={{ color: 'var(--primary-color)', fontWeight: 'bold' }}
+                    />
+                  </Card>
                 </Col>
               </Row>
             </div>
@@ -406,22 +443,49 @@ const Home = () => {
           <Col xs={24} md={0} lg={5} xl={5} style={{ display: { xs: 'none', lg: 'block' } }}>
             <div className="right-sidebar-fixed">
               {/* 热门商品 */}
-              <div className="hot-module">
-                <div className="hot-module-title">
-                  <FireOutlined className="icon" /> 热门商品
-                </div>
-                <div className="hot-module-content">
-                  {hotItems.map(item => (
-                    <div className="hot-item" key={item.id}>
-                      <img src={item.image} alt={item.name} className="hot-item-image" />
-                      <div className="hot-item-info">
-                        <div className="hot-item-title">{item.name}</div>
-                        <div className="hot-item-price">¥{item.price}</div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
+              <Card title="热门商品">
+                {hotItemsLoading ? (
+                  <div style={{ textAlign: 'center', padding: '20px 0' }}>
+                    <Spin />
+                  </div>
+                ) : (
+                  <List
+                    itemLayout="horizontal"
+                    dataSource={hotItems}
+                    locale={{ emptyText: '暂无热门商品' }}
+                    renderItem={item => (
+                      <List.Item 
+                        key={item.id}
+                        onClick={() => navigate(`/items/${item.id}`)}
+                        style={{ cursor: 'pointer' }}
+                      >
+                        <List.Item.Meta
+                          avatar={
+                            <img 
+                              src={item.images?.[0] || 'https://via.placeholder.com/60x60?text=No+Image'} 
+                              alt={item.name}
+                              style={{ width: 60, height: 60, objectFit: 'cover' }}
+                            />
+                          }
+                          title={item.name}
+                          description={
+                            <Space>
+                              <Tag color="red">￥{formatPrice(item.price)}</Tag>
+                              <Tag color="blue">热度: {item.popularity || 0}</Tag>
+                              {item.condition === 1 && <Tag color="green">全新</Tag>}
+                              {item.condition > 1 && item.condition <= 3 && <Tag color="cyan">9成新</Tag>}
+                              {item.condition > 3 && item.condition <= 5 && <Tag color="blue">7成新</Tag>}
+                              {item.condition > 5 && item.condition <= 7 && <Tag color="orange">5成新</Tag>}
+                              {item.condition > 7 && item.condition <= 9 && <Tag color="red">3成新</Tag>}
+                              {item.condition > 9 && <Tag color="red">破旧</Tag>}
+                            </Space>
+                          }
+                        />
+                      </List.Item>
+                    )}
+                  />
+                )}
+              </Card>
                 
               {/* 平台公告 */}
               <div className="platform-notice">

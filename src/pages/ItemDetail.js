@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { 
   Row, Col, Card, Typography, Button, Image, Tag, Descriptions, Divider, 
-  Spin, message, Modal, Form, Input, Radio, Space 
+  Spin, message, Modal, Form, Input, Radio, Space, Avatar
 } from 'antd';
 import { 
   ShoppingCartOutlined, HeartOutlined, HeartFilled, 
@@ -33,13 +33,20 @@ const ItemDetail = () => {
   const [orderForm] = Form.useForm();
   const [isFavorite, setIsFavorite] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [hasLoaded, setHasLoaded] = useState(false);
   
   // 获取物品详情
   useEffect(() => {
-    if (id) {
+    if (id && !hasLoaded) {
       dispatch(fetchItemById(id));
+      setHasLoaded(true);
     }
-  }, [dispatch, id]);
+  }, [dispatch, id, hasLoaded]);
+  
+  // 重置加载状态（当 id 改变时）
+  useEffect(() => {
+    setHasLoaded(false);
+  }, [id]);
   
   // 处理预订
   const handleOrder = () => {
@@ -49,7 +56,7 @@ const ItemDetail = () => {
       return;
     }
     
-    if (item.status !== 'PUBLISHED') {
+    if (item.status !== 1) {
       message.warning('该物品当前不可预订');
       return;
     }
@@ -111,16 +118,26 @@ const ItemDetail = () => {
   
   // 渲染新旧程度标签
   const renderConditionTag = (condition) => {
-    const conditionMap = {
-      5: { color: 'green', text: '全新' },
-      4: { color: 'cyan', text: '9成新' },
-      3: { color: 'blue', text: '7成新' },
-      2: { color: 'orange', text: '5成新' },
-      1: { color: 'red', text: '3成新以下' },
-    };
-    
-    const conditionInfo = conditionMap[condition] || { color: 'default', text: '未知' };
-    return <Tag color={conditionInfo.color}>{conditionInfo.text}</Tag>;
+    if (!condition) return <Tag color="default">未知</Tag>;
+
+    if (condition === 1) return <Tag color="green">全新</Tag>;
+    if (condition <= 3) return <Tag color="cyan">9成新</Tag>;
+    if (condition <= 5) return <Tag color="blue">7成新</Tag>;
+    if (condition <= 7) return <Tag color="orange">5成新</Tag>;
+    if (condition <= 9) return <Tag color="red">3成新</Tag>;
+    return <Tag color="red">破旧</Tag>;
+  };
+  
+  // 格式化时间
+  const formatTime = (time) => {
+    if (!time) return '';
+    return new Date(time).toLocaleString('zh-CN', {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
   };
   
   if (loading) {
@@ -182,14 +199,20 @@ const ItemDetail = () => {
             <Descriptions column={1} bordered>
               <Descriptions.Item label="物品分类">{item.categoryName}</Descriptions.Item>
               <Descriptions.Item label="新旧程度">{renderConditionTag(item.condition)}</Descriptions.Item>
-              <Descriptions.Item label="库存数量">{item.quantity}</Descriptions.Item>
-              <Descriptions.Item label="发布时间">{item.createTime}</Descriptions.Item>
+              <Descriptions.Item label="浏览量">{item.popularity || 0}</Descriptions.Item>
+              <Descriptions.Item label="卖家信息">
+                <Space>
+                  <Avatar size="small" icon={<UserOutlined />} src={item.userAvatar} />
+                  {item.username}
+                </Space>
+              </Descriptions.Item>
+              <Descriptions.Item label="发布时间">{formatTime(item.createTime)}</Descriptions.Item>
               <Descriptions.Item label="物品状态">
-                {item.status === 'PUBLISHED' ? (
+                {item.status === 1 ? (
                   <Tag color="green">可预订</Tag>
-                ) : item.status === 'RESERVED' ? (
+                ) : item.status === 2 ? (
                   <Tag color="orange">已预订</Tag>
-                ) : item.status === 'SOLD' ? (
+                ) : item.status === 3 ? (
                   <Tag color="red">已售出</Tag>
                 ) : (
                   <Tag color="default">未上架</Tag>
@@ -204,7 +227,7 @@ const ItemDetail = () => {
                   size="large" 
                   icon={<ShoppingCartOutlined />}
                   onClick={handleOrder}
-                  disabled={item.status !== 'PUBLISHED'}
+                  disabled={item.status !== 1}
                 >
                   立即预订
                 </Button>
@@ -221,14 +244,8 @@ const ItemDetail = () => {
             </div>
             
             <div style={{ marginTop: 16 }}>
-              <Space>
-                <div>
-                  <UserOutlined /> 卖家: {item.sellerName}
-                </div>
-                <div>
-                  <ClockCircleOutlined /> 浏览: {item.viewCount || 0}次
-                </div>
-              </Space>
+              
+    
             </div>
           </Col>
         </Row>

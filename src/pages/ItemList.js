@@ -51,6 +51,7 @@ import {
 import { fetchItems } from '../store/actions/itemActions';
 import { selectItems, selectItemLoading, selectItemPagination } from '../store/slices/itemSlice';
 import queryString from 'query-string';
+import { formatPrice, DEFAULT_IMAGE } from '../utils/helpers';
 import AuthImage from '../components/AuthImage';
 
 const { Title, Text, Paragraph } = Typography;
@@ -218,8 +219,8 @@ const ItemList = () => {
               <div style={{ position: 'relative' }}>
                 <AuthImage
                   alt={item.name}
-                  src={item.images && item.images.length > 0 ? item.images[0] : undefined}
-                  className="item-image"
+                  src={item.images && item.images.length > 0 ? item.images[0] : DEFAULT_IMAGE}
+                  style={{ objectFit: 'cover', height: '200px' }}
                 />
                 {item.isNew && (
                   <div className="custom-badge">新上架</div>
@@ -236,7 +237,7 @@ const ItemList = () => {
                 </div>
               </div>
             }
-            bodyStyle={{ padding: '12px' }}
+            styles={{ body: { padding: '12px' } }}
           >
             {viewMode === 'grid' ? (
               <Meta
@@ -249,10 +250,11 @@ const ItemList = () => {
                     <div className="flex-between" style={{ marginTop: '8px' }}>
                       <div>
                         {item.condition === 1 && <Tag color="green">全新</Tag>}
-                        {item.condition > 1 && item.condition <= 3 && <Tag color="cyan">几乎全新</Tag>}
-                        {item.condition > 3 && item.condition <= 6 && <Tag color="blue">轻度使用</Tag>}
-                        {item.condition > 6 && item.condition <= 9 && <Tag color="orange">中度使用</Tag>}
-                        {item.condition === 10 && <Tag color="red">重度使用</Tag>}
+                        {item.condition > 1 && item.condition <= 3 && <Tag color="cyan">9成新</Tag>}
+                        {item.condition > 3 && item.condition <= 5 && <Tag color="blue">7成新</Tag>}
+                        {item.condition > 5 && item.condition <= 7 && <Tag color="orange">5成新</Tag>}
+                        {item.condition > 7 && item.condition <= 9 && <Tag color="red">3成新</Tag>}
+                        {item.condition > 9 && <Tag color="red">破旧</Tag>}
                       </div>
                       <div className="flex" style={{ alignItems: 'center' }}>
                         <Avatar size="small" icon={<UserOutlined />} src={item.userAvatar} className="user-avatar" />
@@ -272,10 +274,11 @@ const ItemList = () => {
                 </div>
                 <div style={{ marginBottom: '8px' }}>
                   {item.condition === 1 && <Tag color="green">全新</Tag>}
-                  {item.condition > 1 && item.condition <= 3 && <Tag color="cyan">几乎全新</Tag>}
-                  {item.condition > 3 && item.condition <= 6 && <Tag color="blue">轻度使用</Tag>}
-                  {item.condition > 6 && item.condition <= 9 && <Tag color="orange">中度使用</Tag>}
-                  {item.condition === 10 && <Tag color="red">重度使用</Tag>}
+                  {item.condition > 1 && item.condition <= 3 && <Tag color="cyan">9成新</Tag>}
+                  {item.condition > 3 && item.condition <= 5 && <Tag color="blue">7成新</Tag>}
+                  {item.condition > 5 && item.condition <= 7 && <Tag color="orange">5成新</Tag>}
+                  {item.condition > 7 && item.condition <= 9 && <Tag color="red">3成新</Tag>}
+                  {item.condition > 9 && <Tag color="red">破旧</Tag>}
                   <Tag color="var(--primary-color)">{getCategoryName(item.category)}</Tag>
                 </div>
                 <Paragraph ellipsis={{ rows: 2 }} style={{ color: 'var(--light-text-color)', marginBottom: '8px' }}>
@@ -304,8 +307,8 @@ const ItemList = () => {
             <div style={{ position: 'relative' }}>
               <AuthImage
                 alt={item.name}
-                src={item.images && item.images.length > 0 ? item.images[0] : undefined}
-                className="item-image"
+                src={item.images && item.images.length > 0 ? item.images[0] : DEFAULT_IMAGE}
+                style={{ objectFit: 'cover', height: '200px' }}
               />
               {item.isNew && (
                 <div className="custom-badge">新上架</div>
@@ -322,7 +325,7 @@ const ItemList = () => {
               </div>
             </div>
           }
-          bodyStyle={{ padding: '12px' }}
+          styles={{ body: { padding: '12px' } }}
         >
           {viewMode === 'grid' ? (
             <Meta
@@ -335,10 +338,11 @@ const ItemList = () => {
                   <div className="flex-between" style={{ marginTop: '8px' }}>
                     <div>
                       {item.condition === 1 && <Tag color="green">全新</Tag>}
-                      {item.condition > 1 && item.condition <= 3 && <Tag color="cyan">几乎全新</Tag>}
-                      {item.condition > 3 && item.condition <= 6 && <Tag color="blue">轻度使用</Tag>}
-                      {item.condition > 6 && item.condition <= 9 && <Tag color="orange">中度使用</Tag>}
-                      {item.condition === 10 && <Tag color="red">重度使用</Tag>}
+                      {item.condition > 1 && item.condition <= 3 && <Tag color="cyan">9成新</Tag>}
+                      {item.condition > 3 && item.condition <= 5 && <Tag color="blue">7成新</Tag>}
+                      {item.condition > 5 && item.condition <= 7 && <Tag color="orange">5成新</Tag>}
+                      {item.condition > 7 && item.condition <= 9 && <Tag color="red">3成新</Tag>}
+                      {item.condition > 9 && <Tag color="red">破旧</Tag>}
                     </div>
                     <div className="flex" style={{ alignItems: 'center' }}>
                       <Avatar size="small" icon={<UserOutlined />} src={item.userAvatar} className="user-avatar" />
@@ -358,10 +362,11 @@ const ItemList = () => {
               </div>
               <div style={{ marginBottom: '8px' }}>
                 {item.condition === 1 && <Tag color="green">全新</Tag>}
-                {item.condition > 1 && item.condition <= 3 && <Tag color="cyan">几乎全新</Tag>}
-                {item.condition > 3 && item.condition <= 6 && <Tag color="blue">轻度使用</Tag>}
-                {item.condition > 6 && item.condition <= 9 && <Tag color="orange">中度使用</Tag>}
-                {item.condition === 10 && <Tag color="red">重度使用</Tag>}
+                {item.condition > 1 && item.condition <= 3 && <Tag color="cyan">9成新</Tag>}
+                {item.condition > 3 && item.condition <= 5 && <Tag color="blue">7成新</Tag>}
+                {item.condition > 5 && item.condition <= 7 && <Tag color="orange">5成新</Tag>}
+                {item.condition > 7 && item.condition <= 9 && <Tag color="red">3成新</Tag>}
+                {item.condition > 9 && <Tag color="red">破旧</Tag>}
                 <Tag color="var(--primary-color)">{getCategoryName(item.category)}</Tag>
               </div>
               <Paragraph ellipsis={{ rows: 2 }} style={{ color: 'var(--light-text-color)', marginBottom: '8px' }}>
