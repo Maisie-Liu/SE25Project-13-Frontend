@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { store } from '../store';
+import store from "../store";
 
 // 创建axios实例
 const instance = axios.create({
@@ -17,6 +17,14 @@ instance.interceptors.request.use(
       config.headers.Authorization = `Bearer ${token}`;
     }
     
+    // 日志输出请求信息
+    console.log('[Axios Request]', {
+      url: config.url,
+      method: config.method,
+      headers: config.headers,
+      data: config.data
+    });
+    
     return config;
   },
   (error) => {
@@ -27,7 +35,12 @@ instance.interceptors.request.use(
 // 响应拦截器
 instance.interceptors.response.use(
   (response) => {
-    // 直接返回响应数据
+    // 日志输出响应信息
+    console.log('[Axios Response]', {
+      url: response.config.url,
+      status: response.status,
+      data: response.data
+    });
     return response;
   },
   (error) => {
@@ -38,6 +51,15 @@ instance.interceptors.response.use(
         // 此处可以触发登出操作
         store.dispatch({ type: 'auth/logout' });
       }
+      // 日志输出错误响应
+      console.log('[Axios Error Response]', {
+        url: error.config?.url,
+        status: error.response.status,
+        data: error.response.data
+      });
+    } else {
+      // 日志输出网络错误
+      console.log('[Axios Network Error]', error);
     }
     return Promise.reject(error);
   }
