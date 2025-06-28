@@ -15,7 +15,6 @@ import { createOrder } from '../store/actions/orderActions';
 import { addToFavorite, removeFromFavorite } from '../store/actions/favoriteActions';
 import { selectIsAuthenticated } from '../store/slices/authSlice';
 import { selectItemDetail, selectItemLoading } from '../store/slices/itemSlice';
-import AuthImage from '../components/AuthImage';
 
 const { Title, Text, Paragraph } = Typography;
 const { TextArea } = Input;
@@ -165,7 +164,7 @@ const ItemDetail = () => {
           <Col xs={24} sm={24} md={12} lg={10}>
             <Image.PreviewGroup>
               <div style={{ textAlign: 'center' }}>
-                <AuthImage
+                <img
                   src={item.images && item.images.length > 0 ? item.images[0] : undefined}
                   alt={item.name}
                   style={{ maxWidth: '100%', maxHeight: '400px', objectFit: 'contain' }}
@@ -173,7 +172,7 @@ const ItemDetail = () => {
               </div>
               <div style={{ display: 'flex', justifyContent: 'center', marginTop: 10 }}>
                 {item.images && item.images.slice(1).map((img, index) => (
-                  <AuthImage
+                  <img
                     key={index}
                     src={img}
                     alt={`${item.name}-${index+1}`}
