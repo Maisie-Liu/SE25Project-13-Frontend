@@ -19,6 +19,7 @@ const ItemPublish = () => {
   
   const [fileList, setFileList] = useState([]);
   const [uploading, setUploading] = useState(false);
+  const [imageIds, setImageIds] = useState([]);
   const [imageUrls, setImageUrls] = useState([]);
   const [generatingDescription, setGeneratingDescription] = useState(false);
   
@@ -32,10 +33,11 @@ const ItemPublish = () => {
     try {
       const formData = new FormData();
       formData.append('file', file);
-      const imageUrl = await dispatch(uploadItemImage(formData)).unwrap();
-      setImageUrls([...imageUrls, imageUrl]);
+      const imageId = await dispatch(uploadItemImage(formData)).unwrap();
+      setImageIds([...imageIds, imageId]);
+      setImageUrls([...imageUrls, imageId]); // 兼容老逻辑，imageUrls暂时存id
       message.success('图片上传成功');
-      return imageUrl;
+      return imageId;
     } catch (error) {
       message.error('图片上传失败: ' + error);
     } finally {
@@ -65,17 +67,15 @@ const ItemPublish = () => {
   
   // 提交表单
   const onFinish = async (values) => {
-    if (imageUrls.length === 0) {
+    if (imageIds.length === 0) {
       message.warning('请至少上传一张图片');
       return;
     }
-    
     // 准备提交数据
     const itemData = {
       ...values,
-      imageUrls // 直接传递图片URL数组
+      images: imageIds // 发送图片ID数组
     };
-    
     try {
       await dispatch(createItem(itemData)).unwrap();
       message.success('物品发布成功');
@@ -116,8 +116,11 @@ const ItemPublish = () => {
       const newFileList = fileList.slice();
       newFileList.splice(index, 1);
       setFileList(newFileList);
-      
-      // 同时移除对应的URL
+      // 同时移除对应的图片ID
+      const newImageIds = [...imageIds];
+      newImageIds.splice(index, 1);
+      setImageIds(newImageIds);
+      // 兼容老逻辑
       const newImageUrls = [...imageUrls];
       newImageUrls.splice(index, 1);
       setImageUrls(newImageUrls);
