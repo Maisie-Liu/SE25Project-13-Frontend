@@ -52,7 +52,6 @@ import { fetchItems } from '../store/actions/itemActions';
 import { selectItems, selectItemLoading, selectItemPagination } from '../store/slices/itemSlice';
 import queryString from 'query-string';
 import { formatPrice, DEFAULT_IMAGE } from '../utils/helpers';
-import AuthImage from '../components/AuthImage';
 
 const { Title, Text, Paragraph } = Typography;
 const { Meta } = Card;
@@ -217,7 +216,7 @@ const ItemList = () => {
             className="item-card"
             cover={
               <div style={{ position: 'relative' }}>
-                <AuthImage
+                <img
                   alt={item.name}
                   src={item.images && item.images.length > 0 ? item.images[0] : DEFAULT_IMAGE}
                   style={{ objectFit: 'cover', height: '200px' }}
@@ -305,7 +304,7 @@ const ItemList = () => {
           hoverable
           cover={
             <div style={{ position: 'relative' }}>
-              <AuthImage
+              <img
                 alt={item.name}
                 src={item.images && item.images.length > 0 ? item.images[0] : DEFAULT_IMAGE}
                 style={{ objectFit: 'cover', height: '200px' }}
