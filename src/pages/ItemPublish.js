@@ -33,9 +33,11 @@ const ItemPublish = () => {
     try {
       const formData = new FormData();
       formData.append('file', file);
-      const imageId = await dispatch(uploadItemImage(formData)).unwrap();
-      setImageIds([...imageIds, imageId]);
-      setImageUrls([...imageUrls, imageId]); // 兼容老逻辑，imageUrls暂时存id
+      const res = await dispatch(uploadItemImage(formData));
+      const imageId = res.payload?.imageId || res.payload;
+      console.log("imageId: ", imageId);
+      setImageIds(prev => [...prev, imageId]);
+      setImageUrls(prev => [...prev, imageId]); // 兼容老逻辑，imageUrls暂时存id
       message.success('图片上传成功');
       return imageId;
     } catch (error) {

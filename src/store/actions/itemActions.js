@@ -199,7 +199,7 @@ export const uploadItemImage = createAsyncThunk(
           'Content-Type': 'multipart/form-data'
         }
       });
-      return response.data.data;
+      return response.data;
     } catch (error) {
       return rejectWithValue(
         error.response?.data?.message || '上传物品图片失败'
