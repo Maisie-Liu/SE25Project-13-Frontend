@@ -22,6 +22,8 @@ import OrderManage from './pages/OrderManage';
 import EscrowPayment from './pages/EscrowPayment';
 import MyFavorites from './pages/MyFavorites';
 import TestFavorites from './pages/TestFavorites';
+import HelpCenter from './pages/HelpCenter';
+import Terms from './pages/Terms';
 import './App.css';
 
 const { Content } = Layout;
@@ -141,6 +143,8 @@ const App = () => {
                 </PrivateRoute>
               } 
             />
+            <Route path="/help" element={<HelpCenter />} />
+            <Route path="/terms" element={<Terms />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </div>
