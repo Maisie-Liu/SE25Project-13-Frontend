@@ -20,6 +20,8 @@ import UserProfile from './pages/UserProfile';
 import NotFound from './pages/NotFound';
 import OrderManage from './pages/OrderManage';
 import EscrowPayment from './pages/EscrowPayment';
+import MyFavorites from './pages/MyFavorites';
+import TestFavorites from './pages/TestFavorites';
 import './App.css';
 
 const { Content } = Layout;
@@ -92,10 +94,34 @@ const App = () => {
               } 
             />
             <Route 
+              path="/my/favorites" 
+              element={
+                <PrivateRoute>
+                  <MyFavorites />
+                </PrivateRoute>
+              } 
+            />
+            <Route 
+              path="/test/favorites" 
+              element={
+                <PrivateRoute>
+                  <TestFavorites />
+                </PrivateRoute>
+              } 
+            />
+            <Route 
               path="/orders/:id" 
               element={
                 <PrivateRoute>
                   <OrderDetail />
+                </PrivateRoute>
+              } 
+            />
+            <Route 
+              path="/orders/manage" 
+              element={
+                <PrivateRoute>
+                  <OrderManage />
                 </PrivateRoute>
               } 
             />
@@ -107,8 +133,14 @@ const App = () => {
                 </PrivateRoute>
               } 
             />
-            <Route path="/orders" element={<OrderManage />} />
-            <Route path="/escrow/:orderId" element={<EscrowPayment />} />
+            <Route 
+              path="/escrow/payment/:id" 
+              element={
+                <PrivateRoute>
+                  <EscrowPayment />
+                </PrivateRoute>
+              } 
+            />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </div>

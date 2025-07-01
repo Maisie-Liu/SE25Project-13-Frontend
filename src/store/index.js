@@ -21,7 +21,7 @@ const rootReducer = combineReducers({
   item: itemReducer,
   order: orderReducer,
   category: categoryReducer,
-  favorite: favoriteReducer,
+  favorites: favoriteReducer,
   escrow: escrowReducer,
 });
 
