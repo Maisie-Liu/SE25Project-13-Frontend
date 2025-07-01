@@ -1,5 +1,5 @@
 import { createSlice } from '@reduxjs/toolkit';
-import { fetchFavorites, addFavorite, removeFavorite, checkIsFavorite } from '../actions/favoriteActions';
+import { fetchFavorites, addFavorite, removeFavorite, checkIsFavorite, removeFavoriteByItemId } from '../actions/favoriteActions';
 
 const initialState = {
   favorites: [],
@@ -44,8 +44,10 @@ const favoriteSlice = createSlice({
         state.error = null;
       })
       .addCase(addFavorite.fulfilled, (state, action) => {
-        state.favorites.unshift(action.payload);
-        state.currentFavorite = action.payload;
+        if (action.payload) {
+          state.favorites.unshift(action.payload);
+          state.currentFavorite = action.payload;
+        }
         state.loading = false;
       })
       .addCase(addFavorite.rejected, (state, action) => {
@@ -59,13 +61,45 @@ const favoriteSlice = createSlice({
         state.error = null;
       })
       .addCase(removeFavorite.fulfilled, (state, action) => {
-        state.favorites = state.favorites.filter(favorite => favorite.id !== action.payload);
-        if (state.currentFavorite && state.currentFavorite.id === action.payload) {
-          state.currentFavorite = null;
+        const favoriteId = action.payload;
+        if (favoriteId) {
+          state.favorites = state.favorites.filter(favorite => favorite.id !== favoriteId);
+          if (state.currentFavorite && state.currentFavorite.id === favoriteId) {
+            state.currentFavorite = null;
+          }
         }
         state.loading = false;
       })
       .addCase(removeFavorite.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      })
+      
+      // 根据物品ID移除收藏
+      .addCase(removeFavoriteByItemId.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(removeFavoriteByItemId.fulfilled, (state, action) => {
+        const itemId = action.payload;
+        if (itemId) {
+          state.favorites = state.favorites.filter(favorite => {
+            const favoriteItemId = favorite.item ? favorite.item.id : favorite.id;
+            return favoriteItemId !== itemId;
+          });
+          if (state.currentFavorite) {
+            const currentItemId = state.currentFavorite.item ? 
+              state.currentFavorite.item.id : 
+              state.currentFavorite.itemId || state.currentFavorite.id;
+            
+            if (currentItemId === itemId) {
+              state.currentFavorite = null;
+            }
+          }
+        }
+        state.loading = false;
+      })
+      .addCase(removeFavoriteByItemId.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
       })
@@ -76,12 +110,13 @@ const favoriteSlice = createSlice({
         state.error = null;
       })
       .addCase(checkIsFavorite.fulfilled, (state, action) => {
-        state.currentFavorite = action.payload;
+        state.currentFavorite = action.payload || null;
         state.loading = false;
       })
       .addCase(checkIsFavorite.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
+        state.currentFavorite = null;
       });
   }
 });

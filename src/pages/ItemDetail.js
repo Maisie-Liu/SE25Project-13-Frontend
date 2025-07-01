@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { 
@@ -12,7 +12,7 @@ import {
 } from '@ant-design/icons';
 import { fetchItemById } from '../store/actions/itemActions';
 import { createOrder } from '../store/actions/orderActions';
-import { addFavorite, removeFavorite, checkIsFavorite } from '../store/actions/favoriteActions';
+import { addFavorite, removeFavorite, checkIsFavorite, removeFavoriteByItemId } from '../store/actions/favoriteActions';
 import { selectIsAuthenticated } from '../store/slices/authSlice';
 import { selectItemDetail, selectItemLoading } from '../store/slices/itemSlice';
 import { selectCurrentFavorite } from '../store/slices/favoriteSlice';
@@ -37,6 +37,7 @@ const ItemDetail = () => {
   const [orderForm] = Form.useForm();
   const [isFavorite, setIsFavorite] = useState(false);
   const [hasLoaded, setHasLoaded] = useState(false);
+  const [favoriteLoading, setFavoriteLoading] = useState(false);
   
   // 评论相关
   const [comments, setComments] = useState([]);
@@ -55,6 +56,7 @@ const ItemDetail = () => {
       
       // 检查是否已收藏
       if (isAuthenticated) {
+        setFavoriteLoading(true);
         dispatch(checkIsFavorite(id))
           .unwrap()
           .then(response => {
@@ -62,6 +64,9 @@ const ItemDetail = () => {
           })
           .catch(() => {
             setIsFavorite(false);
+          })
+          .finally(() => {
+            setFavoriteLoading(false);
           });
       }
       
@@ -139,28 +144,47 @@ const ItemDetail = () => {
     }
   };
   
-  // 处理收藏
-  const handleToggleFavorite = async () => {
+  // 使用useCallback包装处理收藏函数，防止重复渲染
+  const handleToggleFavorite = useCallback(async () => {
     if (!isAuthenticated) {
       message.warning('请先登录');
       navigate('/login');
       return;
     }
     
+    // 如果正在加载中，防止重复点击
+    if (favoriteLoading) {
+      return;
+    }
+    
+    setFavoriteLoading(true);
+    
     try {
-      if (isFavorite && currentFavorite) {
-        await dispatch(removeFavorite(currentFavorite.id)).unwrap();
+      if (isFavorite) {
+        if (currentFavorite && currentFavorite.id) {
+          await dispatch(removeFavorite(currentFavorite.id)).unwrap();
+        } else {
+          // 如果没有收藏ID，则使用物品ID删除收藏
+          await dispatch(removeFavoriteByItemId(id)).unwrap();
+        }
         setIsFavorite(false);
         message.success('取消收藏成功');
       } else {
-        await dispatch(addFavorite(id)).unwrap();
+        const result = await dispatch(addFavorite(id)).unwrap();
+        // 确保更新currentFavorite
+        if (result) {
+          // 重新获取收藏状态
+          await dispatch(checkIsFavorite(id)).unwrap();
+        }
         setIsFavorite(true);
         message.success('收藏成功');
       }
     } catch (error) {
       message.error('操作失败: ' + (error || ''));
+    } finally {
+      setFavoriteLoading(false);
     }
-  };
+  }, [isAuthenticated, favoriteLoading, isFavorite, currentFavorite, id, dispatch, navigate]);
   
   // 渲染新旧程度标签
   const renderConditionTag = (condition) => {
@@ -342,10 +366,11 @@ const ItemDetail = () => {
                 </Button>
                 
                 <Button
-                  type={isFavorite ? "default" : "dashed"}
-                  size="large"
+                  type="text"
                   icon={isFavorite ? <HeartFilled style={{ color: '#ff4d4f' }} /> : <HeartOutlined />}
                   onClick={handleToggleFavorite}
+                  loading={favoriteLoading}
+                  disabled={favoriteLoading}
                 >
                   {isFavorite ? '已收藏' : '收藏'}
                 </Button>

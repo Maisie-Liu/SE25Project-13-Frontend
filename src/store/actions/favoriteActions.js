@@ -59,12 +59,28 @@ export const removeFavorite = createAsyncThunk(
   }
 );
 
+// 根据物品ID移除收藏
+export const removeFavoriteByItemId = createAsyncThunk(
+  'favorites/removeFavoriteByItemId',
+  async (itemId, { rejectWithValue }) => {
+    try {
+      await axios.delete(`/favorites/item/${itemId}`);
+      return itemId;
+    } catch (error) {
+      return rejectWithValue(
+        error.response?.data?.message || '移除收藏失败'
+      );
+    }
+  }
+);
+
 // 检查物品是否已收藏
 export const checkIsFavorite = createAsyncThunk(
   'favorites/checkIsFavorite',
   async (itemId, { rejectWithValue }) => {
     try {
       const response = await axios.get(`/favorites/check/${itemId}`);
+      // 返回收藏信息，如果未收藏则为null
       return response.data.data;
     } catch (error) {
       if (error.response && error.response.status === 404) {
