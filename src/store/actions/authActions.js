@@ -1,4 +1,4 @@
-import { createAsyncThunk } from '@reduxjs/toolkit';
+import {createAsyncThunk} from '@reduxjs/toolkit';
 import axios from '../../utils/axios';
 
 // 登录
@@ -61,7 +61,7 @@ export const updateUserProfile = createAsyncThunk(
   async (userData, { getState, rejectWithValue }) => {
     try {
       const { token } = getState().auth;
-      const response = await axios.put('/users/profile', userData);
+      const response = await axios.put('/auth/profile', userData);
       return response.data.data;
     } catch (error) {
       return rejectWithValue(
@@ -71,21 +71,21 @@ export const updateUserProfile = createAsyncThunk(
   }
 );
 
-// 更新用户密码
-export const updateUserPassword = createAsyncThunk(
-  'auth/updateUserPassword',
-  async (passwordData, { getState, rejectWithValue }) => {
-    try {
-      const { token } = getState().auth;
-      const response = await axios.put('/users/password', passwordData);
-      return response.data.data;
-    } catch (error) {
-      return rejectWithValue(
-        error.response?.data?.message || '更新密码失败'
-      );
-    }
-  }
-);
+// // 更新用户密码
+// export const updateUserPassword = createAsyncThunk(
+//   'auth/updateUserPassword',
+//   async (passwordData, { getState, rejectWithValue }) => {
+//     try {
+//       const { token } = getState().auth;
+//       const response = await axios.put('/users/password', passwordData);
+//       return response.data.data;
+//     } catch (error) {
+//       return rejectWithValue(
+//         error.response?.data?.message || '更新密码失败'
+//       );
+//     }
+//   }
+// );
 
 // 上传头像
 export const uploadAvatar = createAsyncThunk(
@@ -93,14 +93,12 @@ export const uploadAvatar = createAsyncThunk(
   async (formData, { getState, rejectWithValue }) => {
     try {
       const { token } = getState().auth;
-      const response = await axios.post('/image/upload', formData, {
+      const response = await axios.post('/image/upload-avatar', formData, {
         headers: {
           'Content-Type': 'multipart/form-data'
         }
       });
-      const imageId = response.data;
-      const imageUrl = `/image/${imageId}`;
-      return imageUrl;
+      return response.data;
     } catch (error) {
       return rejectWithValue(
         error.response?.data?.message || '上传头像失败'
@@ -115,7 +113,7 @@ export const changePassword = createAsyncThunk(
   async ({ oldPassword, newPassword }, { getState, rejectWithValue }) => {
     try {
       const { token } = getState().auth;
-      const response = await axios.put('/users/password', { oldPassword, newPassword });
+      const response = await axios.put('/auth/password', { oldPassword, newPassword });
       return response.data.data;
     } catch (error) {
       return rejectWithValue(

@@ -1,11 +1,12 @@
-import { createAsyncThunk } from '@reduxjs/toolkit';
+import { setCategories, setCategoryLoading, setCategoryError } from '../slices/categorySlice';
 import axios from '../../utils/axios';
 
-export const fetchCategories = createAsyncThunk('categories/fetchCategories', async (_, { rejectWithValue }) => {
+export const fetchCategories = () => async (dispatch) => {
+  dispatch(setCategoryLoading(true));
   try {
     const response = await axios.get('/category/list');
-    return response.data.data;
+    dispatch(setCategories(response.data));
   } catch (error) {
-    return rejectWithValue(error.response?.data?.message || '获取分类失败');
+    dispatch(setCategoryError(error.message || '获取分类失败'));
   }
-}); 
+};
