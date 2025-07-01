@@ -1,9 +1,9 @@
 import { createSlice } from '@reduxjs/toolkit';
-import { 
-  fetchItems, 
-  fetchItemById, 
-  createItem, 
-  updateItem, 
+import {
+  fetchItems,
+  fetchItemById,
+  createItem,
+  updateItem,
   deleteItem,
   publishItem,
   unpublishItem,
@@ -12,7 +12,7 @@ import {
   searchItems,
   uploadItemImage,
   generateItemDescription,
-  fetchRecommendedItems
+  fetchRecommendedItems, fetchMyItems
 } from '../actions/itemActions';
 
 const initialState = {
@@ -168,6 +168,26 @@ const itemSlice = createSlice({
       };
     });
     builder.addCase(fetchUserItems.rejected, (state, action) => {
+      state.loading = false;
+      state.error = action.payload || '获取用户物品列表失败';
+    });
+
+    // 获取我的物品列表
+    builder.addCase(fetchMyItems.pending, (state) => {
+      state.loading = true;
+      state.error = null;
+    });
+    builder.addCase(fetchMyItems.fulfilled, (state, action) => {
+      state.loading = false;
+      state.items = action.payload.list;
+      state.pagination = {
+        pageNum: action.payload.pageNum,
+        pageSize: action.payload.pageSize,
+        total: action.payload.total,
+        pages: action.payload.pages
+      };
+    });
+    builder.addCase(fetchMyItems.rejected, (state, action) => {
       state.loading = false;
       state.error = action.payload || '获取用户物品列表失败';
     });

@@ -248,8 +248,11 @@ export const fetchMyItems = createAsyncThunk(
   'item/fetchMyItems',
   async ({ pageNum = 1, pageSize = 10 }, { getState, rejectWithValue }) => {
     try {
-      const { currentUser } = getState().auth;
-      const response = await axios.get(`/items/user/${currentUser.id}`, {
+      const { user } = getState().auth;
+      if (!user || !user.id) {
+        throw new Error('未登录或用户信息缺失');
+      }
+      const response = await axios.get(`/items/user/${user.id}`, {
         params: {
           pageNum,
           pageSize

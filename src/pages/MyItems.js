@@ -12,10 +12,13 @@ const MyItems = () => {
   const loading = useSelector(selectItemLoading);
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
+  const user = useSelector(state => state.auth.user);
 
   useEffect(() => {
-    dispatch(fetchMyItems());
-  }, [dispatch]);
+    if (user && user.id) {
+      dispatch(fetchMyItems({ pageNum: 1, pageSize: 10 }));
+    }
+  }, [dispatch, user]);
 
   const handleDelete = (id) => {
     dispatch(deleteItem(id))
