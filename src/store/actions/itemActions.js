@@ -194,12 +194,12 @@ export const uploadItemImage = createAsyncThunk(
   'item/uploadItemImage',
   async (formData, { rejectWithValue }) => {
     try {
-      const response = await axios.post('/items/upload-image', formData, {
+      const response = await axios.post('/image/upload', formData, {
         headers: {
           'Content-Type': 'multipart/form-data'
         }
       });
-      return response.data.data;
+      return response.data;
     } catch (error) {
       return rejectWithValue(
         error.response?.data?.message || '上传物品图片失败'
