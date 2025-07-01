@@ -45,11 +45,7 @@ export const fetchCurrentUser = createAsyncThunk(
   async (_, { getState, rejectWithValue }) => {
     try {
       const { token } = getState().auth;
-      const response = await axios.get('/auth/current-user', {
-        headers: {
-          Authorization: `Bearer ${token}`
-        }
-      });
+      const response = await axios.get('/auth/current-user');
       return response.data.data;
     } catch (error) {
       return rejectWithValue(
@@ -65,11 +61,7 @@ export const updateUserProfile = createAsyncThunk(
   async (userData, { getState, rejectWithValue }) => {
     try {
       const { token } = getState().auth;
-      const response = await axios.put('/users/profile', userData, {
-        headers: {
-          Authorization: `Bearer ${token}`
-        }
-      });
+      const response = await axios.put('/users/profile', userData);
       return response.data.data;
     } catch (error) {
       return rejectWithValue(
@@ -85,11 +77,7 @@ export const updateUserPassword = createAsyncThunk(
   async (passwordData, { getState, rejectWithValue }) => {
     try {
       const { token } = getState().auth;
-      const response = await axios.put('/users/password', passwordData, {
-        headers: {
-          Authorization: `Bearer ${token}`
-        }
-      });
+      const response = await axios.put('/users/password', passwordData);
       return response.data.data;
     } catch (error) {
       return rejectWithValue(
@@ -107,12 +95,11 @@ export const uploadAvatar = createAsyncThunk(
       const { token } = getState().auth;
       const response = await axios.post('/image/upload', formData, {
         headers: {
-          'Content-Type': 'multipart/form-data',
-          Authorization: `Bearer ${token}`
+          'Content-Type': 'multipart/form-data'
         }
       });
       const imageId = response.data;
-      const imageUrl = `/api/image/${imageId}`;
+      const imageUrl = `/image/${imageId}`;
       return imageUrl;
     } catch (error) {
       return rejectWithValue(
@@ -128,11 +115,7 @@ export const changePassword = createAsyncThunk(
   async ({ oldPassword, newPassword }, { getState, rejectWithValue }) => {
     try {
       const { token } = getState().auth;
-      const response = await axios.put('/users/password', { oldPassword, newPassword }, {
-        headers: {
-          Authorization: `Bearer ${token}`
-        }
-      });
+      const response = await axios.put('/users/password', { oldPassword, newPassword });
       return response.data.data;
     } catch (error) {
       return rejectWithValue(

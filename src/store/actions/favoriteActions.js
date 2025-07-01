@@ -1,72 +1,79 @@
 import { createAsyncThunk } from '@reduxjs/toolkit';
-import axios from 'axios';
-import { 
-  setFavoriteLoading, 
-  setFavoriteError, 
-  setFavorites,
-  addFavorite,
-  removeFavorite
-} from '../slices/favoriteSlice';
+import axios from '../../utils/axios';
 
 // 获取用户收藏列表
-export const fetchUserFavorites = createAsyncThunk(
-  'favorite/fetchUserFavorites',
-  async (params, { dispatch, rejectWithValue }) => {
+export const fetchFavorites = createAsyncThunk(
+  'favorites/fetchFavorites',
+  async (params, { rejectWithValue }) => {
     try {
-      dispatch(setFavoriteLoading(true));
-      const response = await axios.get('/favorites', { params });
-      dispatch(setFavorites(response.data));
-      return response.data;
+      // 将前端的page参数转换为后端的pageNum参数
+      const backendParams = {
+        pageNum: (params.page || 0) + 1, // 后端页码从1开始
+        pageSize: params.size || 10
+      };
+      
+      const response = await axios.get('/favorites', { params: backendParams });
+      
+      // 适配后端返回的PageResponseDTO格式
+      return {
+        items: response.data.data.list || [],
+        totalItems: response.data.data.total || 0,
+        totalPages: response.data.data.pages || 0,
+        currentPage: (response.data.data.pageNum || 1) - 1 // 转换为从0开始的页码
+      };
     } catch (error) {
-      dispatch(setFavoriteError(error.response?.data?.message || '获取收藏列表失败'));
-      return rejectWithValue(error.response?.data?.message || '获取收藏列表失败');
+      return rejectWithValue(
+        error.response?.data?.message || '获取收藏列表失败'
+      );
     }
   }
 );
 
 // 添加收藏
-export const addToFavorite = createAsyncThunk(
-  'favorite/addToFavorite',
-  async (itemId, { dispatch, rejectWithValue }) => {
+export const addFavorite = createAsyncThunk(
+  'favorites/addFavorite',
+  async (itemId, { rejectWithValue }) => {
     try {
-      dispatch(setFavoriteLoading(true));
       const response = await axios.post('/favorites', { itemId });
-      dispatch(addFavorite(response.data));
-      return response.data;
+      return response.data.data;
     } catch (error) {
-      dispatch(setFavoriteError(error.response?.data?.message || '添加收藏失败'));
-      return rejectWithValue(error.response?.data?.message || '添加收藏失败');
+      return rejectWithValue(
+        error.response?.data?.message || '添加收藏失败'
+      );
     }
   }
 );
 
-// 取消收藏
-export const removeFromFavorite = createAsyncThunk(
-  'favorite/removeFromFavorite',
-  async (favoriteId, { dispatch, rejectWithValue }) => {
+// 移除收藏
+export const removeFavorite = createAsyncThunk(
+  'favorites/removeFavorite',
+  async (favoriteId, { rejectWithValue }) => {
     try {
-      dispatch(setFavoriteLoading(true));
       await axios.delete(`/favorites/${favoriteId}`);
-      dispatch(removeFavorite(favoriteId));
       return favoriteId;
     } catch (error) {
-      dispatch(setFavoriteError(error.response?.data?.message || '取消收藏失败'));
-      return rejectWithValue(error.response?.data?.message || '取消收藏失败');
+      return rejectWithValue(
+        error.response?.data?.message || '移除收藏失败'
+      );
     }
   }
 );
 
 // 检查物品是否已收藏
-export const checkFavoriteStatus = createAsyncThunk(
-  'favorite/checkFavoriteStatus',
-  async (itemId, { dispatch, rejectWithValue }) => {
+export const checkIsFavorite = createAsyncThunk(
+  'favorites/checkIsFavorite',
+  async (itemId, { rejectWithValue }) => {
     try {
-      dispatch(setFavoriteLoading(true));
       const response = await axios.get(`/favorites/check/${itemId}`);
-      return response.data;
+      return response.data.data;
     } catch (error) {
-      dispatch(setFavoriteError(error.response?.data?.message || '检查收藏状态失败'));
-      return rejectWithValue(error.response?.data?.message || '检查收藏状态失败');
+      if (error.response && error.response.status === 404) {
+        // 404表示未收藏
+        return null;
+      }
+      return rejectWithValue(
+        error.response?.data?.message || '检查收藏状态失败'
+      );
     }
   }
 ); 

@@ -73,6 +73,12 @@ const Header = () => {
       onClick: () => navigate('/my/orders')
     },
     {
+      key: 'myFavorites',
+      icon: <HeartOutlined />,
+      label: '我的收藏',
+      onClick: () => navigate('/my/favorites')
+    },
+    {
       type: 'divider'
     },
     {

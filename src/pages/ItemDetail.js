@@ -12,9 +12,13 @@ import {
 } from '@ant-design/icons';
 import { fetchItemById } from '../store/actions/itemActions';
 import { createOrder } from '../store/actions/orderActions';
-import { addToFavorite, removeFromFavorite } from '../store/actions/favoriteActions';
+import { addFavorite, removeFavorite, checkIsFavorite } from '../store/actions/favoriteActions';
 import { selectIsAuthenticated } from '../store/slices/authSlice';
 import { selectItemDetail, selectItemLoading } from '../store/slices/itemSlice';
+import { selectCurrentFavorite } from '../store/slices/favoriteSlice';
+import CommentList from '../components/comment/CommentList';
+import CommentForm from '../components/comment/CommentForm';
+import axios from '../utils/axios';
 
 const { Title, Text, Paragraph } = Typography;
 const { TextArea } = Input;
@@ -27,24 +31,67 @@ const ItemDetail = () => {
   const isAuthenticated = useSelector(selectIsAuthenticated);
   const item = useSelector(selectItemDetail);
   const loading = useSelector(selectItemLoading);
+  const currentFavorite = useSelector(selectCurrentFavorite);
   
   const [orderModalVisible, setOrderModalVisible] = useState(false);
   const [orderForm] = Form.useForm();
   const [isFavorite, setIsFavorite] = useState(false);
-  const [submitting, setSubmitting] = useState(false);
   const [hasLoaded, setHasLoaded] = useState(false);
+  
+  // 评论相关
+  const [comments, setComments] = useState([]);
+  const [commentLoading, setCommentLoading] = useState(false);
+  const [commentContent, setCommentContent] = useState('');
+  const [submitting, setSubmitting] = useState(false);
+  const [replyingId, setReplyingId] = useState(null);
+  const [replyContent, setReplyContent] = useState('');
+  const [replyingUserId, setReplyingUserId] = useState(null);
+  const [replyingUsername, setReplyingUsername] = useState('');
   
   // 获取物品详情
   useEffect(() => {
     if (id && !hasLoaded) {
       dispatch(fetchItemById(id));
+      
+      // 检查是否已收藏
+      if (isAuthenticated) {
+        dispatch(checkIsFavorite(id))
+          .unwrap()
+          .then(response => {
+            setIsFavorite(!!response);
+          })
+          .catch(() => {
+            setIsFavorite(false);
+          });
+      }
+      
       setHasLoaded(true);
     }
-  }, [dispatch, id, hasLoaded]);
+  }, [dispatch, id, hasLoaded, isAuthenticated]);
   
   // 重置加载状态（当 id 改变时）
   useEffect(() => {
     setHasLoaded(false);
+    setIsFavorite(false);
+  }, [id]);
+  
+  // 获取评论
+  const fetchComments = async () => {
+    if (!id) return;
+    setCommentLoading(true);
+    try {
+      const res = await axios.get(`/comments/items/${id}`);
+      setComments(res.data.data || []);
+    } catch (e) {
+      message.error('获取评论失败');
+    } finally {
+      setCommentLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchComments();
+    // eslint-disable-next-line
   }, [id]);
   
   // 处理预订
@@ -101,17 +148,17 @@ const ItemDetail = () => {
     }
     
     try {
-      if (isFavorite) {
-        await dispatch(removeFromFavorite(id)).unwrap();
+      if (isFavorite && currentFavorite) {
+        await dispatch(removeFavorite(currentFavorite.id)).unwrap();
         setIsFavorite(false);
         message.success('取消收藏成功');
       } else {
-        await dispatch(addToFavorite(id)).unwrap();
+        await dispatch(addFavorite(id)).unwrap();
         setIsFavorite(true);
         message.success('收藏成功');
       }
     } catch (error) {
-      message.error('操作失败: ' + error);
+      message.error('操作失败: ' + (error || ''));
     }
   };
   
@@ -137,6 +184,69 @@ const ItemDetail = () => {
       hour: '2-digit',
       minute: '2-digit'
     });
+  };
+  
+  // 发表评论
+  const handleSubmitComment = async () => {
+    if (!isAuthenticated) {
+      message.warning('请先登录');
+      navigate('/login');
+      return;
+    }
+    if (!commentContent.trim()) {
+      message.warning('评论内容不能为空');
+      return;
+    }
+    setSubmitting(true);
+    try {
+      await axios.post('/comments', {
+        content: commentContent,
+        itemId: id
+      });
+      setCommentContent('');
+      fetchComments();
+      message.success('评论成功');
+    } catch (e) {
+      message.error('评论失败');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  // 回复评论
+  const handleReply = (commentId, userId, username) => {
+    setReplyingId(commentId);
+    setReplyingUserId(userId);
+    setReplyingUsername(username);
+    setReplyContent('');
+  };
+  const handleSubmitReply = async (parentComment) => {
+    if (!isAuthenticated) {
+      message.warning('请先登录');
+      navigate('/login');
+      return;
+    }
+    if (!replyContent.trim()) {
+      message.warning('回复内容不能为空');
+      return;
+    }
+    setSubmitting(true);
+    try {
+      await axios.post('/comments', {
+        content: replyContent,
+        itemId: id,
+        parentId: parentComment.id,
+        replyUserId: parentComment.userId
+      });
+      setReplyContent('');
+      setReplyingId(null);
+      fetchComments();
+      message.success('回复成功');
+    } catch (e) {
+      message.error('回复失败');
+    } finally {
+      setSubmitting(false);
+    }
   };
   
   if (loading) {
@@ -246,6 +356,24 @@ const ItemDetail = () => {
               
     
             </div>
+            
+            {/* 评论区 */}
+            <Divider orientation="left">评论区</Divider>
+            <CommentForm
+              value={commentContent}
+              onChange={setCommentContent}
+              onSubmit={handleSubmitComment}
+              submitting={submitting && !replyingId}
+            />
+            <CommentList
+              comments={comments}
+              onReply={handleReply}
+              submitting={submitting && !!replyingId}
+              replyContent={replyContent}
+              onChangeReply={setReplyContent}
+              onSubmitReply={handleSubmitReply}
+              replyingId={replyingId}
+            />
           </Col>
         </Row>
         

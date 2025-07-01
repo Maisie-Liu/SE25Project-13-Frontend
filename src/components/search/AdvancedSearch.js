@@ -113,11 +113,11 @@ const AdvancedSearch = ({ onSearch }) => {
         </Form.Item>
         
         <Upload
-          name="file"
+          name="image"
           listType="picture-card"
-          className="avatar-uploader"
+          className="upload-list-inline"
           showUploadList={false}
-          action="/api/items/image-search" // 实际项目中应使用正确的API路径
+          action="/items/image-search" // 实际项目中应使用正确的API路径
           onChange={handleImageSearch}
           fileList={fileList}
           beforeUpload={(file) => {
