@@ -1,5 +1,6 @@
 import axios from 'axios';
 import store from "../store";
+import { logout } from '../store/actions/authActions';
 
 // 创建axios实例
 const instance = axios.create({
@@ -48,8 +49,9 @@ instance.interceptors.response.use(
       // 服务器返回错误
       if (error.response.status === 401) {
         // 未授权，可能是token过期
-        // 此处可以触发登出操作
-        store.dispatch({ type: 'auth/logout' });
+        // 触发登出操作
+        store.dispatch(logout());
+        console.log('Token已过期或无效，已自动登出');
       }
       // 日志输出错误响应
       console.log('[Axios Error Response]', {

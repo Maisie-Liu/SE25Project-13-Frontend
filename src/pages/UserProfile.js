@@ -109,13 +109,13 @@ const UserProfile = () => {
                 style={{ marginBottom: 16 }}
               />
               <Upload
-                name="avatar"
-                action="/api/image/upload"
+                name="image"
+                listType="picture-card"
+                className="avatar-uploader"
                 showUploadList={false}
-                onChange={handleAvatarUpload}
-                headers={{
-                  Authorization: `Bearer ${localStorage.getItem('token')}`,
-                }}
+                action="/image/upload"
+                beforeUpload={beforeUpload}
+                onChange={handleChange}
               >
                 <Button icon={<UploadOutlined />}>更换头像</Button>
               </Upload>

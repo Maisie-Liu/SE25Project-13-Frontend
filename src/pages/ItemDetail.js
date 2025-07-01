@@ -12,9 +12,10 @@ import {
 } from '@ant-design/icons';
 import { fetchItemById } from '../store/actions/itemActions';
 import { createOrder } from '../store/actions/orderActions';
-import { addToFavorite, removeFromFavorite } from '../store/actions/favoriteActions';
+import { addFavorite, removeFavorite, checkIsFavorite } from '../store/actions/favoriteActions';
 import { selectIsAuthenticated } from '../store/slices/authSlice';
 import { selectItemDetail, selectItemLoading } from '../store/slices/itemSlice';
+import { selectCurrentFavorite } from '../store/slices/favoriteSlice';
 import CommentList from '../components/comment/CommentList';
 import CommentForm from '../components/comment/CommentForm';
 import axios from '../utils/axios';
@@ -30,6 +31,7 @@ const ItemDetail = () => {
   const isAuthenticated = useSelector(selectIsAuthenticated);
   const item = useSelector(selectItemDetail);
   const loading = useSelector(selectItemLoading);
+  const currentFavorite = useSelector(selectCurrentFavorite);
   
   const [orderModalVisible, setOrderModalVisible] = useState(false);
   const [orderForm] = Form.useForm();
@@ -50,13 +52,27 @@ const ItemDetail = () => {
   useEffect(() => {
     if (id && !hasLoaded) {
       dispatch(fetchItemById(id));
+      
+      // 检查是否已收藏
+      if (isAuthenticated) {
+        dispatch(checkIsFavorite(id))
+          .unwrap()
+          .then(response => {
+            setIsFavorite(!!response);
+          })
+          .catch(() => {
+            setIsFavorite(false);
+          });
+      }
+      
       setHasLoaded(true);
     }
-  }, [dispatch, id, hasLoaded]);
+  }, [dispatch, id, hasLoaded, isAuthenticated]);
   
   // 重置加载状态（当 id 改变时）
   useEffect(() => {
     setHasLoaded(false);
+    setIsFavorite(false);
   }, [id]);
   
   // 获取评论
@@ -64,7 +80,7 @@ const ItemDetail = () => {
     if (!id) return;
     setCommentLoading(true);
     try {
-      const res = await axios.get(`items/${id}/comments`);
+      const res = await axios.get(`/comments/items/${id}`);
       setComments(res.data.data || []);
     } catch (e) {
       message.error('获取评论失败');
@@ -132,17 +148,17 @@ const ItemDetail = () => {
     }
     
     try {
-      if (isFavorite) {
-        await dispatch(removeFromFavorite(id)).unwrap();
+      if (isFavorite && currentFavorite) {
+        await dispatch(removeFavorite(currentFavorite.id)).unwrap();
         setIsFavorite(false);
         message.success('取消收藏成功');
       } else {
-        await dispatch(addToFavorite(id)).unwrap();
+        await dispatch(addFavorite(id)).unwrap();
         setIsFavorite(true);
         message.success('收藏成功');
       }
     } catch (error) {
-      message.error('操作失败: ' + error);
+      message.error('操作失败: ' + (error || ''));
     }
   };
   
@@ -183,7 +199,7 @@ const ItemDetail = () => {
     }
     setSubmitting(true);
     try {
-      await axios.post('comments', {
+      await axios.post('/comments', {
         content: commentContent,
         itemId: id
       });
@@ -216,7 +232,7 @@ const ItemDetail = () => {
     }
     setSubmitting(true);
     try {
-      await axios.post('comments', {
+      await axios.post('/comments', {
         content: replyContent,
         itemId: id,
         parentId: parentComment.id,
