@@ -1,5 +1,5 @@
 import { createAsyncThunk } from '@reduxjs/toolkit';
-import axios from 'axios';
+import axios from '../../utils/axios';
 import { 
   setOrderLoading, 
   setOrderError, 
@@ -47,8 +47,8 @@ export const fetchOrderById = createAsyncThunk(
     try {
       dispatch(setOrderLoading(true));
       const response = await axios.get(`/orders/${orderId}`);
-      dispatch(setCurrentOrder(response.data));
-      return response.data;
+      dispatch(setCurrentOrder(response.data.data));
+      return response.data.data;
     } catch (error) {
       dispatch(setOrderError(error.response?.data?.message || '获取订单详情失败'));
       return rejectWithValue(error.response?.data?.message || '获取订单详情失败');
@@ -62,7 +62,7 @@ export const createOrder = createAsyncThunk(
   async (orderData, { dispatch, rejectWithValue }) => {
     try {
       dispatch(setOrderLoading(true));
-      const response = await axios.post('/orders', orderData);
+      const response = await axios.post('/orders', null, { params: orderData });
       return response.data;
     } catch (error) {
       dispatch(setOrderError(error.response?.data?.message || '创建订单失败'));
@@ -130,6 +130,66 @@ export const rateOrder = createAsyncThunk(
     } catch (error) {
       dispatch(setOrderError(error.response?.data?.message || '评价订单失败'));
       return rejectWithValue(error.response?.data?.message || '评价订单失败');
+    }
+  }
+);
+
+// 卖家确认订单
+export const confirmOrder = createAsyncThunk(
+  'order/confirmOrder',
+  async ({ orderId, sellerRemark }, { dispatch, rejectWithValue }) => {
+    try {
+      dispatch(setOrderLoading(true));
+      const response = await axios.put(`/orders/${orderId}/confirm`, sellerRemark ? { sellerRemark } : undefined);
+      return response.data;
+    } catch (error) {
+      dispatch(setOrderError(error.response?.data?.message || '确认订单失败'));
+      return rejectWithValue(error.response?.data?.message || '确认订单失败');
+    }
+  }
+);
+
+// 卖家发货
+export const deliverOrder = createAsyncThunk(
+  'order/deliverOrder',
+  async ({ orderId, trackingNumber }, { dispatch, rejectWithValue }) => {
+    try {
+      dispatch(setOrderLoading(true));
+      const response = await axios.put(`/orders/${orderId}/deliver`, null, { params: { trackingNumber } });
+      return response.data;
+    } catch (error) {
+      dispatch(setOrderError(error.response?.data?.message || '发货失败'));
+      return rejectWithValue(error.response?.data?.message || '发货失败');
+    }
+  }
+);
+
+// 买家确认收货
+export const confirmReceive = createAsyncThunk(
+  'order/confirmReceive',
+  async (orderId, { dispatch, rejectWithValue }) => {
+    try {
+      dispatch(setOrderLoading(true));
+      const response = await axios.put(`/orders/${orderId}/receive`);
+      return response.data;
+    } catch (error) {
+      dispatch(setOrderError(error.response?.data?.message || '确认收货失败'));
+      return rejectWithValue(error.response?.data?.message || '确认收货失败');
+    }
+  }
+);
+
+// 订单评价
+export const commentOrder = createAsyncThunk(
+  'order/commentOrder',
+  async ({ orderId, comment, isBuyer, rating }, { dispatch, rejectWithValue }) => {
+    try {
+      dispatch(setOrderLoading(true));
+      const response = await axios.put(`/orders/${orderId}/comment`, null, { params: { comment, isBuyer, rating } });
+      return response.data;
+    } catch (error) {
+      dispatch(setOrderError(error.response?.data?.message || '评价失败'));
+      return rejectWithValue(error.response?.data?.message || '评价失败');
     }
   }
 ); 

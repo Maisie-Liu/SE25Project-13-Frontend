@@ -1,9 +1,10 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
-import { Card, Descriptions, Button, Steps, Divider, Tag, Spin, Typography, Row, Col, message } from 'antd';
-import { fetchOrderById, updateOrder } from '../store/actions/orderActions';
+import { Card, Descriptions, Button, Steps, Divider, Tag, Spin, Typography, Row, Col, message, Modal, Input, Rate } from 'antd';
+import { fetchOrderById, updateOrder, confirmOrder, deliverOrder, confirmReceive, commentOrder } from '../store/actions/orderActions';
 import { selectCurrentOrder, selectOrderLoading } from '../store/slices/orderSlice';
+import { selectUser } from '../store/slices/authSlice';
 
 const { Step } = Steps;
 const { Title, Text } = Typography;
@@ -15,6 +16,25 @@ const OrderDetail = () => {
   
   const order = useSelector(selectCurrentOrder);
   const loading = useSelector(selectOrderLoading);
+  const user = useSelector(selectUser);
+
+  const [commentModalVisible, setCommentModalVisible] = useState(false);
+  const [commentContent, setCommentContent] = useState('');
+  const [commentSubmitting, setCommentSubmitting] = useState(false);
+  const [rating, setRating] = useState(5);
+  const [deliverModalVisible, setDeliverModalVisible] = useState(false);
+  const [trackingNumber, setTrackingNumber] = useState('');
+
+  const isBuyer = user && order && String(user.id) === String(order.buyerId);
+  const isSeller = user && order && String(user.id) === String(order.sellerId);
+
+  // 判断当前用户是否已评价
+  const hasCommented = order ? ((isBuyer && order.sellerComment) || (isSeller && order.buyerComment)) : false;
+  // 本地显示用的状态
+  let displayStatus = order ? order.status : 0;
+  if (order && order.status === 3 && hasCommented) {
+    displayStatus = 4;
+  }
 
   useEffect(() => {
     if (id) {
@@ -48,65 +68,97 @@ const OrderDetail = () => {
     }
   };
 
+  const handleConfirmOrder = async () => {
+    try {
+      await dispatch(confirmOrder({ orderId: id })).unwrap();
+      message.success('订单已确认');
+      dispatch(fetchOrderById(id));
+    } catch (e) {
+      message.error('操作失败');
+    }
+  };
+
+  const handleDeliverOrder = async () => {
+    setDeliverModalVisible(true);
+  };
+
+  const handleSubmitDeliver = async () => {
+    if (!trackingNumber.trim()) {
+      message.warning('请输入快递单号');
+      return;
+    }
+    try {
+      await dispatch(deliverOrder({ orderId: id, trackingNumber })).unwrap();
+      message.success('发货成功');
+      setDeliverModalVisible(false);
+      setTrackingNumber('');
+      dispatch(fetchOrderById(id));
+    } catch (e) {
+      message.error('发货失败');
+    }
+  };
+
+  const handleConfirmReceive = async () => {
+    try {
+      await dispatch(confirmReceive(id)).unwrap();
+      message.success('确认收货成功');
+      dispatch(fetchOrderById(id));
+    } catch (e) {
+      message.error('操作失败');
+    }
+  };
+
+  const handleOpenComment = () => {
+    setCommentModalVisible(true);
+  };
+
+  const handleSubmitComment = async () => {
+    if (!commentContent.trim()) {
+      message.warning('评价内容不能为空');
+      return;
+    }
+    if (!rating) {
+      message.warning('请给出评分');
+      return;
+    }
+    setCommentSubmitting(true);
+    try {
+      await dispatch(commentOrder({ orderId: id, comment: commentContent, isBuyer, rating })).unwrap();
+      message.success('评价成功');
+      setCommentModalVisible(false);
+      setCommentContent('');
+      setRating(5);
+      dispatch(fetchOrderById(id));
+    } catch (e) {
+      message.error('评价失败');
+    } finally {
+      setCommentSubmitting(false);
+    }
+  };
+
   const renderActionButtons = () => {
-    if (!order) return null;
-    
-    const { status, role } = order;
-    
-    if (role === 'BUYER') {
-      switch(status) {
-        case 'PENDING':
-          return (
-            <Button 
-              type="primary" 
-              onClick={() => navigate(`/escrow/${id}`)}
-            >
-              支付定金
-            </Button>
-          );
-        case 'PAID':
-          return (
-            <Button 
-              type="primary" 
-              onClick={() => handleUpdateStatus('COMPLETED')}
-            >
-              确认收货
-            </Button>
-          );
-        case 'COMPLETED':
-        case 'CANCELLED':
-          return null;
-        default:
-          return null;
+    if (!order || !user) return null;
+    const status = displayStatus;
+    // 状态0：待确定，1：待发货，2：待收货，3：待评价
+    if (isSeller) {
+      if (status === 0) {
+        return <Button type="primary" onClick={handleConfirmOrder}>确认订单</Button>;
       }
-    } else if (role === 'SELLER') {
-      switch(status) {
-        case 'PENDING':
-          return (
-            <Button 
-              danger 
-              onClick={() => handleUpdateStatus('CANCELLED')}
-            >
-              取消订单
-            </Button>
-          );
-        case 'PAID':
-          return (
-            <Button 
-              type="primary" 
-              onClick={() => handleUpdateStatus('COMPLETED')}
-            >
-              确认交付
-            </Button>
-          );
-        case 'COMPLETED':
-        case 'CANCELLED':
-          return null;
-        default:
-          return null;
+      if (status === 1) {
+        return <Button type="primary" onClick={handleDeliverOrder}>发货</Button>;
+      }
+      if (order.status === 3 && !order.buyerComment && isSeller) {
+        return <Button type="primary" onClick={handleOpenComment}>评价买家</Button>;
       }
     }
-    
+    if (isBuyer) {
+      if (status === 2) {
+        return <Button type="primary" onClick={handleConfirmReceive}>确认收货</Button>;
+      }
+      if (order.status === 3 && !order.sellerComment && isBuyer) {
+        return <Button type="primary" onClick={handleOpenComment}>评价卖家</Button>;
+      }
+    }
     return null;
   };
 
@@ -129,22 +181,26 @@ const OrderDetail = () => {
               <Descriptions.Item label="订单编号">{order.id}</Descriptions.Item>
               <Descriptions.Item label="订单状态">
                 <Tag color={
-                  order.status === 'PENDING' ? 'gold' : 
-                  order.status === 'PAID' ? 'blue' : 
-                  order.status === 'COMPLETED' ? 'green' : 
+                  displayStatus === 0 ? 'gold' : 
+                  displayStatus === 1 ? 'blue' : 
+                  displayStatus === 2 ? 'orange' :
+                  displayStatus === 3 ? 'green' : 
                   'red'
                 }>
                   {
-                    order.status === 'PENDING' ? '待支付' : 
-                    order.status === 'PAID' ? '已支付' : 
-                    order.status === 'COMPLETED' ? '已完成' : 
-                    '已取消'
+                    displayStatus === 0 ? '待确认' : 
+                    displayStatus === 1 ? '待发货' : 
+                    displayStatus === 2 ? '待收货' : 
+                    displayStatus === 3 ? '待评价' : 
+                    displayStatus === 4 ? '已完成' : 
+                    displayStatus === 5 ? '已取消' :
+                    '未知状态'
                   }
                 </Tag>
               </Descriptions.Item>
               <Descriptions.Item label="交易角色">
-                <Tag color={order.role === 'BUYER' ? 'blue' : 'orange'}>
-                  {order.role === 'BUYER' ? '买家' : '卖家'}
+                <Tag color={isBuyer ? 'blue' : 'orange'}>
+                  {isBuyer ? '买家' : isSeller ? '卖家' : '无权限'}
                 </Tag>
               </Descriptions.Item>
               <Descriptions.Item label="交易对象">
@@ -156,22 +212,44 @@ const OrderDetail = () => {
               <Descriptions.Item label="更新时间">
                 {new Date(order.updatedAt).toLocaleString()}
               </Descriptions.Item>
+              <Descriptions.Item label="交易方式">
+                <Tag color={order.tradeType === 2 ? 'gold' : 'blue'}>
+                  {order.tradeType === 2 ? '线上交易' : order.tradeType === 1 ? '线下交易' : '未知'}
+                </Tag>
+              </Descriptions.Item>
             </Descriptions>
             
             <Divider />
             
             <Title level={4}>订单进度</Title>
-            <Steps 
-              current={getStatusStep(order.status)} 
-              status={order.status === 'CANCELLED' ? 'error' : 'process'}
-            >
-              <Step title="创建订单" description="等待支付定金" />
-              <Step title="支付定金" description="等待交易完成" />
-              <Step title="交易完成" description="交易成功" />
-              {order.status === 'CANCELLED' && (
-                <Step title="订单取消" description="交易终止" />
-              )}
-            </Steps>
+            {order.tradeType === 2 ? (
+              <Steps 
+                current={displayStatus}
+                status={displayStatus === 5 ? 'error' : displayStatus === 4 ? 'finish' : 'process'}
+              >
+                <Step title="待确认" />
+                <Step title="待发货" />
+                <Step title="待收货" />
+                <Step title="待评价" />
+                <Step title="已完成" />
+                {displayStatus === 5 && (
+                  <Step title="订单取消" description="交易终止" />
+                )}
+              </Steps>
+            ) : (
+              <Steps 
+                current={displayStatus > 1 ? displayStatus - 1 : displayStatus}
+                status={displayStatus === 5 ? 'error' : displayStatus === 4 ? 'finish' : 'process'}
+              >
+                <Step title="待确认" />
+                <Step title="待收货" />
+                <Step title="待评价" />
+                <Step title="已完成" />
+                {displayStatus === 5 && (
+                  <Step title="订单取消" description="交易终止" />
+                )}
+              </Steps>
+            )}
             
             <Divider />
             
@@ -188,13 +266,13 @@ const OrderDetail = () => {
           <Card>
             <div style={{ display: 'flex', alignItems: 'center', marginBottom: 16 }}>
               <img 
-                src={order.item.images && order.item.images.length > 0 ? order.item.images[0] : 'https://via.placeholder.com/100x100?text=No+Image'} 
-                alt={order.item.title}
+                src={order.item && order.item.images && order.item.images.length > 0 ? order.item.images[0] : 'https://via.placeholder.com/100x100?text=No+Image'} 
+                alt={order.item && order.item.title ? order.item.title : 'No Title'}
                 style={{ width: 100, height: 100, marginRight: 16, objectFit: 'cover' }}
               />
               <div>
-                <Title level={4}>{order.item.title}</Title>
-                <Text type="secondary">{order.item.category}</Text>
+                <Title level={4}>{order.item && order.item.title ? order.item.title : '无标题'}</Title>
+                <Text type="secondary">{order.item && order.item.category ? order.item.category : ''}</Text>
               </div>
             </div>
             
@@ -203,6 +281,9 @@ const OrderDetail = () => {
             <Descriptions column={1}>
               <Descriptions.Item label="物品价格">¥{order.amount}</Descriptions.Item>
               <Descriptions.Item label="定金金额">¥{order.deposit || 0}</Descriptions.Item>
+              {order.trackingNumber && (
+                <Descriptions.Item label="快递单号">{order.trackingNumber}</Descriptions.Item>
+              )}
               {order.escrow && (
                 <>
                   <Descriptions.Item label="托管状态">
@@ -225,7 +306,7 @@ const OrderDetail = () => {
               )}
             </Descriptions>
             
-            {order.status === 'PENDING' && order.role === 'BUYER' && (
+            {order.status === 0 && order.role === 'BUYER' && (
               <div style={{ marginTop: 16 }}>
                 <Button 
                   type="primary" 
@@ -239,6 +320,42 @@ const OrderDetail = () => {
           </Card>
         </Col>
       </Row>
+
+      {/* 评价弹窗 */}
+      <Modal
+        title="订单评价"
+        open={commentModalVisible}
+        onOk={handleSubmitComment}
+        onCancel={() => setCommentModalVisible(false)}
+        confirmLoading={commentSubmitting}
+        okText="提交"
+        cancelText="取消"
+      >
+        <Rate allowClear={false} value={rating} onChange={setRating} />
+        <Input.TextArea
+          rows={4}
+          value={commentContent}
+          onChange={e => setCommentContent(e.target.value)}
+          placeholder="请输入评价内容"
+        />
+      </Modal>
+
+      {isSeller && (
+        <Modal
+          title="填写快递单号"
+          open={deliverModalVisible}
+          onOk={handleSubmitDeliver}
+          onCancel={() => setDeliverModalVisible(false)}
+          okText="提交"
+          cancelText="取消"
+        >
+          <Input
+            value={trackingNumber}
+            onChange={e => setTrackingNumber(e.target.value)}
+            placeholder="请输入快递单号"
+          />
+        </Modal>
+      )}
     </div>
   );
 };
