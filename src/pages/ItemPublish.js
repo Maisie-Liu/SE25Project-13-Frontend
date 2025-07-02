@@ -161,9 +161,13 @@ const ItemPublish = () => {
                 rules={[{ required: true, message: '请选择物品分类' }]}
               >
                 <Select placeholder="选择物品分类">
-                  {categories.map(category => (
-                    <Option key={category.id} value={category.id}>{category.name}</Option>
-                  ))}
+                  {(categories || []).length === 0 ? (
+                    <Option disabled value="">暂无数据</Option>
+                  ) : (
+                    categories.map(category => (
+                      <Option key={category.id} value={category.id}>{category.name}</Option>
+                    ))
+                  )}
                 </Select>
               </Form.Item>
             </Col>
