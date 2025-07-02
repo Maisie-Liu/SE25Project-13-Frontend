@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { Form, Input, Button, Card, Avatar, Upload, message, Tabs, List, Spin } from 'antd';
+import { Form, Input, Button, Card, Avatar, Upload, message, Tabs, List, Spin, Typography, Tag } from 'antd';
 import { UserOutlined, UploadOutlined, LockOutlined } from '@ant-design/icons';
 import { fetchCurrentUser, updateUserProfile, changePassword, uploadAvatar } from '../store/actions/authActions';
 import { selectUser, selectAuthLoading } from '../store/slices/authSlice';
@@ -11,6 +11,15 @@ import { selectOrders } from '../store/slices/orderSlice';
 import { Link } from 'react-router-dom';
 
 const { TabPane } = Tabs;
+const { Title, Paragraph } = Typography;
+
+const beforeUpload = () => {
+  // 空实现
+};
+
+const handleChange = () => {
+  // 空实现
+};
 
 const UserProfile = () => {
   const dispatch = useDispatch();
@@ -107,6 +116,10 @@ const UserProfile = () => {
     // 阻止 Upload 组件自动上传
     return Upload.LIST_IGNORE;
   };
+
+  // 收集收到的评价
+  const buyerComments = myOrders.filter(o => o.buyerComment && user && o.buyer?.id === user.id);
+  const sellerComments = myOrders.filter(o => o.sellerComment && user && o.seller?.id === user.id);
 
   if (loading || !user) {
     return (
@@ -309,6 +322,33 @@ const UserProfile = () => {
                 </Button>
               </div>
             )}
+          </TabPane>
+          
+          <TabPane tab="收到的评价" key="comments">
+            <Title level={4}>作为买家收到的评价</Title>
+            <List
+              dataSource={buyerComments}
+              locale={{ emptyText: '暂无评价' }}
+              renderItem={order => (
+                <List.Item>
+                  <Tag color="blue">卖家评价</Tag>
+                  <span>订单号：{order.orderNo}</span>
+                  <Paragraph style={{ margin: 0 }}>{order.buyerComment}</Paragraph>
+                </List.Item>
+              )}
+            />
+            <Title level={4} style={{ marginTop: 24 }}>作为卖家收到的评价</Title>
+            <List
+              dataSource={sellerComments}
+              locale={{ emptyText: '暂无评价' }}
+              renderItem={order => (
+                <List.Item>
+                  <Tag color="orange">买家评价</Tag>
+                  <span>订单号：{order.orderNo}</span>
+                  <Paragraph style={{ margin: 0 }}>{order.sellerComment}</Paragraph>
+                </List.Item>
+              )}
+            />
           </TabPane>
         </Tabs>
       </Card>

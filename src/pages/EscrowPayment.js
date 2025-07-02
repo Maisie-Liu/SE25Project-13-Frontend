@@ -140,17 +140,17 @@ const EscrowPayment = () => {
   
   return (
     <div className="escrow-payment-container">
-      <Card title="交易托管服务" bordered={false}>
+      <Card title="线上交易服务" bordered={false}>
         <Alert
           message="交易安全提示"
-          description="通过托管服务，您的交易将更加安全。卖家发货后，买家确认收货满意再释放货款给卖家。"
+          description="通过线上交易，您的交易将更加安全。卖家发货后，买家确认收货满意再释放货款给卖家。"
           type="info"
           showIcon
           style={{ marginBottom: '20px' }}
         />
         
         <Steps current={currentStep}>
-          <Step title="支付定金" icon={<WalletOutlined />} />
+          <Step title="线上支付" icon={<WalletOutlined />} />
           <Step title="等待发货" icon={<ShoppingCartOutlined />} />
           <Step title="确认收货" icon={<CarOutlined />} />
           <Step title="交易完成" icon={<SmileOutlined />} />
@@ -159,10 +159,10 @@ const EscrowPayment = () => {
         <Divider />
         
         {escrow ? (
-          <Descriptions title="托管详情" bordered>
-            <Descriptions.Item label="托管ID">{escrow.id}</Descriptions.Item>
+          <Descriptions title="线上交易详情" bordered>
+            <Descriptions.Item label="线上交易ID">{escrow.id}</Descriptions.Item>
             <Descriptions.Item label="关联订单">{escrow.orderId}</Descriptions.Item>
-            <Descriptions.Item label="托管金额">￥{escrow.amount}</Descriptions.Item>
+            <Descriptions.Item label="交易金额">￥{escrow.amount}</Descriptions.Item>
             <Descriptions.Item label="创建时间">{escrow.createdAt}</Descriptions.Item>
             <Descriptions.Item label="状态" span={2}>
               {escrow.status === 'PENDING' && <span style={{ color: '#faad14' }}>待支付</span>}
@@ -173,8 +173,8 @@ const EscrowPayment = () => {
           </Descriptions>
         ) : (
           <Alert
-            message="托管信息不存在"
-            description="该订单尚未创建托管服务，请联系卖家或客服。"
+            message="线上交易信息不存在"
+            description="该订单尚未创建线上交易，请联系卖家或客服。"
             type="warning"
             showIcon
           />
@@ -217,7 +217,7 @@ const EscrowPayment = () => {
             <Result
               status="success"
               title="交易已完成"
-              subTitle="感谢您使用我们的托管服务，货款已成功释放给卖家。"
+              subTitle="感谢您使用我们的线上交易服务，货款已成功释放给卖家。"
               extra={[
                 <Button type="primary" key="home" onClick={() => navigate('/')}>
                   继续购物
