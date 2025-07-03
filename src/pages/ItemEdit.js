@@ -82,6 +82,7 @@ const ItemEdit = () => {
         setImageIdList(prev => [...prev, uploadedImageUrl]);
       }
       setUploading(false);
+      console.log("uploadedImageUrl changed! uploadedImageUrl: ", uploadedImageUrl);
     }
   }, [uploadedImageUrl]);
 
