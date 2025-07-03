@@ -88,6 +88,9 @@ const Header = () => {
       <Menu.Item key="profile" onClick={() => navigate('/profile')}>
         <UserOutlined /> 个人资料
       </Menu.Item>
+      <Menu.Item key="items" onClick={() => navigate('/my/items')}>
+        <ShoppingOutlined /> 我的物品
+      </Menu.Item>
       <Menu.Item key="orders" onClick={() => navigate('/my/orders')}>
         <ShoppingOutlined /> 我的订单
       </Menu.Item>
