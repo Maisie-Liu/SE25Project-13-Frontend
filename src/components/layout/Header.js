@@ -170,11 +170,12 @@ const Header = () => {
               <Space size="middle">
                 {isAuthenticated ? (
                   <>
-                    <Badge count={3} size="small">
+                    <Badge count={3} size="small" className="notification-badge">
                       <Button 
                         type="text" 
                         icon={<MessageOutlined />} 
                         className="icon-button"
+                        onClick={() => navigate('/my/messages')}
                       />
                     </Badge>
                     <Button 
