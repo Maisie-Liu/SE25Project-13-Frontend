@@ -6,14 +6,14 @@ import { Tag } from 'antd';
  * @param {number} condition 1-10
  */
 const ConditionTag = ({ condition }) => {
-  if (!condition) return <Tag color="default">未知</Tag>;
-  if (condition === 1) return <Tag color="green">全新</Tag>;
-  if (condition > 1 && condition <= 3) return <Tag color="cyan">9成新</Tag>;
-  if (condition > 3 && condition <= 5) return <Tag color="blue">7成新</Tag>;
-  if (condition > 5 && condition <= 7) return <Tag color="orange">5成新</Tag>;
-  if (condition > 7 && condition <= 9) return <Tag color="red">3成新</Tag>;
-  if (condition === 10) return <Tag color="red">破旧</Tag>;
-  return <Tag color="default">未知</Tag>;
+  return <div className="xianyu-tags">
+  {condition === 1 && <Tag color="green" className="xianyu-tag">全新</Tag>}
+  {condition > 1 && condition <= 3 && <Tag color="cyan" className="xianyu-tag">9成新</Tag>}
+  {condition > 3 && condition <= 5 && <Tag color="blue" className="xianyu-tag">7成新</Tag>}
+  {condition > 5 && condition <= 7 && <Tag color="orange" className="xianyu-tag">5成新</Tag>}
+  {condition > 7 && condition <= 9 && <Tag color="red" className="xianyu-tag">3成新</Tag>}
+  {condition > 9 && <Tag color="red" className="xianyu-tag">破旧</Tag>}
+</div>
 };
 
 export default ConditionTag; 
