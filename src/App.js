@@ -24,6 +24,8 @@ import MyFavorites from './pages/MyFavorites';
 import TestFavorites from './pages/TestFavorites';
 import HelpCenter from './pages/HelpCenter';
 import Terms from './pages/Terms';
+import Privacy from './pages/Privacy';
+import Sitemap from './pages/Sitemap';
 import './App.css';
 
 const { Content } = Layout;
@@ -145,6 +147,8 @@ const App = () => {
             />
             <Route path="/help" element={<HelpCenter />} />
             <Route path="/terms" element={<Terms />} />
+            <Route path="/privacy" element={<Privacy />} />
+            <Route path="/sitemap" element={<Sitemap />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </div>

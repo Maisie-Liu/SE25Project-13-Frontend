@@ -213,40 +213,29 @@ const ItemList = () => {
         <Link to={`/items/${item.id}`}>
           <Card
             hoverable
-            className="item-card"
+            className="item-card xianyu-card"
             cover={
-              <div style={{ position: 'relative' }}>
+              <div className="xianyu-card-image-container">
                 <img
                   alt={item.name}
                   src={item.images && item.images.length > 0 ? item.images[0] : DEFAULT_IMAGE}
-                  style={{ objectFit: 'cover', height: '200px', width: '100%' }}
+                  className="xianyu-card-image"
                 />
                 {item.stock <= 0 && (
-                  <div style={{
-                    position: 'absolute',
-                    top: 0,
-                    left: 0,
-                    width: '100%',
-                    height: '100%',
-                    background: 'rgba(0,0,0,0.55)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    zIndex: 2
-                  }}>
-                    <span style={{ color: '#fff', fontSize: 28, fontWeight: 700, letterSpacing: 4 }}>已售罄</span>
+                  <div className="xianyu-sold-out-overlay">
+                    <span className="xianyu-sold-out-text">已售罄</span>
                   </div>
                 )}
                 {item.isNew && (
-                  <div className="custom-badge">新上架</div>
+                  <div className="xianyu-badge">新上架</div>
                 )}
-                <div style={{ position: 'absolute', bottom: 8, right: 8 }}>
+                <div className="xianyu-card-stats">
                   <Space>
-                    <Badge count={item.viewCount || 0} overflowCount={999} style={{ backgroundColor: 'rgba(0, 0, 0, 0.45)' }}>
-                      <EyeOutlined style={{ color: '#fff', fontSize: 16 }} />
+                    <Badge count={item.viewCount || 0} overflowCount={999} className="xianyu-stat-badge">
+                      <EyeOutlined className="xianyu-stat-icon" />
                     </Badge>
-                    <Badge count={item.favoriteCount || 0} overflowCount={999} style={{ backgroundColor: 'rgba(0, 0, 0, 0.45)' }}>
-                      <HeartOutlined style={{ color: '#fff', fontSize: 16 }} />
+                    <Badge count={item.favoriteCount || 0} overflowCount={999} className="xianyu-stat-badge">
+                      <HeartOutlined className="xianyu-stat-icon" />
                     </Badge>
                   </Space>
                 </div>
@@ -257,23 +246,23 @@ const ItemList = () => {
             {viewMode === 'grid' ? (
               <Meta
                 title={
-                  <div className="text-ellipsis" style={{ fontWeight: 'bold' }}>{item.name}</div>
+                  <div className="text-ellipsis xianyu-card-title">{item.name}</div>
                 }
                 description={
                   <>
-                    <div className="price-tag">{item.price ? `¥${item.price}` : '面议'}</div>
+                    <div className="xianyu-price-tag">{item.price ? `¥${item.price}` : '面议'}</div>
                     <div className="flex-between" style={{ marginTop: '8px' }}>
-                      <div>
-                        {item.condition === 1 && <Tag color="green">全新</Tag>}
-                        {item.condition > 1 && item.condition <= 3 && <Tag color="cyan">9成新</Tag>}
-                        {item.condition > 3 && item.condition <= 5 && <Tag color="blue">7成新</Tag>}
-                        {item.condition > 5 && item.condition <= 7 && <Tag color="orange">5成新</Tag>}
-                        {item.condition > 7 && item.condition <= 9 && <Tag color="red">3成新</Tag>}
-                        {item.condition > 9 && <Tag color="red">破旧</Tag>}
+                      <div className="xianyu-tags">
+                        {item.condition === 1 && <Tag color="green" className="xianyu-tag">全新</Tag>}
+                        {item.condition > 1 && item.condition <= 3 && <Tag color="cyan" className="xianyu-tag">9成新</Tag>}
+                        {item.condition > 3 && item.condition <= 5 && <Tag color="blue" className="xianyu-tag">7成新</Tag>}
+                        {item.condition > 5 && item.condition <= 7 && <Tag color="orange" className="xianyu-tag">5成新</Tag>}
+                        {item.condition > 7 && item.condition <= 9 && <Tag color="red" className="xianyu-tag">3成新</Tag>}
+                        {item.condition > 9 && <Tag color="red" className="xianyu-tag">破旧</Tag>}
                       </div>
-                      <div className="flex" style={{ alignItems: 'center' }}>
-                        <Avatar size="small" icon={<UserOutlined />} src={item.userAvatar} className="user-avatar" />
-                        <span style={{ marginLeft: '4px', fontSize: '12px', color: 'var(--lighter-text-color)' }}>
+                      <div className="xianyu-user">
+                        <Avatar size="small" icon={<UserOutlined />} src={item.userAvatar} className="xianyu-avatar" />
+                        <span className="xianyu-username">
                           {item.username}
                         </span>
                       </div>

@@ -1,6 +1,7 @@
 import React from 'react';
 import styled from 'styled-components';
 import { Layout, Row, Col, Typography, Space, Divider, Button, Input, Form } from 'antd';
+import { Link as RouterLink } from 'react-router-dom';
 import { 
   GithubOutlined, 
   WechatOutlined, 
@@ -104,7 +105,7 @@ const SocialButton = styled(Button)`
   }
 `;
 
-const FooterLink = styled(Link)`
+const FooterLink = styled(RouterLink)`
   color: #4a5568;
   position: relative;
   padding-left: 10px;
@@ -114,6 +115,7 @@ const FooterLink = styled(Link)`
   font-size: 14px;
   line-height: 1.8;
   margin-bottom: 8px;
+  text-decoration: none;
   
   &::before {
     content: '';
@@ -198,6 +200,17 @@ const SectionTitle = styled(Title)`
   }
 `;
 
+const BottomLink = styled(RouterLink)`
+  color: #718096;
+  margin: 0 16px;
+  transition: all 0.3s;
+  text-decoration: none;
+  
+  &:hover {
+    color: #00B8A9;
+  }
+`;
+
 const Footer = () => {
   const onFinish = (values) => {
     console.log('Received values:', values);
@@ -252,16 +265,16 @@ const Footer = () => {
               <Row gutter={[16, 16]}>
                 <Col span={12}>
                   <div style={{ display: 'flex', flexDirection: 'column' }}>
-                    <FooterLink href="/">首页</FooterLink>
-                    <FooterLink href="/items">全部物品</FooterLink>
-                    <FooterLink href="/items/publish">发布物品</FooterLink>
+                    <FooterLink to="/">首页</FooterLink>
+                    <FooterLink to="/items">全部物品</FooterLink>
+                    <FooterLink to="/items/publish">发布物品</FooterLink>
                   </div>
                 </Col>
                 <Col span={12}>
                   <div style={{ display: 'flex', flexDirection: 'column' }}>
-                    <FooterLink href="/about">关于我们</FooterLink>
-                    <FooterLink href="/help">帮助中心</FooterLink>
-                    <FooterLink href="/terms">服务条款</FooterLink>
+                    <FooterLink to="/about">关于我们</FooterLink>
+                    <FooterLink to="/help">帮助中心</FooterLink>
+                    <FooterLink to="/terms">服务条款</FooterLink>
                   </div>
                 </Col>
               </Row>
@@ -330,9 +343,9 @@ const Footer = () => {
             © {new Date().getFullYear()} 交物通 版权所有
           </CopyrightText>
           <div style={{ marginTop: 10 }}>
-            <Link href="/privacy" style={{ color: '#718096', margin: '0 16px' }}>隐私政策</Link>
-            <Link href="/terms" style={{ color: '#718096', margin: '0 16px' }}>服务条款</Link>
-            <Link href="/sitemap" style={{ color: '#718096', margin: '0 16px' }}>网站地图</Link>
+            <BottomLink to="/privacy">隐私政策</BottomLink>
+            <BottomLink to="/terms">服务条款</BottomLink>
+            <BottomLink to="/sitemap">网站地图</BottomLink>
           </div>
         </div>
       </div>
