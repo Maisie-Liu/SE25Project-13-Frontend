@@ -55,6 +55,7 @@ import {
 } from '../store/slices/itemSlice';
 import { formatPrice, DEFAULT_IMAGE } from '../utils/helpers';
 import axios from '../utils/axios';
+import ConditionTag from '../components/condition/ConditionTag';
 
 const { Title, Text, Paragraph } = Typography;
 const { Search } = Input;
@@ -194,12 +195,8 @@ const Home = () => {
               <>
                 <div className="xianyu-price-tag">{item.price ? `¥${item.price}` : '面议'}</div>
                 <div className="flex-between" style={{ marginTop: '8px' }}>
-                  <div className="xianyu-tags">
-                    {item.condition === 1 && <Tag color="green" className="xianyu-tag">全新</Tag>}
-                    {item.condition > 1 && item.condition <= 3 && <Tag color="cyan" className="xianyu-tag">几乎全新</Tag>}
-                    {item.condition > 3 && item.condition <= 6 && <Tag color="blue" className="xianyu-tag">轻度使用</Tag>}
-                    {item.condition > 6 && item.condition <= 9 && <Tag color="orange" className="xianyu-tag">中度使用</Tag>}
-                    {item.condition === 10 && <Tag color="red" className="xianyu-tag">重度使用</Tag>}
+                  <div>
+                    <ConditionTag condition={item.condition} />
                   </div>
                   <div className="xianyu-user">
                     <Avatar size="small" icon={<UserOutlined />} src={item.userAvatar} className="xianyu-avatar" />
@@ -430,7 +427,7 @@ const Home = () => {
                           <div className="xianyu-hot-price">￥{formatPrice(item.price)}</div>
                           <div className="xianyu-hot-meta">
                             <Tag color="blue" className="xianyu-tag">热度: {item.popularity || 0}</Tag>
-                            {item.condition <= 3 && <Tag color="green" className="xianyu-tag">近全新</Tag>}
+                            <ConditionTag condition={item.condition} />
                           </div>
                         </div>
                       </List.Item>

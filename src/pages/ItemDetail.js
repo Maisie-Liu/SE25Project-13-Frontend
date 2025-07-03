@@ -19,6 +19,7 @@ import { selectCurrentFavorite } from '../store/slices/favoriteSlice';
 import CommentList from '../components/comment/CommentList';
 import CommentForm from '../components/comment/CommentForm';
 import axios from '../utils/axios';
+import ConditionTag from '../components/condition/ConditionTag';
 
 const { Title, Text, Paragraph } = Typography;
 const { TextArea } = Input;
@@ -186,18 +187,6 @@ const ItemDetail = () => {
     }
   }, [isAuthenticated, favoriteLoading, isFavorite, currentFavorite, id, dispatch, navigate]);
   
-  // 渲染新旧程度标签
-  const renderConditionTag = (condition) => {
-    if (!condition) return <Tag color="default">未知</Tag>;
-
-    if (condition === 1) return <Tag color="green">全新</Tag>;
-    if (condition <= 3) return <Tag color="cyan">9成新</Tag>;
-    if (condition <= 5) return <Tag color="blue">7成新</Tag>;
-    if (condition <= 7) return <Tag color="orange">5成新</Tag>;
-    if (condition <= 9) return <Tag color="red">3成新</Tag>;
-    return <Tag color="red">破旧</Tag>;
-  };
-  
   // 格式化时间
   const formatTime = (time) => {
     if (!time) return '';
@@ -331,7 +320,7 @@ const ItemDetail = () => {
             
             <Descriptions column={1} bordered>
               <Descriptions.Item label="物品分类">{item.categoryName}</Descriptions.Item>
-              <Descriptions.Item label="新旧程度">{renderConditionTag(item.condition)}</Descriptions.Item>
+              <Descriptions.Item label="新旧程度">{<ConditionTag condition={item.condition} />}</Descriptions.Item>
               <Descriptions.Item label="浏览量">{item.popularity || 0}</Descriptions.Item>
               <Descriptions.Item label="卖家信息">
                 <Space>
