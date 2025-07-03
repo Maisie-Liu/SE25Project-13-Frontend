@@ -219,8 +219,24 @@ const ItemList = () => {
                 <img
                   alt={item.name}
                   src={item.images && item.images.length > 0 ? item.images[0] : DEFAULT_IMAGE}
-                  style={{ objectFit: 'cover', height: '200px' }}
+                  style={{ objectFit: 'cover', height: '200px', width: '100%' }}
                 />
+                {item.stock <= 0 && (
+                  <div style={{
+                    position: 'absolute',
+                    top: 0,
+                    left: 0,
+                    width: '100%',
+                    height: '100%',
+                    background: 'rgba(0,0,0,0.55)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    zIndex: 2
+                  }}>
+                    <span style={{ color: '#fff', fontSize: 28, fontWeight: 700, letterSpacing: 4 }}>已售罄</span>
+                  </div>
+                )}
                 {item.isNew && (
                   <div className="custom-badge">新上架</div>
                 )}
@@ -307,8 +323,24 @@ const ItemList = () => {
               <img
                 alt={item.name}
                 src={item.images && item.images.length > 0 ? item.images[0] : DEFAULT_IMAGE}
-                style={{ objectFit: 'cover', height: '200px' }}
+                style={{ objectFit: 'cover', height: '200px', width: '100%' }}
               />
+                {item.stock <= 0 && (
+                  <div style={{
+                    position: 'absolute',
+                    top: 0,
+                    left: 0,
+                    width: '100%',
+                    height: '100%',
+                    background: 'rgba(0,0,0,0.55)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    zIndex: 2
+                  }}>
+                    <span style={{ color: '#fff', fontSize: 28, fontWeight: 700, letterSpacing: 4 }}>已售罄</span>
+                  </div>
+                )}
               {item.isNew && (
                 <div className="custom-badge">新上架</div>
               )}

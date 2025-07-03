@@ -12,8 +12,8 @@ import {
 } from '@ant-design/icons';
 import { fetchItemById } from '../store/actions/itemActions';
 import { createOrder } from '../store/actions/orderActions';
+import { selectIsAuthenticated, selectUser } from '../store/slices/authSlice';
 import { addFavorite, removeFavorite, checkIsFavorite, removeFavoriteByItemId } from '../store/actions/favoriteActions';
-import { selectIsAuthenticated } from '../store/slices/authSlice';
 import { selectItemDetail, selectItemLoading } from '../store/slices/itemSlice';
 import { selectCurrentFavorite } from '../store/slices/favoriteSlice';
 import CommentList from '../components/comment/CommentList';
@@ -32,6 +32,7 @@ const ItemDetail = () => {
   const item = useSelector(selectItemDetail);
   const loading = useSelector(selectItemLoading);
   const currentFavorite = useSelector(selectCurrentFavorite);
+  const user = useSelector(selectUser);
   
   const [orderModalVisible, setOrderModalVisible] = useState(false);
   const [orderForm] = Form.useForm();
@@ -106,12 +107,14 @@ const ItemDetail = () => {
       navigate('/login');
       return;
     }
-    
+    if (item.userId === user?.id) {
+      message.error('不能购买自己的商品');
+      return;
+    }
     if (item.status !== 1) {
       message.warning('该物品当前不可预订');
       return;
     }
-    
     setOrderModalVisible(true);
   };
   
@@ -122,7 +125,6 @@ const ItemDetail = () => {
       navigate('/login');
       return;
     }
-    
     setSubmitting(true);
     try {
       const orderData = {
@@ -131,14 +133,12 @@ const ItemDetail = () => {
         tradeLocation: values.tradeLocation,
         buyerMessage: values.buyerMessage
       };
-      
       await dispatch(createOrder(orderData)).unwrap();
       message.success('预订成功');
       setOrderModalVisible(false);
-      // 刷新物品状态
       dispatch(fetchItemById(id));
     } catch (error) {
-      message.error('预订失败: ' + error);
+      message.error(error?.message || error?.response?.data?.message || '预订失败');
     } finally {
       setSubmitting(false);
     }
@@ -351,6 +351,9 @@ const ItemDetail = () => {
                   <Tag color="default">未上架</Tag>
                 )}
               </Descriptions.Item>
+              <Descriptions.Item label="库存">
+                {item.stock > 0 ? item.stock : <span style={{color:'red'}}>已售罄</span>}
+              </Descriptions.Item>
             </Descriptions>
             
             <div style={{ marginTop: 24 }}>
@@ -360,7 +363,7 @@ const ItemDetail = () => {
                   size="large" 
                   icon={<ShoppingCartOutlined />}
                   onClick={handleOrder}
-                  disabled={item.status !== 1}
+                  disabled={item.status !== 1 || item.stock <= 0}
                 >
                   立即预订
                 </Button>
@@ -432,8 +435,8 @@ const ItemDetail = () => {
             rules={[{ required: true, message: '请选择交易方式' }]}
           >
             <Radio.Group>
+              <Radio value={2}>线上交易</Radio>
               <Radio value={1}>线下交易</Radio>
-              <Radio value={2}>定金托管</Radio>
             </Radio.Group>
           </Form.Item>
           
