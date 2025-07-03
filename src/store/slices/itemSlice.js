@@ -12,7 +12,9 @@ import {
   searchItems,
   uploadItemImage,
   generateItemDescription,
-  fetchRecommendedItems, fetchMyItems
+  fetchRecommendedItems,
+  fetchMyItems,
+  deleteFile,
 } from '../actions/itemActions';
 
 const initialState = {
@@ -272,6 +274,19 @@ const itemSlice = createSlice({
     builder.addCase(fetchRecommendedItems.rejected, (state, action) => {
       state.loading = false;
       state.error = action.payload || '获取推荐物品列表失败';
+    });
+
+    // 删除图片文件
+    builder.addCase(deleteFile.pending, (state) => {
+      state.loading = true;
+      state.error = null;
+    });
+    builder.addCase(deleteFile.fulfilled, (state) => {
+      state.loading = false;
+    });
+    builder.addCase(deleteFile.rejected, (state, action) => {
+      state.loading = false;
+      state.error = action.payload || '删除图片失败';
     });
   },
 });

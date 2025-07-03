@@ -99,8 +99,8 @@ const MyItems = () => {
     },
     {
       title: '发布时间',
-      dataIndex: 'createdAt',
-      key: 'createdAt',
+      dataIndex: 'createTime',
+      key: 'createTime',
       render: time => new Date(time).toLocaleString(),
     },
     {

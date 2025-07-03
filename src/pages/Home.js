@@ -55,6 +55,7 @@ import {
 } from '../store/slices/itemSlice';
 import { formatPrice, DEFAULT_IMAGE } from '../utils/helpers';
 import axios from '../utils/axios';
+import ConditionTag from '../components/condition/ConditionTag';
 
 const { Title, Text, Paragraph } = Typography;
 const { Search } = Input;
@@ -195,11 +196,7 @@ const Home = () => {
                 <div className="price-tag">{item.price ? `¥${item.price}` : '面议'}</div>
                 <div className="flex-between" style={{ marginTop: '8px' }}>
                   <div>
-                    {item.condition === 1 && <Tag color="green">全新</Tag>}
-                    {item.condition > 1 && item.condition <= 3 && <Tag color="cyan">几乎全新</Tag>}
-                    {item.condition > 3 && item.condition <= 6 && <Tag color="blue">轻度使用</Tag>}
-                    {item.condition > 6 && item.condition <= 9 && <Tag color="orange">中度使用</Tag>}
-                    {item.condition === 10 && <Tag color="red">重度使用</Tag>}
+                    <ConditionTag condition={item.condition} />
                   </div>
                   <div className="flex" style={{ alignItems: 'center' }}>
                     <Avatar size="small" icon={<UserOutlined />} src={item.userAvatar} className="user-avatar" />
@@ -472,12 +469,7 @@ const Home = () => {
                             <Space>
                               <Tag color="red">￥{formatPrice(item.price)}</Tag>
                               <Tag color="blue">热度: {item.popularity || 0}</Tag>
-                              {item.condition === 1 && <Tag color="green">全新</Tag>}
-                              {item.condition > 1 && item.condition <= 3 && <Tag color="cyan">9成新</Tag>}
-                              {item.condition > 3 && item.condition <= 5 && <Tag color="blue">7成新</Tag>}
-                              {item.condition > 5 && item.condition <= 7 && <Tag color="orange">5成新</Tag>}
-                              {item.condition > 7 && item.condition <= 9 && <Tag color="red">3成新</Tag>}
-                              {item.condition > 9 && <Tag color="red">破旧</Tag>}
+                              <ConditionTag condition={item.condition} />
                             </Space>
                           }
                         />

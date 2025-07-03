@@ -314,4 +314,19 @@ export const fetchHotItems = () => async () => {
     message.error('获取热门商品失败');
     return [];
   }
-}; 
+};
+
+// 删除图片文件
+export const deleteFile = createAsyncThunk(
+  'item/deleteFile',
+  async (imageId, { rejectWithValue }) => {
+    try {
+      const response = await axios.delete(`/image/${imageId}`);
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(
+        error.response?.data?.message || '删除图片失败'
+      );
+    }
+  }
+); 

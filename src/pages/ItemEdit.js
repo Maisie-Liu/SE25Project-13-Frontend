@@ -3,8 +3,11 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { Form, Input, InputNumber, Select, Button, Upload, message, Spin } from 'antd';
 import { UploadOutlined } from '@ant-design/icons';
-import { fetchItemById, updateItem, uploadItemImage } from '../store/actions/itemActions';
+import { fetchItemById, updateItem, uploadItemImage, deleteFile } from '../store/actions/itemActions';
 import { selectCurrentItem, selectItemLoading, selectUploadedImageUrl } from '../store/slices/itemSlice';
+import {selectCategories} from "../store/slices/categorySlice";
+import {fetchCategories} from "../store/actions/categoryActions";
+import ConditionSelect from '../components/condition/ConditionSelect';
 
 const { Option } = Select;
 const { TextArea } = Input;
@@ -18,8 +21,10 @@ const ItemEdit = () => {
   const item = useSelector(selectCurrentItem);
   const loading = useSelector(selectItemLoading);
   const uploadedImageUrl = useSelector(selectUploadedImageUrl);
+  const categories = useSelector(selectCategories);
   
-  const [imageList, setImageList] = useState([]);
+  const [fileList, setFileList] = useState([]);
+  const [imageIdList, setImageIdList] = useState([]);
   const [uploading, setUploading] = useState(false);
 
   useEffect(() => {
@@ -31,28 +36,37 @@ const ItemEdit = () => {
   useEffect(() => {
     if (item) {
       form.setFieldsValue({
-        title: item.title,
+        name: item.name,
         description: item.description,
         price: item.price,
-        category: item.category,
+        categoryId: item.categoryId,
         condition: item.condition
       });
       
       if (item.images && item.images.length > 0) {
-        const initialImages = item.images.map((url, index) => ({
+        console.log("images: ", item.images);
+        const initialFileList = item.images.map((url, index) => ({
           uid: `-${index}`,
           name: `image-${index}`,
           status: 'done',
           url,
         }));
-        setImageList(initialImages);
+        setFileList(initialFileList);
+        const initialImageIds = item.images.map(url => {
+          const match = url && url.match(/\/api\/image\/([a-fA-F0-9]+)/);
+          return match ? match[1] : url;
+        });
+        setImageIdList(initialImageIds);
+      } else {
+        setFileList([]);
+        setImageIdList([]);
       }
     }
   }, [form, item]);
 
   useEffect(() => {
     if (uploadedImageUrl) {
-      setImageList(prev => [
+      setFileList(prev => [
         ...prev,
         {
           uid: `${Date.now()}`,
@@ -61,33 +75,57 @@ const ItemEdit = () => {
           url: uploadedImageUrl,
         },
       ]);
+      const match = uploadedImageUrl.match(/\/api\/image\/([a-fA-F0-9]+)/);
+      if (match && match[1]) {
+        setImageIdList(prev => [...prev, match[1]]);
+      } else {
+        setImageIdList(prev => [...prev, uploadedImageUrl]);
+      }
       setUploading(false);
     }
   }, [uploadedImageUrl]);
 
-  const handleUpload = (info) => {
-    if (info.file.status === 'uploading') {
-      setUploading(true);
-      return;
-    }
-    
-    if (info.file.status === 'done') {
-      // 这里处理自定义上传
+  useEffect(() => {
+    dispatch(fetchCategories());
+  }, [dispatch]);
+
+  const handleUpload = async (file) => {
+    setUploading(true);
+    try {
       const formData = new FormData();
-      formData.append('image', info.file.originFileObj);
-      dispatch(uploadItemImage(formData));
+      formData.append('file', file);
+      const res = await dispatch(uploadItemImage(formData));
+      const imageId = res.payload?.imageId || res.payload;
+      const url = `/api/image/${imageId}`;
+      setFileList(prev => [
+        ...prev,
+        {
+          uid: `${Date.now()}`,
+          name: 'image.jpg',
+          status: 'done',
+          url,
+        },
+      ]);
+      setImageIdList(prev => [...prev, imageId]);
+      message.success('图片上传成功');
+      return false;
+    } catch (error) {
+      message.error('图片上传失败: ' + error);
+      return false;
+    } finally {
+      setUploading(false);
     }
   };
 
   const onFinish = (values) => {
-    const imageUrls = imageList.map(img => img.url || img.response?.url);
-    
     const updatedItem = {
-      ...values,
       id,
-      images: imageUrls,
+      itemData: {
+        ...values,
+        images: imageIdList,
+      }
     };
-    
+    console.log("in onFinish, updatedItem: ", updatedItem);
     dispatch(updateItem(updatedItem))
       .then(() => {
         message.success('物品信息更新成功');
@@ -116,11 +154,11 @@ const ItemEdit = () => {
         onFinish={onFinish}
       >
         <Form.Item
-          name="title"
-          label="标题"
-          rules={[{ required: true, message: '请输入物品标题' }]}
+          name="name"
+          label="物品名称"
+          rules={[{ required: true, message: '请输入物品名称' }]}
         >
-          <Input placeholder="请输入物品标题" />
+          <Input placeholder="请输入物品名称，建议30字以内" maxLength={30} />
         </Form.Item>
         
         <Form.Item
@@ -133,29 +171,30 @@ const ItemEdit = () => {
         
         <Form.Item
           name="price"
-          label="价格"
+          label="价格(元)"
           rules={[{ required: true, message: '请输入价格' }]}
         >
           <InputNumber
             min={0}
+            precision={2}
             style={{ width: '100%' }}
-            formatter={value => `¥ ${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
-            parser={value => value.replace(/\¥\s?|(,*)/g, '')}
+            placeholder="请输入价格"
           />
         </Form.Item>
         
         <Form.Item
-          name="category"
-          label="分类"
-          rules={[{ required: true, message: '请选择分类' }]}
+          name="categoryId"
+          label="物品分类"
+          rules={[{ required: true, message: '请选择物品分类' }]}
         >
-          <Select placeholder="请选择分类">
-            <Option value="电子产品">电子产品</Option>
-            <Option value="书籍教材">书籍教材</Option>
-            <Option value="家居用品">家居用品</Option>
-            <Option value="服装鞋包">服装鞋包</Option>
-            <Option value="运动户外">运动户外</Option>
-            <Option value="其他">其他</Option>
+          <Select placeholder="选择物品分类">
+            {(categories || []).length === 0 ? (
+                <Option disabled value="">暂无数据</Option>
+            ) : (
+                categories.map(category => (
+                    <Option key={category.id} value={category.id}>{category.name}</Option>
+                ))
+            )}
           </Select>
         </Form.Item>
         
@@ -164,41 +203,44 @@ const ItemEdit = () => {
           label="新旧程度"
           rules={[{ required: true, message: '请选择新旧程度' }]}
         >
-          <Select placeholder="请选择新旧程度">
-            <Option value="全新">全新</Option>
-            <Option value="几乎全新">几乎全新</Option>
-            <Option value="八成新">八成新</Option>
-            <Option value="五成新">五成新</Option>
-            <Option value="三成新">三成新</Option>
-          </Select>
+          <ConditionSelect />
         </Form.Item>
         
-        <Form.Item
-          label="图片"
-        >
+        <Form.Item label="图片">
           <Upload
+            name="file"
             listType="picture-card"
-            fileList={imageList}
-            customRequest={({ file, onSuccess }) => {
-              setTimeout(() => {
-                onSuccess("ok");
-              }, 0);
-            }}
-            onChange={handleUpload}
-            onRemove={file => {
-              const index = imageList.indexOf(file);
-              const newFileList = imageList.slice();
+            fileList={fileList}
+            beforeUpload={handleUpload}
+            onRemove={async (file) => {
+              const index = fileList.indexOf(file);
+              const newFileList = fileList.slice();
               newFileList.splice(index, 1);
-              setImageList(newFileList);
+              setFileList(newFileList);
+              const newImageIdList = imageIdList.slice();
+              const url = file.url;
+              const match = url && url.match(/\/api\/image\/([a-fA-F0-9]+)/);
+              const imageId = match ? match[1] : url;
+              newImageIdList.splice(index, 1);
+              setImageIdList(newImageIdList);
+              try {
+                await dispatch(deleteFile(imageId));
+                message.success('图片已删除');
+              } catch (e) {
+                message.error('图片删除失败');
+              }
             }}
+            disabled={fileList.length >= 5 || uploading}
+            showUploadList={{ showRemoveIcon: true }}
           >
-            {imageList.length >= 5 ? null : (
+            {fileList.length >= 5 ? null : (
               <div>
                 <UploadOutlined />
-                <div style={{ marginTop: 8 }}>上传</div>
+                <div style={{ marginTop: 8 }}>上传图片</div>
               </div>
             )}
           </Upload>
+          {uploading && <Spin tip="上传中..." />}
         </Form.Item>
         
         <Form.Item>
