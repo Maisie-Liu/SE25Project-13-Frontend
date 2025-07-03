@@ -26,6 +26,8 @@ instance.interceptors.request.use(
       data: config.data
     });
     
+    console.log('请求token:', token, config.url);
+    
     return config;
   },
   (error) => {

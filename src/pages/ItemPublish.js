@@ -150,7 +150,7 @@ const ItemPublish = () => {
           onFinish={onFinish}
           initialValues={{
             condition: 3, // 默认为9成新
-            quantity: 1,
+            stock: 1,
           }}
         >
           <Row gutter={24}>
@@ -209,14 +209,14 @@ const ItemPublish = () => {
             
             <Col span={12}>
               <Form.Item
-                name="quantity"
-                label="数量"
-                rules={[{ required: true, message: '请输入数量' }]}
+                name="stock"
+                label="库存"
+                rules={[{ required: true, message: '请输入库存' }]}
               >
                 <InputNumber 
                   min={1}
                   style={{ width: '100%' }}
-                  placeholder="请输入数量"
+                  placeholder="请输入库存"
                 />
               </Form.Item>
             </Col>

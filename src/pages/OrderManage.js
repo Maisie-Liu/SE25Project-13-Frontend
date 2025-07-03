@@ -161,7 +161,7 @@ const OrderManage = () => {
       case 1:
         return <Tag>线下交易</Tag>;
       case 2:
-        return <Tag color="gold">定金托管</Tag>;
+        return <Tag color="gold">线上交易</Tag>;
       default:
         return <Tag>未知</Tag>;
     }
