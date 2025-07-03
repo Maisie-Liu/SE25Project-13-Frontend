@@ -1,4 +1,5 @@
 import React from 'react';
+import styled from 'styled-components';
 import { Layout, Row, Col, Typography, Space, Divider, Button, Input, Form } from 'antd';
 import { 
   GithubOutlined, 
@@ -16,6 +17,187 @@ import {
 const { Footer: AntFooter } = Layout;
 const { Title, Text, Link, Paragraph } = Typography;
 
+// 使用styled-components创建样式组件
+const StyledFooter = styled(AntFooter)`
+  background: #f0f5f9;
+  padding: 40px 0 20px;
+  position: relative;
+  overflow: hidden;
+  
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, #00B8A9, #0DD8C8, #00B8A9);
+  }
+`;
+
+const BrandTitle = styled(Title)`
+  &.ant-typography {
+    font-family: 'Ma Shan Zheng', cursive;
+    font-size: 32px;
+    margin: 0;
+    color: #00B8A9;
+    position: relative;
+    display: inline-block;
+    
+    &::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      width: 50%;
+      height: 2px;
+      background: linear-gradient(90deg, #00B8A9, transparent);
+      border-radius: 2px;
+    }
+  }
+`;
+
+const StyledIcon = styled.div`
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+  margin-right: 10px;
+  transition: all 0.3s;
+  
+  &:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.12);
+  }
+  
+  .anticon {
+    font-size: 18px;
+    color: #00B8A9;
+  }
+`;
+
+const SocialButton = styled(Button)`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
+  transition: all 0.3s;
+  margin-right: 10px;
+  
+  &:hover {
+    transform: translateY(-3px) rotate(5deg);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    background: #f9f9f9;
+  }
+  
+  .anticon {
+    font-size: 18px;
+    color: #00B8A9;
+  }
+`;
+
+const FooterLink = styled(Link)`
+  color: #4a5568;
+  position: relative;
+  padding-left: 10px;
+  transition: all 0.3s;
+  display: block;
+  font-family: 'Noto Sans SC', sans-serif;
+  font-size: 14px;
+  line-height: 1.8;
+  margin-bottom: 8px;
+  
+  &::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 50%;
+    width: 4px;
+    height: 4px;
+    background: #00B8A9;
+    border-radius: 50%;
+    transform: translateY(-50%);
+    opacity: 0.7;
+    transition: all 0.3s;
+  }
+  
+  &:hover {
+    color: #00B8A9;
+    padding-left: 14px;
+    
+    &::before {
+      width: 5px;
+      height: 5px;
+      opacity: 1;
+    }
+  }
+`;
+
+const AppDownload = styled.div`
+  background: linear-gradient(135deg, rgba(0, 184, 169, 0.05) 0%, rgba(13, 216, 200, 0.1) 100%);
+  padding: 16px;
+  border-radius: 10px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02);
+  border: 1px solid rgba(0, 184, 169, 0.1);
+`;
+
+const AppButton = styled(Button)`
+  border-radius: 6px;
+  height: 34px;
+  padding: 0 14px;
+  background: linear-gradient(135deg, #00B8A9, #0DD8C8);
+  border: none;
+  font-weight: 500;
+  box-shadow: 0 2px 6px rgba(0, 184, 169, 0.2);
+  transition: all 0.3s;
+  
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 10px rgba(0, 184, 169, 0.3);
+    background: linear-gradient(135deg, #00a89a, #0cc8b8);
+  }
+`;
+
+const CopyrightText = styled(Text)`
+  font-family: 'Zhi Mang Xing', cursive;
+  font-size: 18px;
+  letter-spacing: 1px;
+  background: linear-gradient(90deg, #00B8A9, #0DD8C8);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+`;
+
+const FooterDivider = styled(Divider)`
+  &.ant-divider {
+    margin: 24px 0 16px;
+    
+    &::before, &::after {
+      border-top: 1px solid #e2e8f0;
+    }
+  }
+`;
+
+const FooterSection = styled.div`
+  margin-bottom: 16px;
+`;
+
+const SectionTitle = styled(Title)`
+  &.ant-typography {
+    color: #2d3748;
+    margin-bottom: 16px;
+    font-weight: 600;
+    font-size: 16px;
+  }
+`;
+
 const Footer = () => {
   const onFinish = (values) => {
     console.log('Received values:', values);
@@ -23,133 +205,138 @@ const Footer = () => {
   };
 
   return (
-    <AntFooter>
+    <StyledFooter>
       <div className="container">
-        <Row gutter={[24, 24]}>
+        <Row gutter={[32, 32]}>
           <Col xs={24} sm={24} md={8} lg={8}>
-            <div style={{ marginBottom: 16 }}>
-              <Space align="center">
-                <ShoppingOutlined style={{ fontSize: 24, color: 'var(--primary-color)' }} />
-                <Title level={4} style={{ margin: 0, color: 'var(--primary-color)' }}>校园二手交易平台</Title>
+            <FooterSection>
+              <Space align="center" style={{ marginBottom: 16 }}>
+                <ShoppingOutlined style={{ fontSize: 24, color: '#00B8A9' }} />
+                <BrandTitle level={4}>交物通</BrandTitle>
               </Space>
-            </div>
-            <Paragraph style={{ color: 'var(--light-text-color)', marginBottom: 24 }}>
-              让闲置物品流通起来，让校园生活更加便利。
-              我们致力于为校园师生提供安全、便捷的二手物品交易平台。
-            </Paragraph>
-            <div style={{ marginBottom: 16 }}>
-              <Title level={5} style={{ color: 'var(--text-color)' }}>关注我们</Title>
-              <Space size="middle">
-                <Button 
-                  type="text" 
-                  icon={<FacebookOutlined />} 
-                  style={{ color: 'var(--primary-color)', fontSize: '18px' }}
-                />
-                <Button 
-                  type="text" 
-                  icon={<TwitterOutlined />} 
-                  style={{ color: 'var(--primary-color)', fontSize: '18px' }}
-                />
-                <Button 
-                  type="text" 
-                  icon={<InstagramOutlined />} 
-                  style={{ color: 'var(--primary-color)', fontSize: '18px' }}
-                />
-                <Button 
-                  type="text" 
-                  icon={<LinkedinOutlined />} 
-                  style={{ color: 'var(--primary-color)', fontSize: '18px' }}
-                />
-                <Button 
-                  type="text" 
-                  icon={<GithubOutlined />} 
-                  style={{ color: 'var(--primary-color)', fontSize: '18px' }}
-                />
-              </Space>
-            </div>
-          </Col>
-          
-          <Col xs={24} sm={12} md={8} lg={8}>
-            <Title level={5} style={{ color: 'var(--text-color)' }}>快速链接</Title>
-            <Row gutter={[16, 16]}>
-              <Col span={12}>
-                <div style={{ display: 'flex', flexDirection: 'column' }}>
-                  <Link href="/" style={{ color: 'var(--light-text-color)', marginBottom: 8 }}>首页</Link>
-                  <Link href="/items" style={{ color: 'var(--light-text-color)', marginBottom: 8 }}>全部物品</Link>
-                  <Link href="/items/publish" style={{ color: 'var(--light-text-color)', marginBottom: 8 }}>发布物品</Link>
-                </div>
-              </Col>
-              <Col span={12}>
-                <div style={{ display: 'flex', flexDirection: 'column' }}>
-                  <Link href="/about" style={{ color: 'var(--light-text-color)', marginBottom: 8 }}>关于我们</Link>
-                  <Link href="/help" style={{ color: 'var(--light-text-color)', marginBottom: 8 }}>帮助中心</Link>
-                  <Link href="/terms" style={{ color: 'var(--light-text-color)', marginBottom: 8 }}>服务条款</Link>
-                </div>
-              </Col>
-            </Row>
-            
-            <div style={{ marginTop: 24 }}>
-              <Title level={5} style={{ color: 'var(--text-color)' }}>联系我们</Title>
-              <div style={{ display: 'flex', flexDirection: 'column' }}>
-                <Space style={{ marginBottom: 8 }}>
-                  <MailOutlined style={{ color: 'var(--primary-color)' }} />
-                  <Text style={{ color: 'var(--light-text-color)' }}>contact@campus-trading.com</Text>
-                </Space>
-                <Space style={{ marginBottom: 8 }}>
-                  <PhoneOutlined style={{ color: 'var(--primary-color)' }} />
-                  <Text style={{ color: 'var(--light-text-color)' }}>123-456-7890</Text>
-                </Space>
-                <Space style={{ marginBottom: 8 }}>
-                  <WechatOutlined style={{ color: 'var(--primary-color)' }} />
-                  <Text style={{ color: 'var(--light-text-color)' }}>campus_trading</Text>
+              <Paragraph style={{ color: '#4a5568', marginBottom: 16, fontSize: '14px' }}>
+                让闲置物品流通起来，让校园生活更加便利。
+                我们致力于为校园师生提供安全、便捷的二手物品交易平台。
+              </Paragraph>
+              <div>
+                <SectionTitle level={5}>关注我们</SectionTitle>
+                <Space size="small">
+                  <SocialButton 
+                    type="text" 
+                    icon={<FacebookOutlined />}
+                  />
+                  <SocialButton 
+                    type="text" 
+                    icon={<TwitterOutlined />}
+                  />
+                  <SocialButton 
+                    type="text" 
+                    icon={<InstagramOutlined />}
+                  />
+                  <SocialButton 
+                    type="text" 
+                    icon={<LinkedinOutlined />}
+                  />
+                  <SocialButton 
+                    type="text" 
+                    icon={<GithubOutlined />}
+                  />
                 </Space>
               </div>
-            </div>
+            </FooterSection>
           </Col>
           
           <Col xs={24} sm={12} md={8} lg={8}>
-            <Title level={5} style={{ color: 'var(--text-color)' }}>订阅我们</Title>
-            <Paragraph style={{ color: 'var(--light-text-color)' }}>
-              订阅我们的新闻邮件，获取最新的平台动态和优质物品推荐
-            </Paragraph>
-            <Form onFinish={onFinish}>
-              <Form.Item name="email" rules={[{ required: true, message: '请输入您的邮箱!' }]}>
-                <Input.Search
-                  placeholder="请输入您的邮箱"
-                  enterButton={<><SendOutlined /> 订阅</>}
-                  size="middle"
-                  className="search-box"
-                />
-              </Form.Item>
-            </Form>
+            <FooterSection>
+              <SectionTitle level={5}>快速链接</SectionTitle>
+              <Row gutter={[16, 16]}>
+                <Col span={12}>
+                  <div style={{ display: 'flex', flexDirection: 'column' }}>
+                    <FooterLink href="/">首页</FooterLink>
+                    <FooterLink href="/items">全部物品</FooterLink>
+                    <FooterLink href="/items/publish">发布物品</FooterLink>
+                  </div>
+                </Col>
+                <Col span={12}>
+                  <div style={{ display: 'flex', flexDirection: 'column' }}>
+                    <FooterLink href="/about">关于我们</FooterLink>
+                    <FooterLink href="/help">帮助中心</FooterLink>
+                    <FooterLink href="/terms">服务条款</FooterLink>
+                  </div>
+                </Col>
+              </Row>
+            </FooterSection>
             
-            <div style={{ marginTop: 24, background: 'rgba(0, 184, 169, 0.1)', padding: 16, borderRadius: 8 }}>
-              <Title level={5} style={{ color: 'var(--primary-color)' }}>下载我们的APP</Title>
-              <Paragraph style={{ color: 'var(--light-text-color)' }}>
+            <FooterSection>
+              <SectionTitle level={5}>联系我们</SectionTitle>
+              <div style={{ display: 'flex', flexDirection: 'column' }}>
+                <Space style={{ marginBottom: 10 }}>
+                  <StyledIcon>
+                    <MailOutlined />
+                  </StyledIcon>
+                  <Text style={{ color: '#4a5568' }}>contact@campus-trading.com</Text>
+                </Space>
+                <Space style={{ marginBottom: 10 }}>
+                  <StyledIcon>
+                    <PhoneOutlined />
+                  </StyledIcon>
+                  <Text style={{ color: '#4a5568' }}>123-456-7890</Text>
+                </Space>
+                <Space style={{ marginBottom: 10 }}>
+                  <StyledIcon>
+                    <WechatOutlined />
+                  </StyledIcon>
+                  <Text style={{ color: '#4a5568' }}>campus_trading</Text>
+                </Space>
+              </div>
+            </FooterSection>
+          </Col>
+          
+          <Col xs={24} sm={12} md={8} lg={8}>
+            <FooterSection>
+              <SectionTitle level={5}>订阅我们</SectionTitle>
+              <Paragraph style={{ color: '#4a5568', marginBottom: 14, fontSize: '14px' }}>
+                订阅我们的新闻邮件，获取最新的平台动态和优质物品推荐
+              </Paragraph>
+              <Form onFinish={onFinish}>
+                <Form.Item name="email" rules={[{ required: true, message: '请输入您的邮箱!' }]}>
+                  <Input.Search
+                    placeholder="请输入您的邮箱"
+                    enterButton={<SendOutlined />}
+                    size="middle"
+                    style={{ borderRadius: '6px', overflow: 'hidden' }}
+                  />
+                </Form.Item>
+              </Form>
+            </FooterSection>
+            
+            <AppDownload>
+              <SectionTitle level={5} style={{ color: '#00B8A9', marginBottom: 10 }}>下载我们的APP</SectionTitle>
+              <Paragraph style={{ color: '#4a5568', marginBottom: 12, fontSize: '14px' }}>
                 扫描二维码下载APP，享受更流畅的交易体验
               </Paragraph>
-              <div style={{ display: 'flex', gap: 8 }}>
-                <Button type="primary" style={{ borderRadius: 4 }}>Android版</Button>
-                <Button type="primary" style={{ borderRadius: 4 }}>iOS版</Button>
+              <div style={{ display: 'flex', gap: 10 }}>
+                <AppButton type="primary">Android版</AppButton>
+                <AppButton type="primary">iOS版</AppButton>
               </div>
-            </div>
+            </AppDownload>
           </Col>
         </Row>
         
-        <Divider style={{ borderColor: 'var(--border-color)', margin: '24px 0 16px' }} />
+        <FooterDivider />
         
         <div style={{ textAlign: 'center' }}>
-          <Text style={{ color: 'var(--lighter-text-color)' }}>
-            © {new Date().getFullYear()} 校园二手交易平台 版权所有
-          </Text>
-          <div style={{ marginTop: 8 }}>
-            <Link href="/privacy" style={{ color: 'var(--lighter-text-color)', marginRight: 16 }}>隐私政策</Link>
-            <Link href="/terms" style={{ color: 'var(--lighter-text-color)', marginRight: 16 }}>服务条款</Link>
-            <Link href="/sitemap" style={{ color: 'var(--lighter-text-color)' }}>网站地图</Link>
+          <CopyrightText>
+            © {new Date().getFullYear()} 交物通 版权所有
+          </CopyrightText>
+          <div style={{ marginTop: 10 }}>
+            <Link href="/privacy" style={{ color: '#718096', margin: '0 16px' }}>隐私政策</Link>
+            <Link href="/terms" style={{ color: '#718096', margin: '0 16px' }}>服务条款</Link>
+            <Link href="/sitemap" style={{ color: '#718096', margin: '0 16px' }}>网站地图</Link>
           </div>
         </div>
       </div>
-    </AntFooter>
+    </StyledFooter>
   );
 };
 
