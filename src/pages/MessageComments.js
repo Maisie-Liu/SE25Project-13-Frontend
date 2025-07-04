@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useDispatch } from 'react-redux';
 import { 
   Typography, 
   Button, 
@@ -33,92 +34,62 @@ import {
 } from '@ant-design/icons';
 import { format, formatDistanceToNow } from 'date-fns';
 import { zhCN } from 'date-fns/locale';
-import axios from '../utils/axios';
+import { 
+  fetchCommentMessages, 
+  markMessageAsRead, 
+  markAllMessagesByTypeAsRead,
+  fetchUnreadMessagesByTypeCount
+} from '../store/actions/messageActions';
 
 const { Title, Text, Paragraph } = Typography;
 const { Search } = Input;
 
 const MessageComments = () => {
   const navigate = useNavigate();
+  const dispatch = useDispatch();
   const [loading, setLoading] = useState(true);
   const [commentMessages, setCommentMessages] = useState([]);
   const [filter, setFilter] = useState('all');
   const [keyword, setKeyword] = useState('');
+  const [pagination, setPagination] = useState({
+    current: 1,
+    pageSize: 10,
+    total: 0
+  });
+  const [unreadCount, setUnreadCount] = useState(0);
   
-  // 模拟获取评论消息
+  // 获取评论消息
   useEffect(() => {
-    const fetchCommentMessages = async () => {
+    const loadCommentMessages = async () => {
       setLoading(true);
       try {
-        // 模拟数据
-        const mockCommentMessages = [
-          {
-            id: 1,
-            type: 'comment',
-            itemId: 101,
-            itemName: 'iPhone 13 128G',
-            itemImage: 'https://via.placeholder.com/50',
-            itemPrice: 4999,
-            content: '这个手机怎么样，用着好吗？',
-            fromUser: {
-              id: 201,
-              username: '张三',
-              avatar: 'https://via.placeholder.com/40'
-            },
-            createdAt: new Date(Date.now() - 1000 * 60 * 30),
-            read: false
-          },
-          {
-            id: 2,
-            type: 'comment',
-            itemId: 102,
-            itemName: '二手自行车',
-            itemImage: 'https://via.placeholder.com/50',
-            itemPrice: 350,
-            content: '还能便宜一点吗？',
-            fromUser: {
-              id: 202,
-              username: '李四',
-              avatar: 'https://via.placeholder.com/40'
-            },
-            createdAt: new Date(Date.now() - 1000 * 60 * 60 * 3),
-            read: true
-          },
-          {
-            id: 3,
-            type: 'comment',
-            itemId: 103,
-            itemName: '大学教材',
-            itemImage: 'https://via.placeholder.com/50',
-            itemPrice: 45,
-            content: '这本书是哪个版本的？',
-            fromUser: {
-              id: 203,
-              username: '王五',
-              avatar: 'https://via.placeholder.com/40'
-            },
-            createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24),
-            read: true
-          },
-          {
-            id: 4,
-            type: 'comment',
-            itemId: 104,
-            itemName: '耳机',
-            itemImage: 'https://via.placeholder.com/50',
-            itemPrice: 89,
-            content: '音质怎么样？适合听什么类型的音乐？',
-            fromUser: {
-              id: 204,
-              username: '赵六',
-              avatar: 'https://via.placeholder.com/40'
-            },
-            createdAt: new Date(Date.now() - 1000 * 60 * 60 * 48),
-            read: false
-          }
-        ];
+        console.log('开始获取评论消息，页码:', pagination.current - 1, '每页数量:', pagination.pageSize);
+        const result = await dispatch(fetchCommentMessages(pagination.current - 1, pagination.pageSize));
+        console.log('fetchCommentMessages返回结果:', result);
+        const response = result.payload || result;
+        console.log('处理后的响应数据:', response);
         
-        setCommentMessages(mockCommentMessages);
+        // 处理嵌套的响应格式
+        if (response && response.code === 200 && response.data) {
+          console.log('评论消息内容:', response.data);
+          // 使用response.data中的数据
+          setCommentMessages(response.data.list || []);
+          setPagination({
+            ...pagination,
+            total: response.data.total || 0
+          });
+          console.log('更新分页信息，总数:', response.data.total);
+        } else {
+          console.error('响应数据格式不正确:', response);
+          message.error('获取数据格式错误');
+        }
+        
+        // 获取未读消息数量
+        const unreadResult = await dispatch(fetchUnreadMessagesByTypeCount('COMMENT'));
+        const unreadResponse = unreadResult.payload || unreadResult;
+        if (unreadResponse && unreadResponse.data !== undefined) {
+          setUnreadCount(unreadResponse.data);
+        }
       } catch (error) {
         console.error('获取评论消息失败:', error);
         message.error('获取评论消息失败');
@@ -127,19 +98,22 @@ const MessageComments = () => {
       }
     };
     
-    fetchCommentMessages();
-  }, []);
+    loadCommentMessages();
+  }, [dispatch, pagination.current, pagination.pageSize]);
   
   // 标记为已读
-  const markAsRead = async (id) => {
+  const markAsRead = async (messageId) => {
     try {
-      // 实际应该调用API
-      console.log(`标记消息 ${id} 为已读`);
+      await dispatch(markMessageAsRead(messageId));
       
       // 更新本地状态
       setCommentMessages(prev => 
-        prev.map(msg => msg.id === id ? {...msg, read: true} : msg)
+        prev.map(msg => msg.id === messageId ? {...msg, read: true} : msg)
       );
+      
+      // 更新未读数量
+      setUnreadCount(prev => Math.max(0, prev - 1));
+      
       message.success('已标记为已读');
     } catch (error) {
       console.error('标记已读失败:', error);
@@ -181,9 +155,9 @@ const MessageComments = () => {
     if (keyword) {
       filtered = filtered.filter(
         msg => 
-          msg.content.includes(keyword) || 
-          msg.itemName.includes(keyword) ||
-          msg.fromUser.username.includes(keyword)
+          (msg.content && msg.content.includes(keyword)) || 
+          (msg.itemName && msg.itemName.includes(keyword)) ||
+          (msg.sender && msg.sender.username && msg.sender.username.includes(keyword))
       );
     }
     
@@ -192,23 +166,33 @@ const MessageComments = () => {
   };
   
   const filteredMessages = getFilteredMessages();
-  const unreadCount = commentMessages.filter(msg => !msg.read).length;
   const readCount = commentMessages.filter(msg => msg.read).length;
   const totalCount = commentMessages.length;
   
   // 所有评论消息标为已读
-  const markAllAsRead = () => {
+  const markAllAsRead = async () => {
     if (unreadCount === 0) return;
     
     try {
+      await dispatch(markAllMessagesByTypeAsRead('COMMENT'));
+      
       // 更新本地状态
       setCommentMessages(prev => 
         prev.map(msg => ({...msg, read: true}))
       );
+      setUnreadCount(0);
+      
       message.success('已将所有评论消息标记为已读');
     } catch (error) {
       console.error('标记全部已读失败:', error);
       message.error('标记全部已读失败');
+    }
+  };
+  
+  // 查看物品详情
+  const viewItemDetail = (itemId) => {
+    if (itemId) {
+      navigate(`/items/${itemId}`);
     }
   };
   
@@ -312,12 +296,12 @@ const MessageComments = () => {
                     <div className="comment-message-header">
                       <div className="comment-message-user">
                         <Avatar 
-                          src={item.fromUser.avatar} 
+                          src={item.sender?.avatarUrl} 
                           icon={<UserOutlined />} 
                           size="large"
                         />
                         <div className="comment-message-user-info">
-                          <Text strong>{item.fromUser.username}</Text>
+                          <Text strong>{item.sender?.username || '未知用户'}</Text>
                           <Text type="secondary">{formatTime(item.createdAt)}</Text>
                         </div>
                       </div>
@@ -362,7 +346,7 @@ const MessageComments = () => {
                       <Button 
                         type="text" 
                         icon={<ShopOutlined />} 
-                        onClick={() => navigate(`/items/${item.itemId}`)}
+                        onClick={() => viewItemDetail(item.itemId)}
                       >
                         查看物品
                       </Button>
@@ -390,8 +374,8 @@ const MessageComments = () => {
                     <div className="comment-message-item">
                       <div className="comment-message-item-info">
                         <img 
-                          src={item.itemImage} 
-                          alt={item.itemName} 
+                          src={item.itemImage || 'https://via.placeholder.com/60?text=No+Image'} 
+                          alt={item.itemName || '物品'} 
                           className="comment-message-image"
                           style={{
                             width: '60px',
@@ -401,8 +385,8 @@ const MessageComments = () => {
                           }}
                         />
                         <div className="comment-message-item-details">
-                          <Text strong ellipsis style={{ maxWidth: '100%' }}>{item.itemName}</Text>
-                          <Text type="danger">¥{item.itemPrice}</Text>
+                          <Text strong ellipsis style={{ maxWidth: '100%' }}>{item.itemName || '未命名物品'}</Text>
+                          <Text type="danger">¥{item.itemPrice || '暂无价格'}</Text>
                         </div>
                       </div>
                     </div>

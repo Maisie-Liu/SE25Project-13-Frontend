@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { useSelector } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { 
   Card, 
   Input, 
@@ -23,9 +23,21 @@ import {
   InfoCircleOutlined,
   PictureOutlined
 } from '@ant-design/icons';
-import axios from '../utils/axios';
-import { selectUser } from '../store/slices/authSlice';
 import { format } from 'date-fns';
+
+import { selectUser } from '../store/slices/authSlice';
+import { 
+  fetchChatMessages, 
+  sendChatMessage, 
+  markChatMessagesAsRead 
+} from '../store/actions/chatActions';
+import { 
+  selectChatMessages, 
+  selectChatLoading, 
+  selectChatError 
+} from '../store/slices/chatSlice';
+
+import './Chat.css';
 
 const { Title, Text, Paragraph } = Typography;
 const { TextArea } = Input;
@@ -33,79 +45,55 @@ const { TextArea } = Input;
 const Chat = () => {
   const { chatId } = useParams();
   const navigate = useNavigate();
+  const dispatch = useDispatch();
   const currentUser = useSelector(selectUser);
-  const [loading, setLoading] = useState(false);
+  const messages = useSelector(state => selectChatMessages(state, parseInt(chatId)));
+  const loading = useSelector(selectChatLoading);
+  const error = useSelector(selectChatError);
+  
   const [sending, setSending] = useState(false);
   const [messageText, setMessageText] = useState('');
   const [chatInfo, setChatInfo] = useState(null);
-  const [messages, setMessages] = useState([]);
   const messagesEndRef = useRef(null);
   
-  // 模拟获取聊天数据
+  // 获取聊天数据
   useEffect(() => {
     const fetchChatData = async () => {
-      setLoading(true);
+      if (!chatId) return;
+      
       try {
-        // 模拟聊天数据 - 实际项目中应该从API获取
-        const mockChatInfo = {
-          chatId: parseInt(chatId),
-          itemId: 106,
-          itemName: '键盘',
-          itemImage: 'https://via.placeholder.com/100',
-          itemPrice: 199,
-          otherUser: {
-            id: 204,
-            username: '赵六',
-            avatar: 'https://via.placeholder.com/40'
-          }
-        };
+        // 获取聊天消息
+        const messagesData = await dispatch(fetchChatMessages(parseInt(chatId))).unwrap();
         
-        // 模拟消息数据
-        const mockMessages = [
-          {
-            id: 1,
-            senderId: 204,
-            receiverId: currentUser.id,
-            content: '你好，这个物品还在吗？',
-            createdAt: new Date(Date.now() - 1000 * 60 * 60 * 2)
-          },
-          {
-            id: 2,
-            senderId: currentUser.id,
-            receiverId: 204,
-            content: '在的，有什么问题吗？',
-            createdAt: new Date(Date.now() - 1000 * 60 * 60 * 1.5)
-          },
-          {
-            id: 3,
-            senderId: 204,
-            receiverId: currentUser.id,
-            content: '能便宜一点吗？',
-            createdAt: new Date(Date.now() - 1000 * 60 * 60)
-          },
-          {
-            id: 4,
-            senderId: currentUser.id,
-            receiverId: 204,
-            content: '可以的，你想多少钱？',
-            createdAt: new Date(Date.now() - 1000 * 60 * 30)
-          }
-        ];
+        // 标记消息为已读
+        await dispatch(markChatMessagesAsRead(parseInt(chatId))).unwrap();
         
-        setChatInfo(mockChatInfo);
-        setMessages(mockMessages);
+        // 从消息中提取聊天信息
+        if (messagesData.content && messagesData.content.length > 0) {
+          const firstMessage = messagesData.content[0];
+          const otherUser = firstMessage.sender.id !== currentUser.id ? 
+            firstMessage.sender : 
+            (messagesData.content.find(m => m.sender.id !== currentUser.id)?.sender || null);
+          
+          setChatInfo({
+            chatId: parseInt(chatId),
+            itemId: firstMessage.itemId,
+            itemName: firstMessage.itemName,
+            itemImage: firstMessage.itemImage,
+            itemPrice: firstMessage.itemPrice,
+            otherUser: otherUser
+          });
+        }
       } catch (error) {
         console.error('获取聊天数据失败:', error);
         message.error('获取聊天数据失败');
-      } finally {
-        setLoading(false);
       }
     };
     
-    if (chatId) {
+    if (chatId && currentUser) {
       fetchChatData();
     }
-  }, [chatId, currentUser.id]);
+  }, [chatId, currentUser, dispatch]);
   
   // 滚动到最新消息
   useEffect(() => {
@@ -114,26 +102,11 @@ const Chat = () => {
   
   // 发送消息
   const handleSendMessage = async () => {
-    if (!messageText.trim()) return;
+    if (!messageText.trim() || !chatId) return;
     
     setSending(true);
     try {
-      // 实际项目中这里应该调用API发送消息
-      // 这里只是模拟，实际使用时请替换为真实API调用
-      
-      // 模拟新消息
-      const newMessage = {
-        id: messages.length + 1,
-        senderId: currentUser.id,
-        receiverId: chatInfo.otherUser.id,
-        content: messageText.trim(),
-        createdAt: new Date()
-      };
-      
-      // 更新消息列表
-      setMessages([...messages, newMessage]);
-      
-      // 清空输入框
+      await dispatch(sendChatMessage(parseInt(chatId), messageText.trim())).unwrap();
       setMessageText('');
     } catch (error) {
       console.error('发送消息失败:', error);
@@ -163,9 +136,26 @@ const Chat = () => {
     }
   };
   
+  if (error) {
+    return (
+      <div className="chat-error">
+        <Empty 
+          description={
+            <span>
+              加载聊天失败: {error}
+              <Button type="link" onClick={() => navigate('/my/messages/chats')}>
+                返回消息列表
+              </Button>
+            </span>
+          } 
+        />
+      </div>
+    );
+  }
+  
   return (
     <div className="chat-page">
-      {loading ? (
+      {loading && !chatInfo ? (
         <div className="loading-container">
           <Spin size="large" />
         </div>
@@ -175,14 +165,14 @@ const Chat = () => {
             <Button 
               type="link" 
               icon={<ArrowLeftOutlined />} 
-              onClick={() => navigate('/my/messages')}
+              onClick={() => navigate('/my/messages/chats')}
               style={{ marginRight: '10px', padding: 0 }}
             >
               返回
             </Button>
-            <Avatar src={chatInfo.otherUser.avatar} size="large" />
+            <Avatar src={chatInfo.otherUser?.avatarImageId} size="large" />
             <div className="chat-user-info">
-              <Title level={4} style={{ margin: 0 }}>{chatInfo.otherUser.username}</Title>
+              <Title level={4} style={{ margin: 0 }}>{chatInfo.otherUser?.username}</Title>
             </div>
           </Card>
           
@@ -203,7 +193,7 @@ const Chat = () => {
               {messages.length > 0 ? (
                 <>
                   {messages.map((msg, index) => {
-                    const isSelf = msg.senderId === currentUser.id;
+                    const isSelf = msg.sender.id === currentUser.id;
                     const showDate = index === 0 || 
                       formatDate(msg.createdAt) !== formatDate(messages[index - 1].createdAt);
                     
@@ -216,7 +206,7 @@ const Chat = () => {
                         )}
                         <div className={`chat-message ${isSelf ? 'self' : 'other'}`}>
                           {!isSelf && (
-                            <Avatar src={chatInfo.otherUser.avatar} size="small" />
+                            <Avatar src={msg.sender.avatarImageId} size="small" />
                           )}
                           <div className="message-bubble">
                             <div className="message-content">{msg.content}</div>
