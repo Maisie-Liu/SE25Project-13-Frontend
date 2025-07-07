@@ -248,53 +248,31 @@ const MessageChats = () => {
   // 格式化消息时间（聊天界面用）
   const formatMessageTime = (date) => {
     try {
-      const messageDate = new Date(date);
-      const today = new Date();
-      const yesterday = new Date(today);
-      yesterday.setDate(yesterday.getDate() - 1);
-      
-      // 如果是今天的消息，只显示时间
-      if (messageDate.toDateString() === today.toDateString()) {
-        return format(messageDate, 'HH:mm');
-      }
-      // 如果是昨天的消息，显示"昨天 时间"
-      else if (messageDate.toDateString() === yesterday.toDateString()) {
-        return `昨天 ${format(messageDate, 'HH:mm')}`;
-      }
-      // 其他情况显示完整日期和时间
-      else {
-        return format(messageDate, 'yyyy-MM-dd HH:mm');
-      }
+      return format(new Date(date), 'MM-dd HH:mm');
     } catch (error) {
       const d = new Date(date);
-      return `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()} ${d.getHours()}:${d.getMinutes()}`;
+      return `${d.getMonth() + 1}-${d.getDate()} ${d.getHours()}:${d.getMinutes()}`;
     }
   };
   
-  // 过滤聊天组
+  // 根据关键字过滤聊天
   const getFilteredChatGroups = () => {
-    let filtered = Object.values(chatGroups);
+    const groups = Object.values(chatGroups);
+    if (!keyword) return groups;
     
-    // 按关键词搜索
-    if (keyword) {
-      filtered = filtered.filter(
-        group => 
-          (group.lastMessage && group.lastMessage.includes(keyword)) ||
-          (group.itemName && group.itemName.includes(keyword)) ||
-          (group.otherUser && group.otherUser.username && group.otherUser.username.includes(keyword))
-      );
-    }
-    
-    // 按最后消息时间排序
-    return filtered.sort((a, b) => new Date(b.lastMessageTime) - new Date(a.lastMessageTime));
+    return groups.filter(group => {
+      const matchUser = group.otherUser?.username?.toLowerCase().includes(keyword.toLowerCase());
+      const matchItem = group.itemName?.toLowerCase().includes(keyword.toLowerCase());
+      const matchMessage = group.lastMessage?.toLowerCase().includes(keyword.toLowerCase());
+      return matchUser || matchItem || matchMessage;
+    });
   };
   
   const filteredChatGroups = getFilteredChatGroups();
-  const totalUnreadCount = Object.values(chatGroups).reduce((total, group) => total + group.unreadCount, 0);
   
-  // 所有聊天消息标为已读
+  // 标记所有消息为已读
   const markAllAsRead = async () => {
-    if (totalUnreadCount === 0) return;
+    if (unreadCount === 0) return;
     
     try {
       await dispatch(markAllMessagesByTypeAsRead('CHAT'));
@@ -303,6 +281,9 @@ const MessageChats = () => {
       setChatMessages(prev => 
         prev.map(msg => ({...msg, read: true}))
       );
+      
+      // 更新未读数量
+      setUnreadCount(0);
       
       // 更新分组中的未读数
       const updatedGroups = {...chatGroups};
@@ -314,23 +295,19 @@ const MessageChats = () => {
       });
       setChatGroups(updatedGroups);
       
-      setUnreadCount(0);
-      
-      message.success('已将所有聊天消息标记为已读');
+      message.success('已全部标记为已读');
     } catch (error) {
       console.error('标记全部已读失败:', error);
       message.error('标记全部已读失败');
     }
   };
   
-  // 发送新消息（这里只是模拟，实际需要调用API）
+  // 发送消息
   const sendMessage = () => {
-    if (!newMessage.trim() || !selectedChatId) {
-      return;
-    }
+    if (!newMessage.trim() || !selectedChatId) return;
     
-    // 这里应该调用API发送消息
-    message.success('消息发送功能尚未实现');
+    // 这里应该调用发送消息的API
+    console.log('发送消息:', newMessage, '到聊天:', selectedChatId);
     setNewMessage('');
   };
   
@@ -351,26 +328,28 @@ const MessageChats = () => {
   const selectedChat = selectedChatId ? chatGroups[selectedChatId] : null;
   
   return (
-    <div className="chat-page">
-      <div className="chat-header">
-        <Button 
-          type="link" 
-          icon={<ArrowLeftOutlined />} 
-          onClick={() => navigate('/my/messages')}
-          style={{ padding: 0 }}
-        />
-        <Title level={3} className="chat-title">
-          <MessageOutlined /> 私聊消息
-          {totalUnreadCount > 0 && (
-            <Badge count={totalUnreadCount} style={{ marginLeft: '10px', backgroundColor: '#722ed1' }} />
-          )}
-        </Title>
+    <div className="chat-page" style={{ maxWidth: '1200px', margin: '0 auto', padding: '20px' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+        <div style={{ display: 'flex', alignItems: 'center' }}>
+          <Button 
+            type="link" 
+            icon={<ArrowLeftOutlined />} 
+            onClick={() => navigate('/my/messages')}
+            style={{ padding: 0 }}
+          />
+          <Title level={3} style={{ margin: 0, marginLeft: '10px' }}>
+            <MessageOutlined /> 私聊消息
+            {unreadCount > 0 && (
+              <Badge count={unreadCount} style={{ marginLeft: '10px', backgroundColor: '#722ed1' }} />
+            )}
+          </Title>
+        </div>
         
-        <div className="chat-actions">
+        <div>
           <Button 
             type="primary" 
             icon={<MessageOutlined />}
-            disabled={totalUnreadCount === 0}
+            disabled={unreadCount === 0}
             onClick={markAllAsRead}
           >
             全部已读
@@ -378,74 +357,85 @@ const MessageChats = () => {
         </div>
       </div>
       
-      <div className="chat-container">
+      <div style={{ display: 'flex', height: 'calc(100vh - 180px)', gap: '20px' }}>
         {/* 左侧聊天列表 */}
-        <div className="chat-sidebar">
-          <div className="chat-search">
+        <div style={{ width: '300px', display: 'flex', flexDirection: 'column', border: '1px solid #eee', borderRadius: '4px', overflow: 'hidden' }}>
+          <div style={{ padding: '10px' }}>
             <Search 
               placeholder="搜索聊天、消息或用户" 
               allowClear 
               onSearch={value => setKeyword(value)} 
+              style={{ width: '100%' }}
             />
           </div>
           
           {loading ? (
-            <div className="loading-container">
+            <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%' }}>
               <Spin size="large" />
             </div>
           ) : filteredChatGroups.length > 0 ? (
-            <List
-              className="chat-list"
-              dataSource={filteredChatGroups}
-              renderItem={group => (
-                <List.Item 
-                  className={`chat-list-item ${selectedChatId === group.chatId ? 'selected' : ''}`}
-                  onClick={() => selectChat(group.chatId)}
-                >
-                  <div className="chat-list-avatar">
-                    <Badge count={group.unreadCount} offset={[-5, 5]}>
-                      <Avatar 
-                        src={group.otherUser?.avatarUrl} 
-                        icon={<UserOutlined />} 
-                        size={46}
-                      />
-                    </Badge>
-                  </div>
-                  <div className="chat-list-content">
-                    <div className="chat-list-header">
-                      <Text strong className="chat-list-name">
-                        {group.otherUser?.username || '未知用户'}
-                      </Text>
-                      <Text type="secondary" className="chat-list-time">
-                        {formatMessageTime(group.lastMessageTime)}
-                      </Text>
-                    </div>
-                    <div className="chat-list-message">
-                      <Text type="secondary" ellipsis>
-                        {group.lastMessage || '暂无消息'}
-                      </Text>
-                    </div>
-                    <div className="chat-list-item-info">
-                      <Text type="secondary" className="chat-item-name" ellipsis>
-                        物品: {group.itemName || '未知物品'}
-                      </Text>
-                    </div>
-                  </div>
-                </List.Item>
-              )}
-            />
+            <div style={{ flex: 1, overflow: 'auto' }}>
+              <List
+                dataSource={filteredChatGroups}
+                renderItem={group => (
+                  <List.Item 
+                    style={{ 
+                      padding: '12px', 
+                      cursor: 'pointer',
+                      backgroundColor: selectedChatId === group.chatId ? '#e6f7ff' : 'transparent',
+                      borderBottom: '1px solid #f0f0f0'
+                    }}
+                    onClick={() => selectChat(group.chatId)}
+                  >
+                    <List.Item.Meta
+                      avatar={
+                        <Badge count={group.unreadCount} offset={[-5, 5]}>
+                          <Avatar 
+                            src={group.otherUser?.avatarUrl} 
+                            icon={<UserOutlined />} 
+                            size={46}
+                          />
+                        </Badge>
+                      }
+                      title={
+                        <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                          <Text strong style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                            {group.otherUser?.username || '未知用户'}
+                          </Text>
+                          <Text type="secondary" style={{ fontSize: '12px' }}>
+                            {formatMessageTime(group.lastMessageTime)}
+                          </Text>
+                        </div>
+                      }
+                      description={
+                        <>
+                          <div style={{ color: '#999', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                            {group.lastMessage || '暂无消息'}
+                          </div>
+                          <div style={{ fontSize: '12px', color: '#999', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                            物品: {group.itemName || '未知物品'}
+                          </div>
+                        </>
+                      }
+                    />
+                  </List.Item>
+                )}
+              />
+            </div>
           ) : (
-            <Empty description="暂无聊天记录" />
+            <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%' }}>
+              <Empty description="暂无聊天记录" />
+            </div>
           )}
         </div>
         
         {/* 右侧聊天内容 */}
-        <div className="chat-main">
+        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', border: '1px solid #eee', borderRadius: '4px', overflow: 'hidden' }}>
           {selectedChat ? (
             <>
               {/* 聊天头部 */}
-              <div className="chat-main-header">
-                <div className="chat-main-user">
+              <div style={{ padding: '12px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #eee', height: '60px' }}>
+                <div style={{ display: 'flex', alignItems: 'center' }}>
                   <Avatar 
                     src={selectedChat.otherUser?.avatarUrl} 
                     icon={<UserOutlined />} 
@@ -455,7 +445,7 @@ const MessageChats = () => {
                     {selectedChat.otherUser?.username || '未知用户'}
                   </Text>
                 </div>
-                <div className="chat-main-actions">
+                <div>
                   <Button 
                     type="text" 
                     icon={<ShopOutlined />}
@@ -467,26 +457,24 @@ const MessageChats = () => {
               </div>
               
               {/* 聊天物品信息 */}
-              <div className="chat-item-info">
-                <div className="chat-item-image">
+              <div style={{ padding: '10px 20px', display: 'flex', borderBottom: '1px solid #eee' }}>
+                <div style={{ width: '50px', height: '50px', marginRight: '10px' }}>
                   <img 
                     src={selectedChat.itemImage || 'https://via.placeholder.com/60?text=No+Image'} 
                     alt={selectedChat.itemName} 
+                    style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '4px' }}
                   />
                 </div>
-                <div className="chat-item-details">
+                <div style={{ display: 'flex', alignItems: 'center' }}>
                   <Text strong>{selectedChat.itemName || '未知物品'}</Text>
                 </div>
               </div>
               
               {/* 聊天消息区域 */}
-              <div className="chat-messages-container">
+              <div style={{ flex: 1, padding: '20px', overflowY: 'auto', backgroundColor: '#f5f5f5' }}>
                 {selectedChat.messages.length > 0 ? (
-                  <div className="chat-messages">
+                  <div style={{ display: 'flex', flexDirection: 'column' }}>
                     {selectedChat.messages.map((msg, index) => {
-                      // 调试输出
-                      console.log('渲染消息:', msg.id, '发送者ID:', msg.sender?.id, '当前用户ID:', currentUserId, '是否是自己:', Number(msg.sender?.id) === Number(currentUserId));
-                      
                       const isSelf = Number(msg.sender?.id) === Number(currentUserId);
                       const showTime = index === 0 || 
                         new Date(msg.createdAt) - new Date(selectedChat.messages[index-1].createdAt) > 5 * 60 * 1000;
@@ -494,32 +482,41 @@ const MessageChats = () => {
                       return (
                         <React.Fragment key={msg.id}>
                           {showTime && (
-                            <div className="chat-time-divider">
-                              <span>{formatMessageTime(msg.createdAt)}</span>
+                            <div style={{ textAlign: 'center', margin: '10px 0' }}>
+                              <span style={{ backgroundColor: '#f0f0f0', padding: '2px 8px', borderRadius: '10px', fontSize: '12px', color: '#999' }}>
+                                {formatMessageTime(msg.createdAt)}
+                              </span>
                             </div>
                           )}
-                          <div className={`chat-message ${isSelf ? 'self' : 'other'}`}>
-                            {!isSelf && (
-                              <div className="chat-avatar">
-                                <Avatar 
-                                  src={msg.sender?.avatarUrl} 
-                                  icon={<UserOutlined />} 
-                                  size={36}
-                                />
+                          <div 
+                            style={{ 
+                              display: 'flex', 
+                              marginBottom: '15px', 
+                              alignItems: 'flex-start',
+                              flexDirection: isSelf ? 'row-reverse' : 'row'
+                            }}
+                          >
+                            <Avatar 
+                              src={isSelf ? currentUser?.avatarUrl : msg.sender?.avatarUrl} 
+                              icon={<UserOutlined />} 
+                              size={36}
+                              style={{ margin: '0 8px' }}
+                            />
+                            <div 
+                              style={{ 
+                                maxWidth: '70%', 
+                                padding: '10px 15px', 
+                                borderRadius: '18px',
+                                backgroundColor: isSelf ? '#95ec69' : '#fff',
+                                border: isSelf ? 'none' : '1px solid #e8e8e8',
+                                borderTopLeftRadius: isSelf ? '18px' : '4px',
+                                borderTopRightRadius: isSelf ? '4px' : '18px'
+                              }}
+                            >
+                              <div style={{ fontSize: '14px', lineHeight: 1.6 }}>
+                                {msg.content}
                               </div>
-                            )}
-                            <div className="chat-bubble">
-                              <div className="chat-content">{msg.content}</div>
                             </div>
-                            {isSelf && (
-                              <div className="chat-avatar">
-                                <Avatar 
-                                  src={currentUser?.avatarUrl} 
-                                  icon={<UserOutlined />} 
-                                  size={36}
-                                />
-                              </div>
-                            )}
                           </div>
                         </React.Fragment>
                       );
@@ -531,30 +528,24 @@ const MessageChats = () => {
               </div>
               
               {/* 聊天输入区域 */}
-              <div className="chat-input-area">
-                <div className="chat-toolbar">
+              <div style={{ backgroundColor: '#fff', borderTop: '1px solid #e8e8e8', padding: '12px 20px' }}>
+                <div style={{ display: 'flex', marginBottom: '10px' }}>
                   <Button type="text" icon={<SmileOutlined />} />
                   <Button type="text" icon={<PictureOutlined />} />
                 </div>
-                <div className="chat-input">
-                  <TextArea 
-                    placeholder="输入消息..." 
-                    autoSize={{ minRows: 2, maxRows: 4 }}
-                    value={newMessage}
-                    onChange={e => setNewMessage(e.target.value)}
-                    onPressEnter={(e) => {
-                      if (!e.shiftKey) {
-                        e.preventDefault();
-                        sendMessage();
-                      }
-                    }}
-                  />
-                </div>
-                <div className="chat-send">
+                <TextArea
+                  placeholder="输入消息..."
+                  autoSize={{ minRows: 2, maxRows: 4 }}
+                  value={newMessage}
+                  onChange={e => setNewMessage(e.target.value)}
+                  style={{ marginBottom: '10px', borderRadius: '18px', resize: 'none' }}
+                />
+                <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
                   <Button 
                     type="primary" 
                     icon={<SendOutlined />} 
                     onClick={sendMessage}
+                    style={{ borderRadius: '18px' }}
                   >
                     发送
                   </Button>
@@ -562,285 +553,12 @@ const MessageChats = () => {
               </div>
             </>
           ) : (
-            <div className="chat-empty">
+            <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%', backgroundColor: '#fff' }}>
               <Empty description="请选择一个聊天" />
             </div>
           )}
         </div>
       </div>
-      
-      {/* 添加CSS样式 */}
-      <style jsx="true">{`
-        .chat-page {
-          display: flex;
-          flex-direction: column;
-          height: calc(100vh - 64px);
-          background-color: #f5f5f5;
-        }
-        
-        .chat-header {
-          display: flex;
-          align-items: center;
-          padding: 12px 20px;
-          background-color: #fff;
-          border-bottom: 1px solid #e8e8e8;
-          height: 60px;
-        }
-        
-        .chat-title {
-          margin: 0 0 0 10px !important;
-          flex: 1;
-        }
-        
-        .chat-container {
-          display: flex;
-          flex: 1;
-          overflow: hidden;
-        }
-        
-        .chat-sidebar {
-          width: 280px;
-          border-right: 1px solid #e8e8e8;
-          background-color: #fff;
-          display: flex;
-          flex-direction: column;
-          overflow: hidden;
-        }
-        
-        .chat-search {
-          padding: 10px;
-          border-bottom: 1px solid #e8e8e8;
-        }
-        
-        .chat-list {
-          flex: 1;
-          overflow-y: auto;
-        }
-        
-        .chat-list-item {
-          display: flex;
-          padding: 12px;
-          cursor: pointer;
-          transition: background-color 0.3s;
-          border-bottom: 1px solid #f0f0f0;
-        }
-        
-        .chat-list-item:hover {
-          background-color: #f5f5f5;
-        }
-        
-        .chat-list-item.selected {
-          background-color: #e6f7ff;
-        }
-        
-        .chat-list-avatar {
-          margin-right: 12px;
-          flex-shrink: 0;
-        }
-        
-        .chat-list-content {
-          flex: 1;
-          min-width: 0;
-          overflow: hidden;
-        }
-        
-        .chat-list-header {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          margin-bottom: 4px;
-        }
-        
-        .chat-list-name {
-          flex: 1;
-          overflow: hidden;
-          text-overflow: ellipsis;
-          white-space: nowrap;
-        }
-        
-        .chat-list-time {
-          font-size: 12px;
-          flex-shrink: 0;
-          margin-left: 8px;
-        }
-        
-        .chat-list-message {
-          margin-bottom: 4px;
-          overflow: hidden;
-          text-overflow: ellipsis;
-          white-space: nowrap;
-        }
-        
-        .chat-list-item-info {
-          font-size: 12px;
-          overflow: hidden;
-          text-overflow: ellipsis;
-          white-space: nowrap;
-        }
-        
-        .chat-main {
-          flex: 1;
-          display: flex;
-          flex-direction: column;
-          background-color: #f5f5f5;
-          overflow: hidden;
-        }
-        
-        .chat-main-header {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          padding: 12px 20px;
-          background-color: #fff;
-          border-bottom: 1px solid #e8e8e8;
-          height: 60px;
-          flex-shrink: 0;
-        }
-        
-        .chat-main-user {
-          display: flex;
-          align-items: center;
-        }
-        
-        .chat-item-info {
-          display: flex;
-          padding: 10px 20px;
-          background-color: #fff;
-          border-bottom: 1px solid #e8e8e8;
-          flex-shrink: 0;
-        }
-        
-        .chat-item-image {
-          width: 50px;
-          height: 50px;
-          margin-right: 10px;
-          flex-shrink: 0;
-        }
-        
-        .chat-item-image img {
-          width: 100%;
-          height: 100%;
-          object-fit: cover;
-          border-radius: 4px;
-        }
-        
-        .chat-item-details {
-          flex: 1;
-          min-width: 0;
-          display: flex;
-          align-items: center;
-        }
-        
-        .chat-messages-container {
-          flex: 1;
-          padding: 20px;
-          overflow-y: auto;
-          background-color: #f5f5f5;
-        }
-        
-        .chat-messages {
-          display: flex;
-          flex-direction: column;
-        }
-        
-        .chat-time-divider {
-          text-align: center;
-          margin: 10px 0;
-        }
-        
-        .chat-time-divider span {
-          background-color: #f0f0f0;
-          padding: 2px 8px;
-          border-radius: 10px;
-          font-size: 12px;
-          color: #999;
-        }
-        
-        .chat-message {
-          display: flex;
-          margin-bottom: 15px;
-          align-items: flex-start;
-          width: 100%;
-        }
-        
-        .chat-message.self {
-          flex-direction: row-reverse;
-        }
-        
-        .chat-avatar {
-          margin: 0 8px;
-          flex-shrink: 0;
-        }
-        
-        .chat-bubble {
-          max-width: 70%;
-          padding: 10px 15px;
-          border-radius: 18px;
-          word-break: break-word;
-          position: relative;
-        }
-        
-        .chat-message.other .chat-bubble {
-          background-color: #fff;
-          border: 1px solid #e8e8e8;
-          border-top-left-radius: 4px;
-        }
-        
-        .chat-message.self .chat-bubble {
-          background-color: #95ec69;
-          border-top-right-radius: 4px;
-        }
-        
-        .chat-content {
-          font-size: 14px;
-          line-height: 1.6;
-        }
-        
-        .chat-input-area {
-          background-color: #fff;
-          border-top: 1px solid #e8e8e8;
-          padding: 12px 20px;
-          flex-shrink: 0;
-        }
-        
-        .chat-toolbar {
-          display: flex;
-          margin-bottom: 10px;
-        }
-        
-        .chat-input {
-          margin-bottom: 10px;
-        }
-        
-        .chat-input .ant-input {
-          border-radius: 18px;
-          resize: none;
-        }
-        
-        .chat-send {
-          display: flex;
-          justify-content: flex-end;
-        }
-        
-        .chat-send .ant-btn {
-          border-radius: 18px;
-        }
-        
-        .chat-empty {
-          display: flex;
-          justify-content: center;
-          align-items: center;
-          height: 100%;
-          background-color: #fff;
-        }
-        
-        .loading-container {
-          display: flex;
-          justify-content: center;
-          align-items: center;
-          height: 100%;
-        }
-      `}</style>
     </div>
   );
 };
