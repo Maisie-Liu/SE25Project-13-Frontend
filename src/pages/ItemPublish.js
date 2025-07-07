@@ -35,9 +35,19 @@ const ItemPublish = () => {
       const formData = new FormData();
       formData.append('file', file);
       const res = await dispatch(uploadItemImage(formData));
-      const imageId = res.payload?.imageId || res.payload;
+      // 适配新返回值
+      const { imageId, url } = res.payload || {};
       setImageIds(prev => [...prev, imageId]);
-      setImageUrls(prev => [...prev, imageId]); // 兼容老逻辑，imageUrls暂时存id
+      setImageUrls(prev => [...prev, url]); // 预览用 url
+      setFileList(prev => [
+        ...prev,
+        {
+          uid: `${Date.now()}`,
+          name: file.name,
+          status: 'done',
+          url: url,
+        },
+      ]);
       message.success('图片上传成功');
       return imageId;
     } catch (error) {
@@ -57,7 +67,7 @@ const ItemPublish = () => {
     setGeneratingDescription(true);
     try {
       // 使用第一张图片来生成描述
-      const description = await dispatch(generateItemDescription(imageUrls[0])).unwrap();
+      const description = await dispatch(generateItemDescription(imageIds[0])).unwrap();
       form.setFieldsValue({ description });
       message.success('描述生成成功');
     } catch (error) {
@@ -96,21 +106,17 @@ const ItemPublish = () => {
       // 验证文件类型和大小
       const isImage = file.type.startsWith('image/');
       const isLt5M = file.size / 1024 / 1024 < 5;
-      
       if (!isImage) {
         message.error('只能上传图片文件');
         return false;
       }
-      
       if (!isLt5M) {
         message.error('图片大小不能超过5MB');
         return false;
       }
-      
       // 手动上传
       handleUpload(file);
-      setFileList([...fileList, file]);
-      
+      // setFileList([...fileList, file]); // 由 handleUpload 处理
       return false; // 阻止自动上传
     },
     onRemove: async (file) => {

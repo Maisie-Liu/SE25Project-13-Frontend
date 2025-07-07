@@ -96,15 +96,14 @@ const ItemEdit = () => {
       const formData = new FormData();
       formData.append('file', file);
       const res = await dispatch(uploadItemImage(formData));
-      const imageId = res.payload?.imageId || res.payload;
-      const url = `/api/image/${imageId}`;
+      const { imageId, url } = res.payload || {};
       setFileList(prev => [
         ...prev,
         {
           uid: `${Date.now()}`,
-          name: 'image.jpg',
+          name: file.name,
           status: 'done',
-          url,
+          url: url,
         },
       ]);
       setImageIdList(prev => [...prev, imageId]);
