@@ -98,6 +98,12 @@ const Header = () => {
       onClick: () => navigate('/my/orders')
     },
     {
+      key: 'items',
+      icon: <AppstoreOutlined />,
+      label: '我的物品',
+      onClick: () => navigate('/my/items')
+    },
+    {
       type: 'divider'
     },
     {

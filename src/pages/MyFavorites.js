@@ -171,10 +171,10 @@ const MyFavorites = () => {
                       background: '#f0f0f0'
                     }}
                   >
-                    {item.imageUrls && item.imageUrls.length > 0 ? (
+                    {item.images && item.images.length > 0 ? (
                       <img 
                         alt={item.name} 
-                        src={item.imageUrls[0]} 
+                        src={item.images[0]} 
                         style={{ width: '100%', height: '100%', objectFit: 'cover' }} 
                       />
                     ) : (
