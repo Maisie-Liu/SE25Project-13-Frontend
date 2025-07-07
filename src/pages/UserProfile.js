@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { Form, Input, Button, Card, Avatar, Upload, message, Tabs, List, Spin } from 'antd';
+import { Form, Input, Button, Card, Avatar, Upload, message, Tabs, List, Spin, Typography, Tag } from 'antd';
 import { UserOutlined, UploadOutlined, LockOutlined } from '@ant-design/icons';
-import { fetchCurrentUser, updateUserProfile, changePassword } from '../store/actions/authActions';
+import { fetchCurrentUser, updateUserProfile, changePassword, uploadAvatar } from '../store/actions/authActions';
 import { selectUser, selectAuthLoading } from '../store/slices/authSlice';
 import { fetchMyItems } from '../store/actions/itemActions';
 import { fetchUserOrders } from '../store/actions/orderActions';
@@ -11,6 +11,15 @@ import { selectOrders } from '../store/slices/orderSlice';
 import { Link } from 'react-router-dom';
 
 const { TabPane } = Tabs;
+const { Title, Paragraph } = Typography;
+
+const beforeUpload = () => {
+  // 空实现
+};
+
+const handleChange = () => {
+  // 空实现
+};
 
 const UserProfile = () => {
   const dispatch = useDispatch();
@@ -77,16 +86,40 @@ const UserProfile = () => {
       });
   };
 
-  const handleAvatarUpload = (info) => {
-    if (info.file.status === 'done') {
-      if (info.file.response) {
-        setAvatarUrl(info.file.response);
-        message.success('头像上传成功');
-      } else {
-        message.error('头像上传失败');
-      }
-    }
+  const handleAvatarChange = async ({ file }) => {
+    if (file.status === 'uploading') return;
+    // 这里不再处理，全部交给 beforeAvatarUpload
   };
+
+  const beforeAvatarUpload = async (file) => {
+    const isImage = file.type.startsWith('image/');
+    const isLt5M = file.size / 1024 / 1024 < 5;
+    if (!isImage) {
+      message.error('只能上传图片文件');
+      return Upload.LIST_IGNORE;
+    }
+    if (!isLt5M) {
+      message.error('图片大小不能超过5MB');
+      return Upload.LIST_IGNORE;
+    }
+    // 上传图片到后端
+    const formData = new FormData();
+    formData.append('file', file);
+    try {
+      const imageUrl = await dispatch(uploadAvatar(formData)).unwrap();
+      setAvatarUrl(imageUrl);
+      message.success('头像上传成功');
+      dispatch(fetchCurrentUser());
+    } catch (e) {
+      message.error('头像上传失败');
+    }
+    // 阻止 Upload 组件自动上传
+    return Upload.LIST_IGNORE;
+  };
+
+  // 收集收到的评价
+  const buyerComments = myOrders.filter(o => o.buyerComment && user && o.buyer?.id === user.id);
+  const sellerComments = myOrders.filter(o => o.sellerComment && user && o.seller?.id === user.id);
 
   if (loading || !user) {
     return (
@@ -110,12 +143,10 @@ const UserProfile = () => {
               />
               <Upload
                 name="image"
-                listType="picture-card"
-                className="avatar-uploader"
                 showUploadList={false}
-                action="/image/upload"
-                beforeUpload={beforeUpload}
-                onChange={handleChange}
+                beforeUpload={beforeAvatarUpload}
+                onChange={handleAvatarChange}
+                style={{ display: 'inline-block' }}
               >
                 <Button icon={<UploadOutlined />}>更换头像</Button>
               </Upload>
@@ -291,6 +322,33 @@ const UserProfile = () => {
                 </Button>
               </div>
             )}
+          </TabPane>
+          
+          <TabPane tab="收到的评价" key="comments">
+            <Title level={4}>作为买家收到的评价</Title>
+            <List
+              dataSource={buyerComments}
+              locale={{ emptyText: '暂无评价' }}
+              renderItem={order => (
+                <List.Item>
+                  <Tag color="blue">卖家评价</Tag>
+                  <span>订单号：{order.orderNo}</span>
+                  <Paragraph style={{ margin: 0 }}>{order.buyerComment}</Paragraph>
+                </List.Item>
+              )}
+            />
+            <Title level={4} style={{ marginTop: 24 }}>作为卖家收到的评价</Title>
+            <List
+              dataSource={sellerComments}
+              locale={{ emptyText: '暂无评价' }}
+              renderItem={order => (
+                <List.Item>
+                  <Tag color="orange">买家评价</Tag>
+                  <span>订单号：{order.orderNo}</span>
+                  <Paragraph style={{ margin: 0 }}>{order.sellerComment}</Paragraph>
+                </List.Item>
+              )}
+            />
           </TabPane>
         </Tabs>
       </Card>

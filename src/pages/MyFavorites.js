@@ -3,7 +3,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { List, Card, Button, Typography, Empty, Spin, Pagination, message, Tag, Popconfirm } from 'antd';
 import { HeartFilled, ShoppingCartOutlined } from '@ant-design/icons';
 import { Link, useNavigate } from 'react-router-dom';
-import { fetchFavorites, removeFavorite } from '../store/actions/favoriteActions';
+import { fetchFavorites, removeFavorite, removeFavoriteByItemId } from '../store/actions/favoriteActions';
 import { selectFavorites, selectFavoriteLoading, selectFavoriteError, selectFavoritePagination } from '../store/slices/favoriteSlice';
 import { selectIsAuthenticated } from '../store/slices/authSlice';
 
@@ -48,20 +48,42 @@ const MyFavorites = () => {
   };
 
   // 取消收藏
-  const handleRemoveFavorite = (favoriteId) => {
-    if (!favoriteId) {
-      message.error('收藏ID不能为空');
-      return;
+  const handleRemoveFavorite = (favoriteId, itemId) => {
+    if (favoriteId) {
+      // 如果有收藏ID，优先使用收藏ID删除
+      dispatch(removeFavorite(favoriteId))
+        .unwrap()
+        .then(() => {
+          message.success('取消收藏成功');
+        })
+        .catch((error) => {
+          // 如果收藏ID删除失败，尝试使用物品ID删除
+          if (itemId) {
+            dispatch(removeFavoriteByItemId(itemId))
+              .unwrap()
+              .then(() => {
+                message.success('取消收藏成功');
+              })
+              .catch((error) => {
+                message.error('取消收藏失败: ' + (error || ''));
+              });
+          } else {
+            message.error('取消收藏失败: ' + (error || ''));
+          }
+        });
+    } else if (itemId) {
+      // 如果没有收藏ID但有物品ID，使用物品ID删除
+      dispatch(removeFavoriteByItemId(itemId))
+        .unwrap()
+        .then(() => {
+          message.success('取消收藏成功');
+        })
+        .catch((error) => {
+          message.error('取消收藏失败: ' + (error || ''));
+        });
+    } else {
+      message.error('收藏ID和物品ID不能同时为空');
     }
-    
-    dispatch(removeFavorite(favoriteId))
-      .unwrap()
-      .then(() => {
-        message.success('取消收藏成功');
-      })
-      .catch((error) => {
-        message.error('取消收藏失败: ' + (error || ''));
-      });
   };
 
   // 跳转到物品详情
@@ -149,10 +171,10 @@ const MyFavorites = () => {
                       background: '#f0f0f0'
                     }}
                   >
-                    {item.imageUrls && item.imageUrls.length > 0 ? (
+                    {item.images && item.images.length > 0 ? (
                       <img 
                         alt={item.name} 
-                        src={item.imageUrls[0]} 
+                        src={item.images[0]} 
                         style={{ width: '100%', height: '100%', objectFit: 'cover' }} 
                       />
                     ) : (
@@ -171,7 +193,7 @@ const MyFavorites = () => {
                   </Button>,
                   <Popconfirm
                     title="确定取消收藏该物品吗？"
-                    onConfirm={() => handleRemoveFavorite(item.favoriteId)}
+                    onConfirm={() => handleRemoveFavorite(item.favoriteId, item.id)}
                     okText="确定"
                     cancelText="取消"
                   >

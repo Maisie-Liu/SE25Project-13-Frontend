@@ -7,6 +7,8 @@ import orderReducer from './slices/orderSlice';
 import categoryReducer from './slices/categorySlice';
 import favoriteReducer from './slices/favoriteSlice';
 import escrowReducer from './slices/escrowSlice';
+import messageReducer from './slices/messageSlice';
+import chatReducer from './slices/chatSlice';
 
 // 配置持久化存储
 const persistConfig = {
@@ -23,6 +25,8 @@ const rootReducer = combineReducers({
   category: categoryReducer,
   favorites: favoriteReducer,
   escrow: escrowReducer,
+  message: messageReducer,
+  chat: chatReducer
 });
 
 const persistedReducer = persistReducer(persistConfig, rootReducer);

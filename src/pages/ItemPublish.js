@@ -3,9 +3,10 @@ import { useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { Form, Input, Button, Select, InputNumber, Upload, Card, Typography, message, Row, Col, Spin } from 'antd';
 import { UploadOutlined, RollbackOutlined, SaveOutlined, SyncOutlined } from '@ant-design/icons';
-import { createItem, uploadItemImage, generateItemDescription } from '../store/actions/itemActions';
+import { createItem, uploadItemImage, generateItemDescription, deleteFile } from '../store/actions/itemActions';
 import { selectCategories } from '../store/slices/categorySlice';
 import { fetchCategories } from '../store/actions/categoryActions';
+import ConditionSelect from '../components/condition/ConditionSelect';
 
 const { Title } = Typography;
 const { Option } = Select;
@@ -35,7 +36,6 @@ const ItemPublish = () => {
       formData.append('file', file);
       const res = await dispatch(uploadItemImage(formData));
       const imageId = res.payload?.imageId || res.payload;
-      console.log("imageId: ", imageId);
       setImageIds(prev => [...prev, imageId]);
       setImageUrls(prev => [...prev, imageId]); // 兼容老逻辑，imageUrls暂时存id
       message.success('图片上传成功');
@@ -69,10 +69,11 @@ const ItemPublish = () => {
   
   // 提交表单
   const onFinish = async (values) => {
-    if (imageIds.length === 0) {
-      message.warning('请至少上传一张图片');
-      return;
-    }
+    // 允许不传图片
+    // if (imageIds.length === 0) {
+    //   message.warning('请至少上传一张图片');
+    //   return;
+    // }
     // 准备提交数据
     const itemData = {
       ...values,
@@ -113,12 +114,12 @@ const ItemPublish = () => {
       
       return false; // 阻止自动上传
     },
-    onRemove: (file) => {
+    onRemove: async (file) => {
       const index = fileList.indexOf(file);
       const newFileList = fileList.slice();
       newFileList.splice(index, 1);
       setFileList(newFileList);
-      // 同时移除对应的图片ID
+      // 同步移除图片ID
       const newImageIds = [...imageIds];
       newImageIds.splice(index, 1);
       setImageIds(newImageIds);
@@ -126,6 +127,16 @@ const ItemPublish = () => {
       const newImageUrls = [...imageUrls];
       newImageUrls.splice(index, 1);
       setImageUrls(newImageUrls);
+      // 调用后端删除接口
+      const url = file.url;
+      const match = url && url.match(/\/api\/image\/([a-fA-F0-9]+)/);
+      const imageId = match ? match[1] : url;
+      try {
+        await dispatch(deleteFile(imageId));
+        message.success('图片已删除');
+      } catch (e) {
+        message.error('图片删除失败');
+      }
     }
   };
   
@@ -139,8 +150,8 @@ const ItemPublish = () => {
           layout="vertical"
           onFinish={onFinish}
           initialValues={{
-            condition: 3, // 默认为7成新
-            quantity: 1,
+            condition: 3, // 默认为9成新
+            stock: 1,
           }}
         >
           <Row gutter={24}>
@@ -161,9 +172,13 @@ const ItemPublish = () => {
                 rules={[{ required: true, message: '请选择物品分类' }]}
               >
                 <Select placeholder="选择物品分类">
-                  {categories.map(category => (
-                    <Option key={category.id} value={category.id}>{category.name}</Option>
-                  ))}
+                  {(categories || []).length === 0 ? (
+                    <Option disabled value="">暂无数据</Option>
+                  ) : (
+                    categories.map(category => (
+                      <Option key={category.id} value={category.id}>{category.name}</Option>
+                    ))
+                  )}
                 </Select>
               </Form.Item>
             </Col>
@@ -174,13 +189,7 @@ const ItemPublish = () => {
                 label="新旧程度"
                 rules={[{ required: true, message: '请选择新旧程度' }]}
               >
-                <Select placeholder="选择新旧程度">
-                  <Option value={5}>全新</Option>
-                  <Option value={4}>9成新</Option>
-                  <Option value={3}>7成新</Option>
-                  <Option value={2}>5成新</Option>
-                  <Option value={1}>3成新以下</Option>
-                </Select>
+                <ConditionSelect />
               </Form.Item>
             </Col>
             
@@ -201,14 +210,14 @@ const ItemPublish = () => {
             
             <Col span={12}>
               <Form.Item
-                name="quantity"
-                label="数量"
-                rules={[{ required: true, message: '请输入数量' }]}
+                name="stock"
+                label="库存"
+                rules={[{ required: true, message: '请输入库存' }]}
               >
                 <InputNumber 
                   min={1}
                   style={{ width: '100%' }}
-                  placeholder="请输入数量"
+                  placeholder="请输入库存"
                 />
               </Form.Item>
             </Col>

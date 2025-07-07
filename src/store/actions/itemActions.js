@@ -248,8 +248,11 @@ export const fetchMyItems = createAsyncThunk(
   'item/fetchMyItems',
   async ({ pageNum = 1, pageSize = 10 }, { getState, rejectWithValue }) => {
     try {
-      const { currentUser } = getState().auth;
-      const response = await axios.get(`/items/user/${currentUser.id}`, {
+      const { user } = getState().auth;
+      if (!user || !user.id) {
+        throw new Error('未登录或用户信息缺失');
+      }
+      const response = await axios.get(`/items/user/${user.id}`, {
         params: {
           pageNum,
           pageSize
@@ -311,4 +314,19 @@ export const fetchHotItems = () => async () => {
     message.error('获取热门商品失败');
     return [];
   }
-}; 
+};
+
+// 删除图片文件
+export const deleteFile = createAsyncThunk(
+  'item/deleteFile',
+  async (imageId, { rejectWithValue }) => {
+    try {
+      const response = await axios.delete(`/image/${imageId}`);
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(
+        error.response?.data?.message || '删除图片失败'
+      );
+    }
+  }
+); 

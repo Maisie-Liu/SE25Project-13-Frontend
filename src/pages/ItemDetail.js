@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { 
@@ -12,13 +12,14 @@ import {
 } from '@ant-design/icons';
 import { fetchItemById } from '../store/actions/itemActions';
 import { createOrder } from '../store/actions/orderActions';
-import { addFavorite, removeFavorite, checkIsFavorite } from '../store/actions/favoriteActions';
-import { selectIsAuthenticated } from '../store/slices/authSlice';
+import { selectIsAuthenticated, selectUser } from '../store/slices/authSlice';
+import { addFavorite, removeFavorite, checkIsFavorite, removeFavoriteByItemId } from '../store/actions/favoriteActions';
 import { selectItemDetail, selectItemLoading } from '../store/slices/itemSlice';
 import { selectCurrentFavorite } from '../store/slices/favoriteSlice';
 import CommentList from '../components/comment/CommentList';
 import CommentForm from '../components/comment/CommentForm';
 import axios from '../utils/axios';
+import ConditionTag from '../components/condition/ConditionTag';
 
 const { Title, Text, Paragraph } = Typography;
 const { TextArea } = Input;
@@ -32,11 +33,13 @@ const ItemDetail = () => {
   const item = useSelector(selectItemDetail);
   const loading = useSelector(selectItemLoading);
   const currentFavorite = useSelector(selectCurrentFavorite);
+  const user = useSelector(selectUser);
   
   const [orderModalVisible, setOrderModalVisible] = useState(false);
   const [orderForm] = Form.useForm();
   const [isFavorite, setIsFavorite] = useState(false);
   const [hasLoaded, setHasLoaded] = useState(false);
+  const [favoriteLoading, setFavoriteLoading] = useState(false);
   
   // 评论相关
   const [comments, setComments] = useState([]);
@@ -55,6 +58,7 @@ const ItemDetail = () => {
       
       // 检查是否已收藏
       if (isAuthenticated) {
+        setFavoriteLoading(true);
         dispatch(checkIsFavorite(id))
           .unwrap()
           .then(response => {
@@ -62,6 +66,9 @@ const ItemDetail = () => {
           })
           .catch(() => {
             setIsFavorite(false);
+          })
+          .finally(() => {
+            setFavoriteLoading(false);
           });
       }
       
@@ -101,12 +108,14 @@ const ItemDetail = () => {
       navigate('/login');
       return;
     }
-    
+    if (item.userId === user?.id) {
+      message.error('不能购买自己的商品');
+      return;
+    }
     if (item.status !== 1) {
       message.warning('该物品当前不可预订');
       return;
     }
-    
     setOrderModalVisible(true);
   };
   
@@ -117,7 +126,6 @@ const ItemDetail = () => {
       navigate('/login');
       return;
     }
-    
     setSubmitting(true);
     try {
       const orderData = {
@@ -126,53 +134,68 @@ const ItemDetail = () => {
         tradeLocation: values.tradeLocation,
         buyerMessage: values.buyerMessage
       };
-      
       await dispatch(createOrder(orderData)).unwrap();
       message.success('预订成功');
       setOrderModalVisible(false);
-      // 刷新物品状态
       dispatch(fetchItemById(id));
     } catch (error) {
-      message.error('预订失败: ' + error);
+      message.error(error?.message || error?.response?.data?.message || '预订失败');
     } finally {
       setSubmitting(false);
     }
   };
   
-  // 处理收藏
-  const handleToggleFavorite = async () => {
+  // 使用useCallback包装处理收藏函数，防止重复渲染
+  const handleToggleFavorite = useCallback(async () => {
     if (!isAuthenticated) {
       message.warning('请先登录');
       navigate('/login');
       return;
     }
     
+    // 如果正在加载中，防止重复点击
+    if (favoriteLoading) {
+      return;
+    }
+    
+    setFavoriteLoading(true);
+    
     try {
-      if (isFavorite && currentFavorite) {
-        await dispatch(removeFavorite(currentFavorite.id)).unwrap();
+      console.log("收藏操作 - 当前状态:", { isFavorite, currentFavorite, itemId: id });
+      
+      if (isFavorite) {
+        // 取消收藏
+        if (currentFavorite && currentFavorite.favoriteId) {
+          console.log("取消收藏 - 使用favoriteId:", currentFavorite.favoriteId);
+          await dispatch(removeFavorite(currentFavorite.favoriteId)).unwrap();
+        } else {
+          // 如果没有收藏ID，则使用物品ID删除收藏
+          console.log("取消收藏 - 使用itemId:", id);
+          await dispatch(removeFavoriteByItemId(id)).unwrap();
+        }
         setIsFavorite(false);
         message.success('取消收藏成功');
       } else {
-        await dispatch(addFavorite(id)).unwrap();
+        // 添加收藏
+        console.log("添加收藏 - itemId:", id);
+        const result = await dispatch(addFavorite(id)).unwrap();
+        console.log("添加收藏结果:", result);
+        
+        // 确保更新currentFavorite
+        if (result) {
+          // 重新获取收藏状态
+          await dispatch(checkIsFavorite(id)).unwrap();
+        }
         setIsFavorite(true);
         message.success('收藏成功');
       }
     } catch (error) {
-      message.error('操作失败: ' + (error || ''));
+      console.error("收藏操作失败:", error);
+      message.error('操作失败: ' + (error?.message || '未知错误'));
+    } finally {
+      setFavoriteLoading(false);
     }
-  };
-  
-  // 渲染新旧程度标签
-  const renderConditionTag = (condition) => {
-    if (!condition) return <Tag color="default">未知</Tag>;
-
-    if (condition === 1) return <Tag color="green">全新</Tag>;
-    if (condition <= 3) return <Tag color="cyan">9成新</Tag>;
-    if (condition <= 5) return <Tag color="blue">7成新</Tag>;
-    if (condition <= 7) return <Tag color="orange">5成新</Tag>;
-    if (condition <= 9) return <Tag color="red">3成新</Tag>;
-    return <Tag color="red">破旧</Tag>;
-  };
+  }, [isAuthenticated, favoriteLoading, isFavorite, currentFavorite, id, dispatch, navigate]);
   
   // 格式化时间
   const formatTime = (time) => {
@@ -307,7 +330,7 @@ const ItemDetail = () => {
             
             <Descriptions column={1} bordered>
               <Descriptions.Item label="物品分类">{item.categoryName}</Descriptions.Item>
-              <Descriptions.Item label="新旧程度">{renderConditionTag(item.condition)}</Descriptions.Item>
+              <Descriptions.Item label="新旧程度">{<ConditionTag condition={item.condition} />}</Descriptions.Item>
               <Descriptions.Item label="浏览量">{item.popularity || 0}</Descriptions.Item>
               <Descriptions.Item label="卖家信息">
                 <Space>
@@ -327,6 +350,9 @@ const ItemDetail = () => {
                   <Tag color="default">未上架</Tag>
                 )}
               </Descriptions.Item>
+              <Descriptions.Item label="库存">
+                {item.stock > 0 ? item.stock : <span style={{color:'red'}}>已售罄</span>}
+              </Descriptions.Item>
             </Descriptions>
             
             <div style={{ marginTop: 24 }}>
@@ -336,16 +362,17 @@ const ItemDetail = () => {
                   size="large" 
                   icon={<ShoppingCartOutlined />}
                   onClick={handleOrder}
-                  disabled={item.status !== 1}
+                  disabled={item.status !== 1 || item.stock <= 0}
                 >
                   立即预订
                 </Button>
                 
                 <Button
-                  type={isFavorite ? "default" : "dashed"}
-                  size="large"
+                  type="text"
                   icon={isFavorite ? <HeartFilled style={{ color: '#ff4d4f' }} /> : <HeartOutlined />}
                   onClick={handleToggleFavorite}
+                  loading={favoriteLoading}
+                  disabled={favoriteLoading}
                 >
                   {isFavorite ? '已收藏' : '收藏'}
                 </Button>
@@ -407,8 +434,8 @@ const ItemDetail = () => {
             rules={[{ required: true, message: '请选择交易方式' }]}
           >
             <Radio.Group>
+              <Radio value={2}>线上交易</Radio>
               <Radio value={1}>线下交易</Radio>
-              <Radio value={2}>定金托管</Radio>
             </Radio.Group>
           </Form.Item>
           
