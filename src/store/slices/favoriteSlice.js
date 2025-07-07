@@ -110,6 +110,7 @@ const favoriteSlice = createSlice({
         state.error = null;
       })
       .addCase(checkIsFavorite.fulfilled, (state, action) => {
+        console.log("checkIsFavorite.fulfilled - payload:", action.payload);
         state.currentFavorite = action.payload || null;
         state.loading = false;
       })

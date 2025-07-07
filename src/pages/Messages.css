@@ -1,0 +1,148 @@
+.messages-page {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+.page-header {
+  margin-bottom: 24px;
+}
+
+.messages-loading {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 300px;
+}
+
+.message-block {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.message-block-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.message-block-title {
+  display: flex;
+  align-items: center;
+}
+
+.message-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  color: white;
+  font-size: 20px;
+  margin-right: 12px;
+}
+
+.message-block-content {
+  flex: 1;
+  margin-bottom: 16px;
+}
+
+.message-block-latest {
+  display: flex;
+  flex-direction: column;
+}
+
+.message-block-user {
+  display: flex;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.message-block-text {
+  margin-bottom: 8px;
+}
+
+.message-block-item {
+  display: flex;
+  align-items: center;
+  background-color: #f5f5f5;
+  padding: 8px;
+  border-radius: 4px;
+}
+
+.message-item-thumbnail {
+  width: 40px;
+  height: 40px;
+  object-fit: cover;
+  margin-right: 8px;
+  border-radius: 4px;
+}
+
+.message-block-footer {
+  display: flex;
+  justify-content: center;
+}
+
+.message-list-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.message-list-item {
+  display: flex;
+  margin-bottom: 16px;
+  padding: 16px;
+  border-radius: 4px;
+  background-color: white;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.message-list-item:hover {
+  background-color: #f9f9f9;
+}
+
+.message-item-content {
+  flex: 1;
+  margin-left: 16px;
+}
+
+.message-item-header {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.message-item-meta {
+  display: flex;
+  align-items: center;
+}
+
+.message-item-body {
+  margin-bottom: 8px;
+}
+
+.message-item-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.message-item-product {
+  display: flex;
+  align-items: center;
+  background-color: #f5f5f5;
+  padding: 8px;
+  border-radius: 4px;
+  max-width: 300px;
+}
+
+.message-pagination {
+  display: flex;
+  justify-content: center;
+  margin-top: 24px;
+} 

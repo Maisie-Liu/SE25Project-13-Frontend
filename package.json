@@ -18,6 +18,7 @@
     "axios": "^1.6.2",
     "body-parser": "^2.2.0",
     "cors": "^2.8.5",
+    "date-fns": "^4.1.0",
     "dayjs": "^1.11.10",
     "express": "^5.1.0",
     "jwt-decode": "^4.0.0",

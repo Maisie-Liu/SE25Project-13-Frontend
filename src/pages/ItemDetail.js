@@ -161,17 +161,26 @@ const ItemDetail = () => {
     setFavoriteLoading(true);
     
     try {
+      console.log("收藏操作 - 当前状态:", { isFavorite, currentFavorite, itemId: id });
+      
       if (isFavorite) {
-        if (currentFavorite && currentFavorite.id) {
-          await dispatch(removeFavorite(currentFavorite.id)).unwrap();
+        // 取消收藏
+        if (currentFavorite && currentFavorite.favoriteId) {
+          console.log("取消收藏 - 使用favoriteId:", currentFavorite.favoriteId);
+          await dispatch(removeFavorite(currentFavorite.favoriteId)).unwrap();
         } else {
           // 如果没有收藏ID，则使用物品ID删除收藏
+          console.log("取消收藏 - 使用itemId:", id);
           await dispatch(removeFavoriteByItemId(id)).unwrap();
         }
         setIsFavorite(false);
         message.success('取消收藏成功');
       } else {
+        // 添加收藏
+        console.log("添加收藏 - itemId:", id);
         const result = await dispatch(addFavorite(id)).unwrap();
+        console.log("添加收藏结果:", result);
+        
         // 确保更新currentFavorite
         if (result) {
           // 重新获取收藏状态
@@ -181,7 +190,8 @@ const ItemDetail = () => {
         message.success('收藏成功');
       }
     } catch (error) {
-      message.error('操作失败: ' + (error || ''));
+      console.error("收藏操作失败:", error);
+      message.error('操作失败: ' + (error?.message || '未知错误'));
     } finally {
       setFavoriteLoading(false);
     }

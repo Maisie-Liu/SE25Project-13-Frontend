@@ -1,17 +1,17 @@
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { useSelector, useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import styled from 'styled-components';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faExchangeAlt } from '@fortawesome/free-solid-svg-icons';
 import { 
   Layout, 
-  Menu, 
   Button, 
   Avatar, 
-  Dropdown, 
-  Space,
-  Badge,
+  Space, 
+  Menu, 
+  Badge, 
+  Dropdown,
   Tooltip,
   Input,
   Tag
@@ -83,23 +83,36 @@ const Header = () => {
     navigate('/login');
   };
   
-  const userMenu = (
-    <Menu>
-      <Menu.Item key="profile" onClick={() => navigate('/profile')}>
-        <UserOutlined /> 个人资料
-      </Menu.Item>
-      <Menu.Item key="items" onClick={() => navigate('/my/items')}>
-        <ShoppingOutlined /> 我的物品
-      </Menu.Item>
-      <Menu.Item key="orders" onClick={() => navigate('/my/orders')}>
-        <ShoppingOutlined /> 我的订单
-      </Menu.Item>
-      <Menu.Divider />
-      <Menu.Item key="logout" onClick={handleLogout}>
-        <LogoutOutlined /> 退出登录
-      </Menu.Item>
-    </Menu>
-  );
+  // 定义菜单项数组，符合Ant Design v5的要求
+  const menuItems = [
+    {
+      key: 'profile',
+      icon: <UserOutlined />,
+      label: '个人资料',
+      onClick: () => navigate('/profile')
+    },
+    {
+      key: 'orders',
+      icon: <ShoppingOutlined />,
+      label: '我的订单',
+      onClick: () => navigate('/my/orders')
+    },
+    {
+      key: 'items',
+      icon: <AppstoreOutlined />,
+      label: '我的物品',
+      onClick: () => navigate('/my/items')
+    },
+    {
+      type: 'divider'
+    },
+    {
+      key: 'logout',
+      icon: <LogoutOutlined />,
+      label: '退出登录',
+      onClick: handleLogout
+    }
+  ];
   
   const categories = [
     { name: '电子产品', link: '/items?category=electronics' },
@@ -173,11 +186,12 @@ const Header = () => {
               <Space size="middle">
                 {isAuthenticated ? (
                   <>
-                    <Badge count={3} size="small">
+                    <Badge count={3} size="small" className="notification-badge">
                       <Button 
                         type="text" 
                         icon={<MessageOutlined />} 
                         className="icon-button"
+                        onClick={() => navigate('/my/messages')}
                       />
                     </Badge>
                     <Button 
@@ -186,7 +200,7 @@ const Header = () => {
                       className="icon-button"
                       onClick={() => navigate('/my/favorites')}
                     />
-                    <Dropdown overlay={userMenu} placement="bottomRight" arrow>
+                    <Dropdown menu={{ items: menuItems }} placement="bottomRight" arrow>
                       <div className="user-avatar-container">
                         <Avatar 
                           size="default" 
