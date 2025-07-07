@@ -69,10 +69,11 @@ const ItemPublish = () => {
   
   // 提交表单
   const onFinish = async (values) => {
-    if (imageIds.length === 0) {
-      message.warning('请至少上传一张图片');
-      return;
-    }
+    // 允许不传图片
+    // if (imageIds.length === 0) {
+    //   message.warning('请至少上传一张图片');
+    //   return;
+    // }
     // 准备提交数据
     const itemData = {
       ...values,

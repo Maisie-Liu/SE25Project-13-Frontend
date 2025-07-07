@@ -26,6 +26,12 @@ import HelpCenter from './pages/HelpCenter';
 import Terms from './pages/Terms';
 import Privacy from './pages/Privacy';
 import Sitemap from './pages/Sitemap';
+import Messages from './pages/Messages';
+import MessageComments from './pages/MessageComments';
+import MessageFavorites from './pages/MessageFavorites';
+import MessageOrders from './pages/MessageOrders';
+import MessageChats from './pages/MessageChats';
+import Chat from './pages/Chat';
 import './App.css';
 
 const { Content } = Layout;
@@ -102,6 +108,62 @@ const App = () => {
               element={
                 <PrivateRoute>
                   <MyFavorites />
+                </PrivateRoute>
+              } 
+            />
+            <Route 
+              path="/my/messages" 
+              element={
+                <PrivateRoute>
+                  <Messages />
+                </PrivateRoute>
+              } 
+            />
+            <Route 
+              path="/my/messages/comments" 
+              element={
+                <PrivateRoute>
+                  <MessageComments />
+                </PrivateRoute>
+              } 
+            />
+            <Route 
+              path="/my/messages/favorites" 
+              element={
+                <PrivateRoute>
+                  <MessageFavorites />
+                </PrivateRoute>
+              } 
+            />
+            <Route 
+              path="/my/messages/orders" 
+              element={
+                <PrivateRoute>
+                  <MessageOrders />
+                </PrivateRoute>
+              } 
+            />
+            <Route 
+              path="/my/messages/chats" 
+              element={
+                <PrivateRoute>
+                  <MessageChats />
+                </PrivateRoute>
+              } 
+            />
+            <Route 
+              path="/chat/:chatId" 
+              element={
+                <PrivateRoute>
+                  <Chat />
+                </PrivateRoute>
+              } 
+            />
+            <Route 
+              path="/comments/reply/:commentId" 
+              element={
+                <PrivateRoute>
+                  <ItemDetail />
                 </PrivateRoute>
               } 
             />
