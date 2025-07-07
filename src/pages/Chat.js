@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { useSelector } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { 
   Card, 
   Input, 
@@ -23,9 +23,23 @@ import {
   InfoCircleOutlined,
   PictureOutlined
 } from '@ant-design/icons';
-import axios from '../utils/axios';
-import { selectUser } from '../store/slices/authSlice';
 import { format } from 'date-fns';
+
+import { selectUser } from '../store/slices/authSlice';
+import { 
+  fetchChatMessages, 
+  sendChatMessage, 
+  markChatMessagesAsRead,
+  fetchUserChats
+} from '../store/actions/chatActions';
+import { 
+  selectChatMessages, 
+  selectChatLoading, 
+  selectChatError,
+  selectChats
+} from '../store/slices/chatSlice';
+
+import './Chat.css';
 
 const { Title, Text, Paragraph } = Typography;
 const { TextArea } = Input;
@@ -33,79 +47,76 @@ const { TextArea } = Input;
 const Chat = () => {
   const { chatId } = useParams();
   const navigate = useNavigate();
+  const dispatch = useDispatch();
   const currentUser = useSelector(selectUser);
-  const [loading, setLoading] = useState(false);
+  const messages = useSelector(state => selectChatMessages(state, parseInt(chatId)));
+  const loading = useSelector(selectChatLoading);
+  const error = useSelector(selectChatError);
+  const chats = useSelector(selectChats);
+  
   const [sending, setSending] = useState(false);
   const [messageText, setMessageText] = useState('');
   const [chatInfo, setChatInfo] = useState(null);
-  const [messages, setMessages] = useState([]);
+  const [loadingChats, setLoadingChats] = useState(true);
   const messagesEndRef = useRef(null);
   
-  // 模拟获取聊天数据
+  // 获取所有聊天会话
   useEffect(() => {
-    const fetchChatData = async () => {
-      setLoading(true);
+    const fetchChats = async () => {
+      setLoadingChats(true);
       try {
-        // 模拟聊天数据 - 实际项目中应该从API获取
-        const mockChatInfo = {
-          chatId: parseInt(chatId),
-          itemId: 106,
-          itemName: '键盘',
-          itemImage: 'https://via.placeholder.com/100',
-          itemPrice: 199,
-          otherUser: {
-            id: 204,
-            username: '赵六',
-            avatar: 'https://via.placeholder.com/40'
-          }
-        };
-        
-        // 模拟消息数据
-        const mockMessages = [
-          {
-            id: 1,
-            senderId: 204,
-            receiverId: currentUser.id,
-            content: '你好，这个物品还在吗？',
-            createdAt: new Date(Date.now() - 1000 * 60 * 60 * 2)
-          },
-          {
-            id: 2,
-            senderId: currentUser.id,
-            receiverId: 204,
-            content: '在的，有什么问题吗？',
-            createdAt: new Date(Date.now() - 1000 * 60 * 60 * 1.5)
-          },
-          {
-            id: 3,
-            senderId: 204,
-            receiverId: currentUser.id,
-            content: '能便宜一点吗？',
-            createdAt: new Date(Date.now() - 1000 * 60 * 60)
-          },
-          {
-            id: 4,
-            senderId: currentUser.id,
-            receiverId: 204,
-            content: '可以的，你想多少钱？',
-            createdAt: new Date(Date.now() - 1000 * 60 * 30)
-          }
-        ];
-        
-        setChatInfo(mockChatInfo);
-        setMessages(mockMessages);
+        await dispatch(fetchUserChats()).unwrap();
       } catch (error) {
-        console.error('获取聊天数据失败:', error);
-        message.error('获取聊天数据失败');
+        console.error('获取聊天列表失败:', error);
+        message.error('获取聊天列表失败');
       } finally {
-        setLoading(false);
+        setLoadingChats(false);
       }
     };
     
-    if (chatId) {
+    if (currentUser) {
+      fetchChats();
+    }
+  }, [currentUser, dispatch]);
+  
+  // 获取聊天数据
+  useEffect(() => {
+    const fetchChatData = async () => {
+      if (!chatId) return;
+      
+      try {
+        // 获取聊天消息
+        const messagesData = await dispatch(fetchChatMessages({ chatId: parseInt(chatId) })).unwrap();
+        
+        // 标记消息为已读
+        await dispatch(markChatMessagesAsRead(parseInt(chatId))).unwrap();
+        
+        // 从消息中提取聊天信息
+        if (messagesData.messages && messagesData.messages.content && messagesData.messages.content.length > 0) {
+          const firstMessage = messagesData.messages.content[0];
+          const otherUser = firstMessage.sender.id !== currentUser.id ? 
+            firstMessage.sender : 
+            (messagesData.messages.content.find(m => m.sender.id !== currentUser.id)?.sender || null);
+          
+          setChatInfo({
+            chatId: parseInt(chatId),
+            itemId: firstMessage.itemId,
+            itemName: firstMessage.itemName,
+            itemImage: firstMessage.itemImage,
+            itemPrice: firstMessage.itemPrice,
+            otherUser: otherUser
+          });
+        }
+      } catch (error) {
+        console.error('获取聊天数据失败:', error);
+        message.error('获取聊天数据失败');
+      }
+    };
+    
+    if (chatId && currentUser) {
       fetchChatData();
     }
-  }, [chatId, currentUser.id]);
+  }, [chatId, currentUser, dispatch]);
   
   // 滚动到最新消息
   useEffect(() => {
@@ -114,26 +125,11 @@ const Chat = () => {
   
   // 发送消息
   const handleSendMessage = async () => {
-    if (!messageText.trim()) return;
+    if (!messageText.trim() || !chatId) return;
     
     setSending(true);
     try {
-      // 实际项目中这里应该调用API发送消息
-      // 这里只是模拟，实际使用时请替换为真实API调用
-      
-      // 模拟新消息
-      const newMessage = {
-        id: messages.length + 1,
-        senderId: currentUser.id,
-        receiverId: chatInfo.otherUser.id,
-        content: messageText.trim(),
-        createdAt: new Date()
-      };
-      
-      // 更新消息列表
-      setMessages([...messages, newMessage]);
-      
-      // 清空输入框
+      await dispatch(sendChatMessage({ chatId: parseInt(chatId), content: messageText.trim() })).unwrap();
       setMessageText('');
     } catch (error) {
       console.error('发送消息失败:', error);
@@ -163,109 +159,209 @@ const Chat = () => {
     }
   };
   
-  return (
-    <div className="chat-page">
-      {loading ? (
+  // 切换到其他聊天
+  const handleChatSelect = (selectedChatId) => {
+    navigate(`/chat/${selectedChatId}`);
+  };
+  
+  // 渲染聊天列表
+  const renderChatList = () => {
+    if (loadingChats) {
+      return (
+        <div className="loading-container" style={{ height: '100px' }}>
+          <Spin size="small" />
+        </div>
+      );
+    }
+    
+    if (!chats || chats.length === 0) {
+      return (
+        <div className="chat-empty">
+          <Empty description="暂无聊天" />
+        </div>
+      );
+    }
+    
+    return (
+      <List
+        className="chat-list"
+        itemLayout="horizontal"
+        dataSource={chats}
+        renderItem={(chat) => {
+          const isActive = chat.id === parseInt(chatId);
+          const otherUser = chat.participants?.find(p => p.id !== currentUser?.id) || {};
+          
+          return (
+            <List.Item 
+              className={`chat-list-item ${isActive ? 'active' : ''}`}
+              onClick={() => handleChatSelect(chat.id)}
+            >
+              <List.Item.Meta
+                avatar={
+                  <Badge dot={chat.unreadCount > 0}>
+                    <Avatar src={otherUser.avatarUrl} icon={<UserOutlined />} />
+                  </Badge>
+                }
+                title={<span>{otherUser.username || '未知用户'}</span>}
+                description={
+                  <div>
+                    <div className="chat-list-message">
+                      {chat.lastMessage || '暂无消息'}
+                    </div>
+                    <div className="chat-list-time">
+                      {chat.lastMessageTime && formatTime(chat.lastMessageTime)}
+                    </div>
+                  </div>
+                }
+              />
+            </List.Item>
+          );
+        }}
+      />
+    );
+  };
+  
+  // 渲染聊天详情
+  const renderChatDetail = () => {
+    if (error) {
+      return (
+        <div className="chat-error">
+          <Empty 
+            description={
+              <span>
+                加载聊天失败: {error}
+                <Button type="link" onClick={() => navigate('/my/messages/chats')}>
+                  返回消息列表
+                </Button>
+              </span>
+            } 
+          />
+        </div>
+      );
+    }
+    
+    if (loading && !chatInfo) {
+      return (
         <div className="loading-container">
           <Spin size="large" />
         </div>
-      ) : chatInfo ? (
-        <>
-          <Card className="chat-header-card">
-            <Button 
-              type="link" 
-              icon={<ArrowLeftOutlined />} 
-              onClick={() => navigate('/my/messages')}
-              style={{ marginRight: '10px', padding: 0 }}
-            >
-              返回
-            </Button>
-            <Avatar src={chatInfo.otherUser.avatar} size="large" />
-            <div className="chat-user-info">
-              <Title level={4} style={{ margin: 0 }}>{chatInfo.otherUser.username}</Title>
-            </div>
-          </Card>
-          
-          <div className="chat-container">
-            <div className="chat-item-info">
-              <Card className="item-card">
-                <div className="item-info-content">
-                  <img src={chatInfo.itemImage} alt={chatInfo.itemName} className="chat-item-image" />
-                  <div className="chat-item-details">
-                    <Text strong>{chatInfo.itemName}</Text>
-                    <Text type="danger">¥{chatInfo.itemPrice}</Text>
-                  </div>
+      );
+    }
+    
+    if (!chatInfo) {
+      return (
+        <div className="chat-empty">
+          <Empty description="请选择一个聊天" />
+        </div>
+      );
+    }
+    
+    return (
+      <>
+        <Card className="chat-header-card">
+          <Avatar src={chatInfo.otherUser?.avatarImageId} size="large" />
+          <div className="chat-user-info">
+            <Title level={4} style={{ margin: 0 }}>{chatInfo.otherUser?.username}</Title>
+          </div>
+        </Card>
+        
+        <div className="chat-container">
+          <div className="chat-item-info">
+            <Card className="item-card">
+              <div className="item-info-content">
+                <img src={chatInfo.itemImage} alt={chatInfo.itemName} className="chat-item-image" />
+                <div className="chat-item-details">
+                  <Text strong>{chatInfo.itemName}</Text>
+                  <Text type="danger">¥{chatInfo.itemPrice}</Text>
                 </div>
-              </Card>
-            </div>
-            
-            <div className="chat-messages-container">
-              {messages.length > 0 ? (
-                <>
-                  {messages.map((msg, index) => {
-                    const isSelf = msg.senderId === currentUser.id;
-                    const showDate = index === 0 || 
-                      formatDate(msg.createdAt) !== formatDate(messages[index - 1].createdAt);
-                    
-                    return (
-                      <div key={msg.id}>
-                        {showDate && (
-                          <div className="chat-date-divider">
-                            <span>{formatDate(msg.createdAt)}</span>
-                          </div>
+              </div>
+            </Card>
+          </div>
+          
+          <div className="chat-messages-container">
+            {messages.length > 0 ? (
+              <>
+                {messages.map((msg, index) => {
+                  const isSelf = msg.sender.id === currentUser.id;
+                  const showDate = index === 0 || 
+                    formatDate(msg.createdAt) !== formatDate(messages[index - 1].createdAt);
+                  
+                  return (
+                    <div key={msg.id}>
+                      {showDate && (
+                        <div className="chat-date-divider">
+                          <span>{formatDate(msg.createdAt)}</span>
+                        </div>
+                      )}
+                      <div className={`chat-message ${isSelf ? 'self' : 'other'}`}>
+                        {!isSelf && (
+                          <Avatar src={msg.sender.avatarImageId} size="small" />
                         )}
-                        <div className={`chat-message ${isSelf ? 'self' : 'other'}`}>
-                          {!isSelf && (
-                            <Avatar src={chatInfo.otherUser.avatar} size="small" />
-                          )}
-                          <div className="message-bubble">
-                            <div className="message-content">{msg.content}</div>
-                            <div className="message-time">{formatTime(msg.createdAt)}</div>
-                          </div>
+                        <div className="message-bubble">
+                          <div className="message-content">{msg.content}</div>
+                          <div className="message-time">{formatTime(msg.createdAt)}</div>
                         </div>
                       </div>
-                    );
-                  })}
-                  <div ref={messagesEndRef} />
-                </>
-              ) : (
-                <Empty description="暂无消息记录" />
-              )}
-            </div>
-            
-            <div className="chat-input-container">
-              <Space style={{ marginBottom: '10px' }}>
-                <Button icon={<PictureOutlined />} />
-              </Space>
-              <div className="chat-input">
-                <TextArea 
-                  placeholder="输入消息..." 
-                  autoSize={{ minRows: 2, maxRows: 4 }} 
-                  value={messageText}
-                  onChange={(e) => setMessageText(e.target.value)}
-                  onPressEnter={(e) => {
-                    if (!e.shiftKey) {
-                      e.preventDefault();
-                      handleSendMessage();
-                    }
-                  }}
-                />
-                <Button 
-                  type="primary" 
-                  icon={<SendOutlined />} 
-                  onClick={handleSendMessage}
-                  loading={sending}
-                  disabled={!messageText.trim()}
-                >
-                  发送
-                </Button>
-              </div>
+                    </div>
+                  );
+                })}
+                <div ref={messagesEndRef} />
+              </>
+            ) : (
+              <Empty description="暂无消息记录" />
+            )}
+          </div>
+          
+          <div className="chat-input-container">
+            <Space style={{ marginBottom: '10px' }}>
+              <Button icon={<PictureOutlined />} />
+            </Space>
+            <div className="chat-input">
+              <TextArea 
+                placeholder="输入消息..." 
+                autoSize={{ minRows: 2, maxRows: 4 }} 
+                value={messageText}
+                onChange={(e) => setMessageText(e.target.value)}
+                onPressEnter={(e) => {
+                  if (!e.shiftKey) {
+                    e.preventDefault();
+                    handleSendMessage();
+                  }
+                }}
+              />
+              <Button 
+                type="primary" 
+                icon={<SendOutlined />} 
+                onClick={handleSendMessage}
+                loading={sending}
+                disabled={!messageText.trim()}
+              >
+                发送
+              </Button>
             </div>
           </div>
-        </>
-      ) : (
-        <Empty description="聊天不存在" />
-      )}
+        </div>
+      </>
+    );
+  };
+  
+  return (
+    <div className="chat-page">
+      <div className="chat-layout">
+        <div className="chat-sidebar">
+          <Card 
+            title="我的聊天" 
+            extra={<Button type="link" icon={<ArrowLeftOutlined />} onClick={() => navigate('/my/messages/chats')}>返回</Button>}
+            style={{ height: '100%' }}
+            bodyStyle={{ padding: '0', height: 'calc(100% - 57px)', overflow: 'auto' }}
+          >
+            {renderChatList()}
+          </Card>
+        </div>
+        <div className="chat-main">
+          {renderChatDetail()}
+        </div>
+      </div>
     </div>
   );
 };
