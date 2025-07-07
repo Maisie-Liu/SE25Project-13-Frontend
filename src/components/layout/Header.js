@@ -1,5 +1,5 @@
-import React from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import styled from 'styled-components';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -68,13 +68,21 @@ const LogoText = styled.span`
 
 const Header = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const dispatch = useDispatch();
   const isAuthenticated = useSelector(selectIsAuthenticated);
   const user = useSelector(selectUser);
+  const [headerSearch, setHeaderSearch] = useState('');
+  
+  useEffect(() => {
+    if (location.pathname === '/items') {
+      setHeaderSearch('');
+    }
+  }, [location.pathname]);
   
   const handleSearch = (value) => {
     if (value.trim()) {
-      navigate(`/items?search=${encodeURIComponent(value.trim())}`);
+      navigate(`/items?keyword=${encodeURIComponent(value.trim())}`);
     }
   };
   
@@ -126,11 +134,13 @@ const Header = () => {
                 allowClear
                 enterButton={<SearchOutlined style={{ fontSize: '18px' }} />}
                 size="large"
+                value={headerSearch}
+                onChange={e => setHeaderSearch(e.target.value)}
                 onSearch={handleSearch}
                 className="header-search-box"
                 style={{ width: '100%' }}
               />
-              <div className="header-tags">
+              {/* <div className="header-tags">
                 {categories.map((category, index) => (
                   <Link to={category.link} key={index}>
                     <Tag 
@@ -149,7 +159,7 @@ const Header = () => {
                     </Tag>
                   </Link>
                 ))}
-              </div>
+              </div> */}
             </div>
           </div>
           
