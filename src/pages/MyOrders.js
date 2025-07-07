@@ -137,12 +137,12 @@ const MyOrders = () => {
       render: (item) => (
         item ? (
           <>
-            <img
-              src={item.images && item.images.length > 0 ? item.images[0] : 'https://via.placeholder.com/50x50?text=No+Image'}
-              alt={item.title}
-              style={{ width: 50, height: 50, marginRight: 10, objectFit: 'cover' }}
-            />
-            <Link to={`/items/${item.id}`}>{item.title}</Link>
+          <img 
+            src={item.images && item.images.length > 0 ? item.images[0] : 'https://via.placeholder.com/50x50?text=No+Image'} 
+            alt={item.title}
+            style={{ width: 50, height: 50, marginRight: 10, objectFit: 'cover' }}
+          />
+          <Link to={`/items/${item.id}`}>{item.title}</Link>
           </>
         ) : (
           <span>商品信息缺失</span>
