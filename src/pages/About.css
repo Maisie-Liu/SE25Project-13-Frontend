@@ -1,0 +1,290 @@
+.about-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 20px;
+}
+
+/* 英雄区域 */
+.about-hero {
+  position: relative;
+  height: 300px;
+  background: linear-gradient(135deg, rgba(0, 184, 169, 0.8) 0%, rgba(13, 216, 200, 0.8) 100%), url('https://img.freepik.com/free-photo/group-diverse-people-having-business-meeting_53876-25060.jpg?w=1200');
+  background-size: cover;
+  background-position: center;
+  border-radius: 12px;
+  margin-bottom: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+  margin-top: 20px;
+}
+
+.hero-content {
+  text-align: center;
+  color: white;
+  padding: 0 20px;
+  max-width: 800px;
+}
+
+.hero-title {
+  font-size: 42px !important;
+  margin-bottom: 16px !important;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.hero-description {
+  font-size: 18px !important;
+  opacity: 0.9;
+}
+
+/* 内容区域 */
+.about-section {
+  margin-bottom: 60px;
+}
+
+.section-title {
+  margin-bottom: 24px !important;
+  color: #333 !important;
+  display: flex;
+  align-items: center;
+}
+
+.section-title .anticon {
+  margin-right: 10px;
+  color: #00B8A9;
+}
+
+.text-center {
+  text-align: center;
+}
+
+.text-center.section-title {
+  justify-content: center;
+}
+
+/* 使命部分 */
+.mission-content {
+  padding-right: 20px;
+}
+
+.mission-text {
+  font-size: 16px;
+  line-height: 1.6;
+  margin-bottom: 30px;
+}
+
+.mission-stats {
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  margin-top: 30px;
+}
+
+.stat-item {
+  text-align: center;
+  flex: 1;
+  min-width: 100px;
+}
+
+.stat-item h2 {
+  color: #00B8A9 !important;
+  margin-bottom: 0 !important;
+}
+
+/* 图片样式 */
+.about-image {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100%;
+}
+
+.rounded-image {
+  border-radius: 12px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+}
+
+/* 分隔线 */
+.fancy-divider {
+  margin: 48px 0 !important;
+  position: relative;
+}
+
+.fancy-divider::before {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: 100px;
+  height: 3px;
+  background: linear-gradient(90deg, transparent, #00B8A9, transparent);
+  border-radius: 3px;
+}
+
+/* 历程时间线 */
+.history-timeline {
+  padding: 20px 0;
+}
+
+.timeline-card {
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  border: 1px solid #f0f0f0;
+  transition: all 0.3s;
+}
+
+.timeline-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+}
+
+.timeline-card h4 {
+  color: #00B8A9 !important;
+}
+
+/* 团队部分 */
+.team-section {
+  background-color: #f9f9f9;
+  padding: 40px;
+  border-radius: 12px;
+}
+
+.team-intro {
+  font-size: 16px;
+  max-width: 700px;
+  margin: 0 auto 40px !important;
+}
+
+.team-card {
+  height: 100%;
+  border-radius: 10px;
+  overflow: hidden;
+  transition: all 0.3s;
+}
+
+.team-card:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1) !important;
+}
+
+.team-member {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.member-avatar {
+  margin-bottom: 16px;
+  border: 3px solid #fff;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
+}
+
+.member-name {
+  margin-bottom: 4px !important;
+}
+
+.member-title {
+  font-size: 14px;
+  margin-bottom: 12px;
+  display: block;
+}
+
+.member-bio {
+  font-size: 14px;
+  color: #666;
+}
+
+/* 联系我们 */
+.contact-section {
+  margin-bottom: 80px;
+}
+
+.contact-info {
+  margin-top: 24px;
+}
+
+.contact-item {
+  display: flex;
+  align-items: flex-start;
+}
+
+.contact-icon {
+  font-size: 18px;
+  color: #00B8A9;
+  margin-right: 16px;
+  margin-top: 4px;
+}
+
+/* CTA区域 */
+.about-cta {
+  background: linear-gradient(135deg, rgba(0, 184, 169, 0.9) 0%, rgba(13, 216, 200, 0.9) 100%);
+  padding: 60px 40px;
+  border-radius: 12px;
+  text-align: center;
+  margin-bottom: 40px;
+  box-shadow: 0 10px 30px rgba(0, 184, 169, 0.2);
+}
+
+.about-cta h2, .about-cta p {
+  color: white !important;
+}
+
+.cta-buttons {
+  margin-top: 30px;
+  display: flex;
+  justify-content: center;
+  gap: 16px;
+}
+
+.cta-buttons button {
+  min-width: 120px;
+}
+
+.cta-buttons button:first-child {
+  background: white;
+  color: #00B8A9;
+  border: none;
+}
+
+.cta-buttons button:last-child {
+  background: transparent;
+  color: white;
+  border: 2px solid white;
+}
+
+/* 响应式调整 */
+@media (max-width: 768px) {
+  .about-hero {
+    height: 250px;
+  }
+  
+  .hero-title {
+    font-size: 32px !important;
+  }
+  
+  .hero-description {
+    font-size: 16px !important;
+  }
+  
+  .mission-content {
+    padding-right: 0;
+    margin-bottom: 30px;
+  }
+  
+  .about-section {
+    margin-bottom: 40px;
+  }
+  
+  .team-section {
+    padding: 30px 20px;
+  }
+  
+  .about-cta {
+    padding: 40px 20px;
+  }
+} 
