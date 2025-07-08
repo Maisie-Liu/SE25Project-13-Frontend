@@ -1,17 +1,17 @@
-import React from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { useSelector, useDispatch } from 'react-redux';
+import React, { useState, useEffect } from 'react';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
+import { useDispatch, useSelector } from 'react-redux';
 import styled from 'styled-components';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faExchangeAlt } from '@fortawesome/free-solid-svg-icons';
 import { 
   Layout, 
-  Menu, 
   Button, 
   Avatar, 
-  Dropdown, 
-  Space,
-  Badge,
+  Space, 
+  Menu, 
+  Badge, 
+  Dropdown,
   Tooltip,
   Input,
   Tag
@@ -30,6 +30,14 @@ import {
 } from '@ant-design/icons';
 import { selectIsAuthenticated, selectUser } from '../../store/slices/authSlice';
 import { logout } from '../../store/actions/authActions';
+import { 
+  selectUnreadCount,
+  selectUnreadCommentCount,
+  selectUnreadFavoriteCount,
+  selectUnreadOrderCount,
+  selectUnreadChatCount
+} from '../../store/slices/messageSlice';
+import { fetchUnreadMessagesCount, fetchUnreadMessagesByTypeCount } from '../../store/actions/messageActions';
 
 const { Header: AntHeader } = Layout;
 const { Search } = Input;
@@ -68,13 +76,58 @@ const LogoText = styled.span`
 
 const Header = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const dispatch = useDispatch();
   const isAuthenticated = useSelector(selectIsAuthenticated);
   const user = useSelector(selectUser);
+  const [headerSearch, setHeaderSearch] = useState('');
+  
+  // 获取未读消息数量
+  const unreadCount = useSelector(selectUnreadCount);
+  const unreadCommentCount = useSelector(selectUnreadCommentCount);
+  const unreadFavoriteCount = useSelector(selectUnreadFavoriteCount);
+  const unreadOrderCount = useSelector(selectUnreadOrderCount);
+  const unreadChatCount = useSelector(selectUnreadChatCount);
+  
+  // 计算总未读消息数
+  const totalUnreadCount = (Number(unreadCommentCount) || 0) + 
+                          (Number(unreadFavoriteCount) || 0) + 
+                          (Number(unreadOrderCount) || 0) + 
+                          (Number(unreadChatCount) || 0);
+  
+  useEffect(() => {
+    if (location.pathname === '/items') {
+      setHeaderSearch('');
+    }
+  }, [location.pathname]);
+  
+  // 获取未读消息数量
+  useEffect(() => {
+    if (isAuthenticated) {
+      // 立即获取一次未读消息数量
+      const fetchUnreadCounts = () => {
+        dispatch(fetchUnreadMessagesCount());
+        dispatch(fetchUnreadMessagesByTypeCount('COMMENT'));
+        dispatch(fetchUnreadMessagesByTypeCount('FAVORITE'));
+        dispatch(fetchUnreadMessagesByTypeCount('ORDER'));
+        dispatch(fetchUnreadMessagesByTypeCount('CHAT'));
+      };
+      
+      fetchUnreadCounts();
+      
+      // 设置轮询，每30秒更新一次未读消息数量
+      const intervalId = setInterval(fetchUnreadCounts, 30000);
+      
+      // 清理函数
+      return () => {
+        clearInterval(intervalId);
+      };
+    }
+  }, [dispatch, isAuthenticated]);
   
   const handleSearch = (value) => {
     if (value.trim()) {
-      navigate(`/items?search=${encodeURIComponent(value.trim())}`);
+      navigate(`/items?keyword=${encodeURIComponent(value.trim())}`);
     }
   };
   
@@ -83,20 +136,36 @@ const Header = () => {
     navigate('/login');
   };
   
-  const userMenu = (
-    <Menu>
-      <Menu.Item key="profile" onClick={() => navigate('/profile')}>
-        <UserOutlined /> 个人资料
-      </Menu.Item>
-      <Menu.Item key="orders" onClick={() => navigate('/my/orders')}>
-        <ShoppingOutlined /> 我的订单
-      </Menu.Item>
-      <Menu.Divider />
-      <Menu.Item key="logout" onClick={handleLogout}>
-        <LogoutOutlined /> 退出登录
-      </Menu.Item>
-    </Menu>
-  );
+  // 定义菜单项数组，符合Ant Design v5的要求
+  const menuItems = [
+    {
+      key: 'profile',
+      icon: <UserOutlined />,
+      label: '个人资料',
+      onClick: () => navigate('/profile')
+    },
+    {
+      key: 'orders',
+      icon: <ShoppingOutlined />,
+      label: '我的订单',
+      onClick: () => navigate('/my/orders')
+    },
+    {
+      key: 'items',
+      icon: <AppstoreOutlined />,
+      label: '我的物品',
+      onClick: () => navigate('/my/items')
+    },
+    {
+      type: 'divider'
+    },
+    {
+      key: 'logout',
+      icon: <LogoutOutlined />,
+      label: '退出登录',
+      onClick: handleLogout
+    }
+  ];
   
   const categories = [
     { name: '电子产品', link: '/items?category=electronics' },
@@ -126,11 +195,13 @@ const Header = () => {
                 allowClear
                 enterButton={<SearchOutlined style={{ fontSize: '18px' }} />}
                 size="large"
+                value={headerSearch}
+                onChange={e => setHeaderSearch(e.target.value)}
                 onSearch={handleSearch}
                 className="header-search-box"
                 style={{ width: '100%' }}
               />
-              <div className="header-tags">
+              {/* <div className="header-tags">
                 {categories.map((category, index) => (
                   <Link to={category.link} key={index}>
                     <Tag 
@@ -149,7 +220,7 @@ const Header = () => {
                     </Tag>
                   </Link>
                 ))}
-              </div>
+              </div> */}
             </div>
           </div>
           
@@ -170,7 +241,7 @@ const Header = () => {
               <Space size="middle">
                 {isAuthenticated ? (
                   <>
-                    <Badge count={3} size="small" className="notification-badge">
+                    <Badge count={totalUnreadCount > 0 ? totalUnreadCount : 0} size="small" className="notification-badge">
                       <Button 
                         type="text" 
                         icon={<MessageOutlined />} 
@@ -184,7 +255,7 @@ const Header = () => {
                       className="icon-button"
                       onClick={() => navigate('/my/favorites')}
                     />
-                    <Dropdown overlay={userMenu} placement="bottomRight" arrow>
+                    <Dropdown menu={{ items: menuItems }} placement="bottomRight" arrow>
                       <div className="user-avatar-container">
                         <Avatar 
                           size="default" 

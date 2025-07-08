@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useDispatch } from 'react-redux';
 import { 
   Typography, 
   Button, 
@@ -27,73 +28,49 @@ import {
 } from '@ant-design/icons';
 import { format, formatDistanceToNow } from 'date-fns';
 import { zhCN } from 'date-fns/locale';
-import axios from '../utils/axios';
+import { fetchFavoriteMessages, markMessageAsRead } from '../store/actions/messageActions';
 
 const { Title, Text, Paragraph } = Typography;
 const { Search } = Input;
 
 const MessageFavorites = () => {
   const navigate = useNavigate();
+  const dispatch = useDispatch();
   const [loading, setLoading] = useState(true);
   const [favoriteMessages, setFavoriteMessages] = useState([]);
   const [filter, setFilter] = useState('all');
   const [keyword, setKeyword] = useState('');
+  const [pagination, setPagination] = useState({
+    current: 1,
+    pageSize: 10,
+    total: 0
+  });
   
-  // 模拟获取收藏消息
+  // 获取收藏消息
   useEffect(() => {
-    const fetchFavoriteMessages = async () => {
+    const loadFavoriteMessages = async () => {
       setLoading(true);
       try {
-        // 模拟数据
-        const mockFavoriteMessages = [
-          {
-            id: 1,
-            type: 'favorite',
-            itemId: 101,
-            itemName: 'iPhone 13 128G',
-            itemImage: 'https://via.placeholder.com/50',
-            itemPrice: 4999,
-            fromUser: {
-              id: 201,
-              username: '王五',
-              avatar: 'https://via.placeholder.com/40'
-            },
-            createdAt: new Date(Date.now() - 1000 * 60 * 30),
-            read: false
-          },
-          {
-            id: 2,
-            type: 'favorite',
-            itemId: 102,
-            itemName: '二手自行车',
-            itemImage: 'https://via.placeholder.com/50',
-            itemPrice: 350,
-            fromUser: {
-              id: 202,
-              username: '李四',
-              avatar: 'https://via.placeholder.com/40'
-            },
-            createdAt: new Date(Date.now() - 1000 * 60 * 60 * 3),
-            read: true
-          },
-          {
-            id: 3,
-            type: 'favorite',
-            itemId: 103,
-            itemName: '大学教材',
-            itemImage: 'https://via.placeholder.com/50',
-            itemPrice: 45,
-            fromUser: {
-              id: 203,
-              username: '张三',
-              avatar: 'https://via.placeholder.com/40'
-            },
-            createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24),
-            read: true
-          }
-        ];
+        console.log('开始获取收藏消息，页码:', pagination.current - 1, '每页数量:', pagination.pageSize);
+        const result = await dispatch(fetchFavoriteMessages(pagination.current - 1, pagination.pageSize));
+        console.log('fetchFavoriteMessages返回结果:', result);
+        const response = result.payload || result;
+        console.log('处理后的响应数据:', response);
         
-        setFavoriteMessages(mockFavoriteMessages);
+        // 处理嵌套的响应格式
+        if (response && response.code === 200 && response.data) {
+          console.log('收藏消息内容:', response.data);
+          // 使用response.data中的数据
+          setFavoriteMessages(response.data.list || []);
+          setPagination({
+            ...pagination,
+            total: response.data.total || 0
+          });
+          console.log('更新分页信息，总数:', response.data.total);
+        } else {
+          console.error('响应数据格式不正确:', response);
+          message.error('获取数据格式错误');
+        }
       } catch (error) {
         console.error('获取收藏消息失败:', error);
         message.error('获取收藏消息失败');
@@ -102,19 +79,20 @@ const MessageFavorites = () => {
       }
     };
     
-    fetchFavoriteMessages();
-  }, []);
+    loadFavoriteMessages();
+  }, [dispatch, pagination.current, pagination.pageSize]);
   
   // 标记为已读
-  const markAsRead = async (id) => {
+  const handleMarkAsRead = async (messageId) => {
     try {
-      // 实际应该调用API
-      console.log(`标记消息 ${id} 为已读`);
+      await dispatch(markMessageAsRead(messageId));
       
       // 更新本地状态
       setFavoriteMessages(prev => 
-        prev.map(msg => msg.id === id ? {...msg, read: true} : msg)
+        prev.map(msg => msg.id === messageId ? {...msg, read: true} : msg)
       );
+      
+      message.success('已标记为已读');
     } catch (error) {
       console.error('标记已读失败:', error);
       message.error('标记已读失败');
@@ -146,8 +124,8 @@ const MessageFavorites = () => {
     if (keyword) {
       filtered = filtered.filter(
         msg => 
-          msg.itemName.includes(keyword) ||
-          msg.fromUser.username.includes(keyword)
+          (msg.itemName && msg.itemName.includes(keyword)) ||
+          (msg.sender && msg.sender.username && msg.sender.username.includes(keyword))
       );
     }
     
@@ -157,6 +135,13 @@ const MessageFavorites = () => {
   
   const filteredMessages = getFilteredMessages();
   const unreadCount = favoriteMessages.filter(msg => !msg.read).length;
+  
+  // 查看物品详情
+  const viewItemDetail = (itemId) => {
+    if (itemId) {
+      navigate(`/items/${itemId}`);
+    }
+  };
   
   return (
     <div className="message-detail-page">
@@ -212,13 +197,13 @@ const MessageFavorites = () => {
                 <Card 
                   className={`favorite-message-card ${!item.read ? 'unread' : ''}`}
                   hoverable
-                  onClick={() => !item.read && markAsRead(item.id)}
+                  onClick={() => !item.read && handleMarkAsRead(item.id)}
                 >
                   <div className="favorite-message-header">
                     <div className="favorite-message-user">
-                      <Avatar src={item.fromUser.avatar} icon={<UserOutlined />} />
+                      <Avatar src={item.sender?.avatarImageId} icon={<UserOutlined />} />
                       <div className="favorite-message-user-info">
-                        <Text strong>{item.fromUser.username}</Text>
+                        <Text strong>{item.sender?.nickname || item.sender?.username || '未知用户'}</Text>
                         <Text type="secondary" className="favorite-time">{formatTime(item.createdAt)}</Text>
                       </div>
                     </div>
@@ -230,14 +215,18 @@ const MessageFavorites = () => {
                   <div className="favorite-message-content">
                     <div className="favorite-message-action">
                       <HeartFilled style={{ color: '#ff4d4f', fontSize: '22px' }} />
-                      <Text style={{ marginLeft: '8px' }}>收藏了你的物品</Text>
+                      <Text style={{ marginLeft: '8px' }}>收藏了您的物品</Text>
                     </div>
                     
                     <div className="favorite-message-item-info">
-                      <img src={item.itemImage} alt={item.itemName} className="favorite-message-image" />
+                      <img 
+                        src={item.itemImage || 'https://via.placeholder.com/50?text=No+Image'} 
+                        alt={item.itemName || '物品'} 
+                        className="favorite-message-image" 
+                      />
                       <div className="favorite-message-item-details">
-                        <Text strong ellipsis>{item.itemName}</Text>
-                        <Text type="danger">¥{item.itemPrice}</Text>
+                        <Text strong ellipsis>{item.itemName || '未命名物品'}</Text>
+                        <Text type="danger">¥{item.itemPrice || '暂无价格'}</Text>
                       </div>
                     </div>
                   </div>
@@ -250,21 +239,21 @@ const MessageFavorites = () => {
                           size="small"
                           onClick={(e) => {
                             e.stopPropagation();
-                            markAsRead(item.id);
+                            handleMarkAsRead(item.id);
                           }}
                         >
                           标记已读
                         </Button>
                       </Tooltip>
                     )}
-                    <Tooltip title="查看物品详情">
+                    
+                    <Tooltip title="查看物品">
                       <Button 
-                        type="primary" 
-                        icon={<ShopOutlined />}
+                        icon={<ShopOutlined />} 
                         size="small"
                         onClick={(e) => {
                           e.stopPropagation();
-                          navigate(`/items/${item.itemId}`);
+                          viewItemDetail(item.itemId);
                         }}
                       >
                         查看物品
@@ -274,9 +263,27 @@ const MessageFavorites = () => {
                 </Card>
               </List.Item>
             )}
+            pagination={{
+              current: pagination.current,
+              pageSize: pagination.pageSize,
+              total: pagination.total,
+              onChange: (page, pageSize) => {
+                setPagination({
+                  ...pagination,
+                  current: page,
+                  pageSize: pageSize
+                });
+              },
+              showSizeChanger: true,
+              showQuickJumper: true,
+              showTotal: (total) => `共 ${total} 条消息`
+            }}
           />
         ) : (
-          <Empty description="暂无收藏消息" />
+          <Empty 
+            description="暂无收藏消息" 
+            image={Empty.PRESENTED_IMAGE_SIMPLE}
+          />
         )}
       </div>
     </div>
