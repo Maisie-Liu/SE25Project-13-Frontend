@@ -242,7 +242,7 @@ const Messages = () => {
         <Title level={2}>
           <BellOutlined /> 我的消息
           <Text type="secondary" style={{ fontSize: '16px', marginLeft: '10px' }}>
-            ({unreadCommentCount + unreadFavoriteCount + unreadOrderCount + unreadChatCount})
+            ({(Number(unreadCommentCount) || 0) + (Number(unreadFavoriteCount) || 0) + (Number(unreadOrderCount) || 0) + (Number(unreadChatCount) || 0)})
           </Text>
         </Title>
       </div>

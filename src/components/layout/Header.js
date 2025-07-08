@@ -30,6 +30,14 @@ import {
 } from '@ant-design/icons';
 import { selectIsAuthenticated, selectUser } from '../../store/slices/authSlice';
 import { logout } from '../../store/actions/authActions';
+import { 
+  selectUnreadCount,
+  selectUnreadCommentCount,
+  selectUnreadFavoriteCount,
+  selectUnreadOrderCount,
+  selectUnreadChatCount
+} from '../../store/slices/messageSlice';
+import { fetchUnreadMessagesCount, fetchUnreadMessagesByTypeCount } from '../../store/actions/messageActions';
 
 const { Header: AntHeader } = Layout;
 const { Search } = Input;
@@ -74,11 +82,35 @@ const Header = () => {
   const user = useSelector(selectUser);
   const [headerSearch, setHeaderSearch] = useState('');
   
+  // 获取未读消息数量
+  const unreadCount = useSelector(selectUnreadCount);
+  const unreadCommentCount = useSelector(selectUnreadCommentCount);
+  const unreadFavoriteCount = useSelector(selectUnreadFavoriteCount);
+  const unreadOrderCount = useSelector(selectUnreadOrderCount);
+  const unreadChatCount = useSelector(selectUnreadChatCount);
+  
+  // 计算总未读消息数
+  const totalUnreadCount = (Number(unreadCommentCount) || 0) + 
+                          (Number(unreadFavoriteCount) || 0) + 
+                          (Number(unreadOrderCount) || 0) + 
+                          (Number(unreadChatCount) || 0);
+  
   useEffect(() => {
     if (location.pathname === '/items') {
       setHeaderSearch('');
     }
   }, [location.pathname]);
+  
+  // 获取未读消息数量
+  useEffect(() => {
+    if (isAuthenticated) {
+      dispatch(fetchUnreadMessagesCount());
+      dispatch(fetchUnreadMessagesByTypeCount('COMMENT'));
+      dispatch(fetchUnreadMessagesByTypeCount('FAVORITE'));
+      dispatch(fetchUnreadMessagesByTypeCount('ORDER'));
+      dispatch(fetchUnreadMessagesByTypeCount('CHAT'));
+    }
+  }, [dispatch, isAuthenticated]);
   
   const handleSearch = (value) => {
     if (value.trim()) {
@@ -196,7 +228,7 @@ const Header = () => {
               <Space size="middle">
                 {isAuthenticated ? (
                   <>
-                    <Badge count={3} size="small" className="notification-badge">
+                    <Badge count={totalUnreadCount > 0 ? totalUnreadCount : 0} size="small" className="notification-badge">
                       <Button 
                         type="text" 
                         icon={<MessageOutlined />} 

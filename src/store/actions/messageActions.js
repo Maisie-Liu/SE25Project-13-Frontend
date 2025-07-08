@@ -218,11 +218,17 @@ export const fetchUnreadMessagesByTypeCount = (messageType) => async (dispatch) 
     const response = await axios.get(`/messages/unread/count/${messageType}`);
     console.log(`fetchUnreadMessagesByTypeCount - ${messageType} 响应:`, response.data);
     
+    // 确保data是数字
+    let count = 0;
+    if (response.data && response.data.data !== undefined) {
+      count = typeof response.data.data === 'number' ? response.data.data : parseInt(response.data.data, 10) || 0;
+    }
+    
     dispatch({
       type: 'FETCH_UNREAD_MESSAGES_BY_TYPE_COUNT_SUCCESS',
       payload: {
         messageType,
-        ...response.data  // 包含 { code: 200, data: count }
+        data: count
       }
     });
     return response.data;
