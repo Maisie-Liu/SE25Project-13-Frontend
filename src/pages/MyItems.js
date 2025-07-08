@@ -66,7 +66,7 @@ const MyItems = () => {
     },
     {
       title: '分类',
-      dataIndex: 'category',
+      dataIndex: 'categoryName',
       key: 'category',
     },
     {
