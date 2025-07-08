@@ -213,7 +213,7 @@ export const generateItemDescription = createAsyncThunk(
   'item/generateItemDescription',
   async (imageId, { rejectWithValue }) => {
     try {
-      const response = await axios.post('/items/generate-description', null, { params: { imageId } });
+      const response = await axios.post('/items/generate-description', null, { params: { imageId }, timeout: 300000 });
       return response.data.data;
     } catch (error) {
       return rejectWithValue(
