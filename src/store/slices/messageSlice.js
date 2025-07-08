@@ -279,7 +279,10 @@ const messageSlice = createSlice({
     },
     fetchUnreadMessagesByTypeCountSuccess: (state, action) => {
       state.loading = false;
-      const { messageType, count } = action.payload;
+      const { messageType, data } = action.payload;
+      
+      // 确保数据是数字类型
+      const count = typeof data === 'number' ? data : parseInt(data, 10) || 0;
       
       // 根据消息类型更新相应的未读消息数量
       switch (messageType) {
@@ -298,6 +301,12 @@ const messageSlice = createSlice({
         default:
           break;
       }
+      
+      // 更新总未读消息数
+      state.unreadCount = (Number(state.unreadCommentCount) || 0) + 
+                         (Number(state.unreadFavoriteCount) || 0) + 
+                         (Number(state.unreadOrderCount) || 0) + 
+                         (Number(state.unreadChatCount) || 0);
     },
     fetchUnreadMessagesByTypeCountFailure: (state, action) => {
       state.loading = false;

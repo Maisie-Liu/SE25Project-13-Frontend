@@ -62,9 +62,13 @@ export const markChatMessagesAsRead = createAsyncThunk(
   'chat/markChatMessagesAsRead',
   async (chatId, { rejectWithValue }) => {
     try {
+      console.log(`尝试标记聊天 ${chatId} 的所有消息为已读`);
       const response = await axios.put(`/api/chats/${chatId}/read`);
+      console.log(`标记聊天 ${chatId} 的所有消息为已读成功:`, response.data);
       return { chatId };
     } catch (error) {
+      console.error(`标记聊天 ${chatId} 的所有消息为已读失败:`, error);
+      console.error('错误详情:', error.response?.data || error.message);
       return rejectWithValue(error.response?.data?.message || '标记消息已读失败');
     }
   }

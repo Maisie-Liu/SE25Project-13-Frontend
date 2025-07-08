@@ -30,7 +30,8 @@ import {
   fetchChatMessages, 
   sendChatMessage, 
   markChatMessagesAsRead,
-  fetchUserChats
+  fetchUserChats,
+  fetchTotalUnreadCount
 } from '../store/actions/chatActions';
 import { 
   selectChatMessages, 
@@ -38,6 +39,7 @@ import {
   selectChatError,
   selectChats
 } from '../store/slices/chatSlice';
+import { fetchUnreadMessagesByTypeCount } from '../store/actions/messageActions';
 
 import './Chat.css';
 
@@ -88,8 +90,27 @@ const Chat = () => {
         // 获取聊天消息
         const messagesData = await dispatch(fetchChatMessages({ chatId: parseInt(chatId) })).unwrap();
         
-        // 标记消息为已读
-        await dispatch(markChatMessagesAsRead(parseInt(chatId))).unwrap();
+        // 标记消息为已读，添加重试逻辑
+        let retryCount = 0;
+        const maxRetries = 2;
+        let markReadSuccess = false;
+        
+        while (!markReadSuccess && retryCount <= maxRetries) {
+          try {
+            await dispatch(markChatMessagesAsRead(parseInt(chatId))).unwrap();
+            markReadSuccess = true;
+          } catch (error) {
+            retryCount++;
+            console.error(`标记聊天 ${chatId} 已读失败 (${retryCount}/${maxRetries}):`, error);
+            if (retryCount > maxRetries) break;
+            // 等待短暂时间后重试
+            await new Promise(resolve => setTimeout(resolve, 500));
+          }
+        }
+        
+        // 无论标记已读是否成功，都更新未读消息数量
+        await dispatch(fetchTotalUnreadCount());
+        await dispatch(fetchUnreadMessagesByTypeCount('CHAT'));
         
         // 从消息中提取聊天信息
         if (messagesData.messages && messagesData.messages.content && messagesData.messages.content.length > 0) {
@@ -131,6 +152,10 @@ const Chat = () => {
     try {
       await dispatch(sendChatMessage({ chatId: parseInt(chatId), content: messageText.trim() })).unwrap();
       setMessageText('');
+      
+      // 重新获取未读消息数量
+      await dispatch(fetchTotalUnreadCount());
+      await dispatch(fetchUnreadMessagesByTypeCount('CHAT'));
     } catch (error) {
       console.error('发送消息失败:', error);
       message.error('发送消息失败');

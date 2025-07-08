@@ -104,11 +104,24 @@ const Header = () => {
   // 获取未读消息数量
   useEffect(() => {
     if (isAuthenticated) {
-      dispatch(fetchUnreadMessagesCount());
-      dispatch(fetchUnreadMessagesByTypeCount('COMMENT'));
-      dispatch(fetchUnreadMessagesByTypeCount('FAVORITE'));
-      dispatch(fetchUnreadMessagesByTypeCount('ORDER'));
-      dispatch(fetchUnreadMessagesByTypeCount('CHAT'));
+      // 立即获取一次未读消息数量
+      const fetchUnreadCounts = () => {
+        dispatch(fetchUnreadMessagesCount());
+        dispatch(fetchUnreadMessagesByTypeCount('COMMENT'));
+        dispatch(fetchUnreadMessagesByTypeCount('FAVORITE'));
+        dispatch(fetchUnreadMessagesByTypeCount('ORDER'));
+        dispatch(fetchUnreadMessagesByTypeCount('CHAT'));
+      };
+      
+      fetchUnreadCounts();
+      
+      // 设置轮询，每30秒更新一次未读消息数量
+      const intervalId = setInterval(fetchUnreadCounts, 30000);
+      
+      // 清理函数
+      return () => {
+        clearInterval(intervalId);
+      };
     }
   }, [dispatch, isAuthenticated]);
   
