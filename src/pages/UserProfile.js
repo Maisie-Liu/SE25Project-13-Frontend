@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { Form, Input, Button, Card, Avatar, Upload, message, Tabs, List, Spin, Typography, Tag, Row, Col, Divider } from 'antd';
+import { Form, Input, Button, Card, Avatar, Upload, message, Tabs, List, Spin, Typography, Tag, Divider, Switch, Row, Col } from 'antd';
 import { UserOutlined, UploadOutlined, LockOutlined, MailOutlined, PhoneOutlined, InfoCircleOutlined } from '@ant-design/icons';
-import { fetchCurrentUser, updateUserProfile, changePassword, uploadAvatar } from '../store/actions/authActions';
+import { fetchCurrentUser, updateUserProfile, changePassword, uploadAvatar, getPersonalizedRecommendSetting, setPersonalizedRecommendSetting, getUserInterestProfile } from '../store/actions/authActions';
 import { selectUser, selectAuthLoading } from '../store/slices/authSlice';
 import { fetchMyItems } from '../store/actions/itemActions';
 import { fetchUserOrders } from '../store/actions/orderActions';
@@ -10,17 +10,10 @@ import { selectItems } from '../store/slices/itemSlice';
 import { selectOrders } from '../store/slices/orderSlice';
 import { Link } from 'react-router-dom';
 import './UserProfile.css';
+import { Pie } from '@ant-design/plots';
 
 const { TabPane } = Tabs;
 const { Title, Paragraph } = Typography;
-
-const beforeUpload = () => {
-  // 空实现
-};
-
-const handleChange = () => {
-  // 空实现
-};
 
 const UserProfile = () => {
   const dispatch = useDispatch();
@@ -28,6 +21,9 @@ const UserProfile = () => {
   const loading = useSelector(selectAuthLoading);
   const myItems = useSelector(selectItems);
   const myOrders = useSelector(selectOrders);
+  const allowPersonalizedRecommend = useSelector(selectPersonalizedRecommend);
+  const userInterestProfile = useSelector(selectUserInterestProfile);
+  const userInterestProfileLoading = useSelector(selectUserInterestProfileLoading);
   
   const [profileForm] = Form.useForm();
   const [passwordForm] = Form.useForm();
@@ -53,6 +49,11 @@ const UserProfile = () => {
       }
     }
   }, [user, profileForm]);
+
+  useEffect(() => {
+    dispatch(getPersonalizedRecommendSetting());
+    dispatch(getUserInterestProfile());
+  }, [dispatch]);
 
   const handleProfileUpdate = (values) => {
     const updatedProfile = {
@@ -121,6 +122,51 @@ const UserProfile = () => {
   // 收集收到的评价
   const buyerComments = myOrders.filter(o => o.buyerComment && user && o.buyer?.id === user.id);
   const sellerComments = myOrders.filter(o => o.sellerComment && user && o.seller?.id === user.id);
+
+  const handleSwitchChange = async (checked) => {
+    try {
+      await dispatch(setPersonalizedRecommendSetting(checked));
+      message.success(checked ? '已开启个性化推荐' : '已关闭个性化推荐，平台将不再采集你的行为数据');
+    } catch (e) {
+      message.error('设置失败');
+    }
+  };
+
+  // 生成同色系渐变色数组（浅主色 -> 主色）
+  function getGradientColors(n) {
+    // 主色
+    const base = { r: 0, g: 184, b: 169 };
+    // 浅主色（主色和白色混合70%主色）
+    const light = {
+      r: Math.round(255 * 0.7 + base.r * 0.3),
+      g: Math.round(255 * 0.7 + base.g * 0.3),
+      b: Math.round(255 * 0.7 + base.b * 0.3)
+    };
+    const colors = [];
+    for (let i = 0; i < n; i++) {
+      const percent = n === 1 ? 1 : i / (n - 1);
+      const r = Math.round(light.r * (1 - percent) + base.r * percent);
+      const g = Math.round(light.g * (1 - percent) + base.g * percent);
+      const b = Math.round(light.b * (1 - percent) + base.b * percent);
+      colors.push(`rgb(${r},${g},${b})`);
+    }
+    return colors;
+  }
+
+  // 生成类别名数组和颜色映射
+  const categoryIdToName = userInterestProfile?.categoryIdToName || {};
+  const categoryInterest = userInterestProfile?.categoryInterest || {};
+  // 先将categoryId和categoryName按兴趣值从小到大排序
+  const sortedCategoryArr = Object.keys(categoryIdToName)
+    .map(id => ({
+      id,
+      name: categoryIdToName[id],
+      interest: categoryInterest[id] ?? 0
+    }))
+    .sort((a, b) => a.interest - b.interest);
+  const categoryIds = sortedCategoryArr.map(item => item.id);
+  const categoryNames = sortedCategoryArr.map(item => item.name);
+  const colors = getGradientColors(categoryNames.length);
 
   if (loading || !user) {
     return (
@@ -461,7 +507,7 @@ const UserProfile = () => {
           </TabPane>
           
           <TabPane tab="收到的评价" key="comments">
-            <Row gutter={[24, 24]} className="profile-content">
+          <Row gutter={[24, 24]} className="profile-content">
               <Col span={24}>
                 <Card className="comments-card">
                   <Tabs defaultActiveKey="buyer" className="comments-tabs">
@@ -546,6 +592,61 @@ const UserProfile = () => {
                 </Card>
               </Col>
             </Row>
+          </TabPane>
+          
+          <TabPane tab="设置" key="settings">
+            <div style={{ margin: '24px 0', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <span>个性化推荐与数据采集</span>
+              <div style={{ display: 'flex', alignItems: 'center' }}>
+                <Switch checked={allowPersonalizedRecommend} onChange={handleSwitchChange} />
+                <span style={{ marginLeft: 8, color: '#888' }}>
+                  {allowPersonalizedRecommend ? '已开启' : '已关闭'}
+                </span>
+              </div>
+            </div>
+          </TabPane>
+          
+          <TabPane tab="兴趣画像" key="interest">
+            {allowPersonalizedRecommend ? (
+              userInterestProfileLoading ? (
+                <Spin />
+              ) : userInterestProfile && userInterestProfile.categoryInterest && userInterestProfile.categoryIdToName ? (
+                <div
+                   style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}
+                >
+                   <Title level={3} style={{ width: '100%', textAlign: 'center', marginBottom: 24 }}>你的兴趣画像</Title>
+                   <Pie
+                    data={categoryIds.map((catId) => ({
+                      categoryName: categoryIdToName[catId],
+                      value: categoryInterest[catId] ?? 0
+                    }))}
+                    angleField="value"
+                    colorField="categoryName"
+                    radius={1}
+                    innerRadius={0.6}
+                    autoFit={false}
+                    height={400}
+                    legend={false}
+                    label={{
+                      position: 'spider',
+                      text: ({ categoryName}) => `${categoryName}`
+                    }}
+                    tooltip={false}
+                    scale={{
+                      color: {
+                        range: colors
+                      }
+                    }}
+                    statistic={false}
+                    style={{margin: '0 auto', inset: 1, display: 'block'}}
+                  />
+                </div>
+              ) : (
+                <div style={{ color: '#888' }}>暂无兴趣画像数据</div>
+              )
+            ) : (
+              <div style={{ color: '#888' }}>你已关闭个性化推荐与数据采集，平台不会展示你的兴趣画像。</div>
+            )}
           </TabPane>
         </Tabs>
       </Card>

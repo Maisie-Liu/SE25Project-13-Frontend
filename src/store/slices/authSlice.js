@@ -97,3 +97,51 @@ export const selectAuthLoading = (state) => state.auth.loading;
 export const selectAuthError = (state) => state.auth.error;
 
 export default authSlice.reducer; 
+
+
+// 个性化推荐开关
+const initialPersonalizedRecommendState = {
+  value: true,
+  loading: false,
+  error: null
+};
+
+export const personalizedRecommendSlice = (state = initialPersonalizedRecommendState, action) => {
+  switch (action.type) {
+    case 'personalizedRecommend/getSuccess':
+      return { ...state, value: action.payload, loading: false, error: null };
+    case 'personalizedRecommend/getError':
+      return { ...state, loading: false, error: action.error };
+    case 'personalizedRecommend/setSuccess':
+      return { ...state, value: action.payload, loading: false, error: null };
+    case 'personalizedRecommend/setError':
+      return { ...state, loading: false, error: action.error };
+    default:
+      return state;
+  }
+};
+
+export const selectPersonalizedRecommend = (state) => state.personalizedRecommend?.value;
+export const selectPersonalizedRecommendError = (state) => state.personalizedRecommend?.error;
+
+// 用户兴趣画像内容
+const initialUserInterestProfileState = {
+  data: null,
+  loading: false,
+  error: null
+};
+
+export const userInterestProfileSlice = (state = initialUserInterestProfileState, action) => {
+  switch (action.type) {
+    case 'userInterestProfile/getSuccess':
+      return { ...state, data: action.payload, loading: false, error: null };
+    case 'userInterestProfile/getError':
+      return { ...state, loading: false, error: action.error };
+    default:
+      return state;
+  }
+};
+
+export const selectUserInterestProfile = (state) => state.userInterestProfile?.data;
+export const selectUserInterestProfileLoading = (state) => state.userInterestProfile?.loading;
+export const selectUserInterestProfileError = (state) => state.userInterestProfile?.error; 

@@ -264,7 +264,7 @@ const Header = () => {
                         <Avatar 
                           size="default" 
                           icon={<UserOutlined />} 
-                          src={user?.avatar} 
+                          src={user?.avatarUrl} 
                           className="user-avatar"
                         />
                         <span className="username">{user?.username || '用户'}</span>
