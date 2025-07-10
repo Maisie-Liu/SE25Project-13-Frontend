@@ -3,7 +3,13 @@ import { useDispatch, useSelector } from 'react-redux';
 import { Form, Input, Button, Card, Avatar, Upload, message, Tabs, List, Spin, Typography, Tag, Divider, Switch, Row, Col } from 'antd';
 import { UserOutlined, UploadOutlined, LockOutlined, MailOutlined, PhoneOutlined, InfoCircleOutlined } from '@ant-design/icons';
 import { fetchCurrentUser, updateUserProfile, changePassword, uploadAvatar, getPersonalizedRecommendSetting, setPersonalizedRecommendSetting, getUserInterestProfile } from '../store/actions/authActions';
-import { selectUser, selectAuthLoading } from '../store/slices/authSlice';
+import {
+  selectUser,
+  selectAuthLoading,
+  selectPersonalizedRecommend,
+  selectUserInterestProfile,
+  selectUserInterestProfileLoading
+} from '../store/slices/authSlice';
 import { fetchMyItems } from '../store/actions/itemActions';
 import { fetchUserOrders } from '../store/actions/orderActions';
 import { selectItems } from '../store/slices/itemSlice';
