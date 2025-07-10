@@ -9,6 +9,7 @@ import favoriteReducer from './slices/favoriteSlice';
 import escrowReducer from './slices/escrowSlice';
 import messageReducer from './slices/messageSlice';
 import chatReducer from './slices/chatSlice';
+import userPublicProfileReducer from './slices/userPublicProfileSlice';
 import { recommendedItemsPageSlice, userProfileInterestSlice } from './slices/itemSlice';
 import { personalizedRecommendSlice, userInterestProfileSlice } from './slices/authSlice';
 
@@ -33,6 +34,7 @@ const rootReducer = combineReducers({
   userProfileInterest: userProfileInterestSlice,
   personalizedRecommend: personalizedRecommendSlice,
   userInterestProfile: userInterestProfileSlice,
+  userPublicProfile: userPublicProfileReducer,
 });
 
 const persistedReducer = persistReducer(persistConfig, rootReducer);
