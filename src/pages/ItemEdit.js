@@ -40,7 +40,8 @@ const ItemEdit = () => {
         description: item.description,
         price: item.price,
         categoryId: item.categoryId,
-        condition: item.condition
+        condition: item.condition,
+        stock: item.stock
       });
       
       if (item.images && item.images.length > 0) {
@@ -64,27 +65,27 @@ const ItemEdit = () => {
     }
   }, [form, item]);
 
-  useEffect(() => {
-    if (uploadedImageUrl) {
-      setFileList(prev => [
-        ...prev,
-        {
-          uid: `${Date.now()}`,
-          name: 'image.jpg',
-          status: 'done',
-          url: uploadedImageUrl,
-        },
-      ]);
-      const match = uploadedImageUrl.match(/\/api\/image\/([a-fA-F0-9]+)/);
-      if (match && match[1]) {
-        setImageIdList(prev => [...prev, match[1]]);
-      } else {
-        setImageIdList(prev => [...prev, uploadedImageUrl]);
-      }
-      setUploading(false);
-      console.log("uploadedImageUrl changed! uploadedImageUrl: ", uploadedImageUrl);
-    }
-  }, [uploadedImageUrl]);
+  // useEffect(() => {
+  //   if (uploadedImageUrl) {
+  //     setFileList(prev => [
+  //       ...prev,
+  //       {
+  //         uid: `${Date.now()}`,
+  //         name: 'image.jpg',
+  //         status: 'done',
+  //         url: uploadedImageUrl,
+  //       },
+  //     ]);
+  //     const match = uploadedImageUrl.match(/\/api\/image\/([a-fA-F0-9]+)/);
+  //     if (match && match[1]) {
+  //       setImageIdList(prev => [...prev, match[1]]);
+  //     } else {
+  //       setImageIdList(prev => [...prev, uploadedImageUrl]);
+  //     }
+  //     setUploading(false);
+  //     console.log("uploadedImageUrl changed! uploadedImageUrl: ", uploadedImageUrl);
+  //   }
+  // }, [uploadedImageUrl]);
 
   useEffect(() => {
     dispatch(fetchCategories());
@@ -108,10 +109,11 @@ const ItemEdit = () => {
       ]);
       setImageIdList(prev => [...prev, imageId]);
       message.success('图片上传成功');
-      return false;
+      return imageId;
+      // return false;
     } catch (error) {
       message.error('图片上传失败: ' + error);
-      return false;
+      // return false;
     } finally {
       setUploading(false);
     }
@@ -134,6 +136,52 @@ const ItemEdit = () => {
       .catch(() => {
         message.error('更新失败，请重试');
       });
+  };
+
+  // 上传组件配置
+  const uploadProps = {
+    name: 'file',
+    multiple: true,
+    fileList,
+    beforeUpload: (file) => {
+      // 验证文件类型和大小
+      const isImage = file.type.startsWith('image/');
+      const isLt5M = file.size / 1024 / 1024 < 5;
+
+      if (!isImage) {
+        message.error('只能上传图片文件');
+        return false;
+      }
+
+      if (!isLt5M) {
+        message.error('图片大小不能超过5MB');
+        return false;
+      }
+
+      // 手动上传
+      handleUpload(file);
+      setFileList([...fileList, file]);
+
+      return false; // 阻止自动上传
+    },
+    onRemove: async (file) => {
+      const index = fileList.indexOf(file);
+      const newFileList = fileList.slice();
+      newFileList.splice(index, 1);
+      setFileList(newFileList);
+      const newImageIdList = [...imageIdList];
+      newImageIdList.splice(index, 1);
+      setImageIdList(newImageIdList);
+      const url = file.url;
+      const match = url && url.match(/\/api\/image\/([a-fA-F0-9]+)/);
+      const imageId = match ? match[1] : url;
+      try {
+        await dispatch(deleteFile(imageId));
+        message.success('图片已删除');
+      } catch (e) {
+        message.error('图片删除失败');
+      }
+    }
   };
 
   if (loading && !item) {
@@ -205,33 +253,25 @@ const ItemEdit = () => {
         >
           <ConditionSelect />
         </Form.Item>
+
+        <Form.Item
+            name="stock"
+            label="库存"
+            rules={[{ required: true, message: '请输入库存' }]}
+        >
+          <InputNumber
+              min={1}
+              style={{ width: '100%' }}
+              placeholder="请输入库存"
+          />
+        </Form.Item>
         
         <Form.Item label="图片">
           <Upload
-            name="file"
+            {...uploadProps}
             listType="picture-card"
-            fileList={fileList}
-            beforeUpload={handleUpload}
-            onRemove={async (file) => {
-              const index = fileList.indexOf(file);
-              const newFileList = fileList.slice();
-              newFileList.splice(index, 1);
-              setFileList(newFileList);
-              const newImageIdList = imageIdList.slice();
-              const url = file.url;
-              const match = url && url.match(/\/api\/image\/([a-fA-F0-9]+)/);
-              const imageId = match ? match[1] : url;
-              newImageIdList.splice(index, 1);
-              setImageIdList(newImageIdList);
-              try {
-                await dispatch(deleteFile(imageId));
-                message.success('图片已删除');
-              } catch (e) {
-                message.error('图片删除失败');
-              }
-            }}
             disabled={fileList.length >= 5 || uploading}
-            showUploadList={{ showRemoveIcon: true }}
+            // showUploadList={{ showRemoveIcon: true }}
           >
             {fileList.length >= 5 ? null : (
               <div>
