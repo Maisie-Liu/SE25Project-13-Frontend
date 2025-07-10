@@ -46,7 +46,7 @@ const chatSlice = createSlice({
       })
       .addCase(fetchUserChats.fulfilled, (state, action) => {
         state.loading = false;
-        state.chats = action.payload.content || [];
+        state.chats = action.payload.content || action.payload.list || [];
         state.pagination = {
           page: action.payload.page || 0,
           size: action.payload.size || 10,
@@ -75,7 +75,7 @@ const chatSlice = createSlice({
         const { chatId, messages } = action.payload;
         
         // 保存消息到对应的聊天会话
-        state.messages[chatId] = messages.content || [];
+        state.messages[chatId] = messages.content || messages.list || [];
         
         // 更新聊天会话的未读消息数
         state.chats = state.chats.map(chat => {
@@ -236,7 +236,10 @@ export const {
 
 export const selectChats = state => state.chat.chats || [];
 export const selectCurrentChat = state => state.chat.currentChat;
-export const selectChatMessages = (state, chatId) => state.chat.messages[chatId] || [];
+export const selectChatMessages = (state, chatId) =>
+  state.chat.messages[chatId] ||
+  state.chat.messages[String(chatId)] ||
+  [];
 export const selectTotalUnreadCount = state => state.chat.totalUnreadCount;
 export const selectChatLoading = state => state.chat.loading;
 export const selectChatError = state => state.chat.error;

@@ -50,6 +50,8 @@ import {
 } from '@ant-design/icons';
 import { fetchItems } from '../store/actions/itemActions';
 import { selectItems, selectItemLoading, selectItemPagination } from '../store/slices/itemSlice';
+import { selectCategories, selectCategoryLoading } from '../store/slices/categorySlice';
+import { fetchCategories } from '../store/actions/categoryActions';
 import queryString from 'query-string';
 import { formatPrice, DEFAULT_IMAGE } from '../utils/helpers';
 import ConditionTag from '../components/condition/ConditionTag';
@@ -103,6 +105,39 @@ const ItemList = () => {
   const items = useSelector(selectItems);
   const loading = useSelector(selectItemLoading);
   const pagination = useSelector(selectItemPagination);
+  const categories = useSelector(selectCategories);
+  const categoryLoading = useSelector(selectCategoryLoading);
+
+  useEffect(() => {
+    dispatch(fetchCategories());
+  }, [dispatch]);
+
+  const categoryIcons = {
+    1: <MobileOutlined />,
+    2: <BookOutlined />,
+    3: <HomeOutlined />,
+    4: <SkinOutlined />,
+    5: <TrophyOutlined />,
+    6: <GiftOutlined />,
+    9: <BookOutlined /> // 假设小说id为9，如实际为其他请调整
+  };
+
+  // 替换 parentCategories 相关逻辑，直接平铺所有分类
+  const categoryOptions = [
+    { value: '', label: '全部分类' },
+    ...(
+      categories && categories.length > 0
+        ? categories.map(cat => ({
+            value: String(cat.id),
+            label: (
+              <span>
+                {categoryIcons[cat.id] || <AppstoreOutlined />} {cat.name}
+              </span>
+            )
+          }))
+        : []
+    )
+  ];
   
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(12);
@@ -437,6 +472,7 @@ const ItemList = () => {
                     placeholder="选择分类"
                     style={{ width: 120 }}
                     options={categoryOptions}
+                    loading={categoryLoading}
                     styles={{
                       popup: {
                         root: {

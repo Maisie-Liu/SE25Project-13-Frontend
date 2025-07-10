@@ -45,7 +45,8 @@ import {
   PlusOutlined,
   ShoppingCartOutlined,
   MessageOutlined,
-  CloseOutlined
+  CloseOutlined,
+  AppstoreOutlined
 } from '@ant-design/icons';
 import { fetchItems, fetchRecommendedItems, fetchHotItems } from '../store/actions/itemActions';
 import { 
@@ -53,6 +54,8 @@ import {
   selectRecommendedItems, 
   selectItemLoading 
 } from '../store/slices/itemSlice';
+import { selectCategories, selectCategoryLoading } from '../store/slices/categorySlice';
+import { fetchCategories } from '../store/actions/categoryActions';
 import { formatPrice, DEFAULT_IMAGE } from '../utils/helpers';
 import axios from '../utils/axios';
 import ConditionTag from '../components/condition/ConditionTag';
@@ -86,6 +89,8 @@ const Home = () => {
     completedOrders: 0,
     totalUsers: 0
   });
+  const categories = useSelector(selectCategories);
+  const categoryLoading = useSelector(selectCategoryLoading);
 
   // 加载最新物品和推荐物品
   useEffect(() => {
@@ -125,6 +130,10 @@ const Home = () => {
 
     fetchStatistics();
   }, []);
+
+  useEffect(() => {
+    dispatch(fetchCategories());
+  }, [dispatch]);
 
   // 处理点击外部关闭菜单
   useEffect(() => {
@@ -213,6 +222,17 @@ const Home = () => {
     </Col>
   );
 
+  const categoryIcons = {
+    1: <MobileOutlined className="xianyu-category-icon" />,
+    2: <BookOutlined className="xianyu-category-icon" />,
+    3: <HomeOutlined className="xianyu-category-icon" />,
+    4: <SkinOutlined className="xianyu-category-icon" />,
+    5: <TrophyOutlined className="xianyu-category-icon" />,
+    6: <GiftOutlined className="xianyu-category-icon" />
+  };
+
+  const parentCategories = categories && categories.length > 0 ? categories.filter(cat => !cat.parentId) : [];
+
   return (
     <>
       {/* 背景遮罩 */}
@@ -257,36 +277,25 @@ const Home = () => {
                   物品分类
                 </div>
                 <div className="xianyu-category-list">
-                  <div className="xianyu-category-item">
-                    <MobileOutlined className="xianyu-category-icon" />
-                    <span className="xianyu-category-text">电子产品</span>
-                    <span className="xianyu-category-count">328</span>
-                  </div>
-                  <div className="xianyu-category-item">
-                    <BookOutlined className="xianyu-category-icon" />
-                    <span className="xianyu-category-text">图书教材</span>
-                    <span className="xianyu-category-count">215</span>
-                  </div>
-                  <div className="xianyu-category-item">
-                    <HomeOutlined className="xianyu-category-icon" />
-                    <span className="xianyu-category-text">生活用品</span>
-                    <span className="xianyu-category-count">189</span>
-                  </div>
-                  <div className="xianyu-category-item">
-                    <SkinOutlined className="xianyu-category-icon" />
-                    <span className="xianyu-category-text">服装鞋帽</span>
-                    <span className="xianyu-category-count">156</span>
-                  </div>
-                  <div className="xianyu-category-item">
-                    <TrophyOutlined className="xianyu-category-icon" />
-                    <span className="xianyu-category-text">运动户外</span>
-                    <span className="xianyu-category-count">98</span>
-                  </div>
-                  <div className="xianyu-category-item">
-                    <GiftOutlined className="xianyu-category-icon" />
-                    <span className="xianyu-category-text">其他物品</span>
-                    <span className="xianyu-category-count">76</span>
-                  </div>
+                  {categoryLoading ? (
+                    <div style={{ textAlign: 'center', padding: '20px 0' }}><Spin /></div>
+                  ) : (
+                    parentCategories.length > 0 ? (
+                      parentCategories.map(category => (
+                        <div
+                          className="xianyu-category-item"
+                          key={category.id}
+                          style={{ cursor: 'pointer' }}
+                          onClick={() => navigate(`/items?category=${category.id}`)}
+                        >
+                          {categoryIcons[category.id] || <AppstoreOutlined className="xianyu-category-icon" />}
+                          <span className="xianyu-category-text">{category.name}</span>
+                        </div>
+                      ))
+                    ) : (
+                      <div style={{ textAlign: 'center', color: '#aaa', padding: '12px 0' }}>暂无分类</div>
+                    )
+                  )}
                 </div>
               </div>
               
@@ -300,8 +309,8 @@ const Home = () => {
                 />
                 <Divider style={{ margin: '12px 0' }} />
                 <Statistic 
-                  title="成交订单" 
-                  value={statistics.completedOrders} 
+                  title="平台订单" 
+                  value={statistics.totalOrders} 
                   prefix={<SafetyCertificateOutlined />} 
                   valueStyle={{ color: 'var(--primary-color)' }}
                 />

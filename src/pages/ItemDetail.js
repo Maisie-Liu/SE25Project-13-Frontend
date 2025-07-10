@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { 
@@ -50,6 +50,9 @@ const ItemDetail = () => {
   const [replyContent, setReplyContent] = useState('');
   const [replyingUserId, setReplyingUserId] = useState(null);
   const [replyingUsername, setReplyingUsername] = useState('');
+  
+  // 浏览量
+  // const [viewCount, setViewCount] = useState(0); // 移除本地 viewCount 状态
   
   // 获取物品详情
   useEffect(() => {
@@ -272,6 +275,21 @@ const ItemDetail = () => {
     }
   };
   
+  // 在 ItemDetail 组件内添加私聊跳转逻辑
+  const handleGoToChat = () => {
+    if (!isAuthenticated) {
+      message.warning('请先登录');
+      navigate('/login');
+      return;
+    }
+    if (item.userId === user?.id) {
+      message.info('不能和自己私聊');
+      return;
+    }
+    // 假设 chat 页面支持 /chat?userId=xxx 或 /chat/xxx
+    navigate(`/chat?userId=${item.userId}&itemId=${item.id}`);
+  };
+  
   if (loading) {
     return (
       <div style={{ textAlign: 'center', padding: '50px 0' }}>
@@ -331,11 +349,16 @@ const ItemDetail = () => {
             <Descriptions column={1} bordered>
               <Descriptions.Item label="物品分类">{item.categoryName}</Descriptions.Item>
               <Descriptions.Item label="新旧程度">{<ConditionTag condition={item.condition} />}</Descriptions.Item>
-              <Descriptions.Item label="浏览量">{item.popularity || 0}</Descriptions.Item>
+              <Descriptions.Item label="浏览量">{item.popularity}</Descriptions.Item>
               <Descriptions.Item label="卖家信息">
                 <Space>
                   <Avatar size="small" icon={<UserOutlined />} src={item.userAvatar} />
                   {item.username}
+                  {isAuthenticated && user?.id !== item.userId && (
+                    <Button size="small" type="primary" onClick={handleGoToChat} style={{ marginLeft: 8 }}>
+                      去私聊
+                    </Button>
+                  )}
                 </Space>
               </Descriptions.Item>
               <Descriptions.Item label="发布时间">{formatTime(item.createTime)}</Descriptions.Item>

@@ -160,6 +160,14 @@ const App = () => {
               } 
             />
             <Route 
+              path="/chat" 
+              element={
+                <PrivateRoute>
+                  <Chat />
+                </PrivateRoute>
+              } 
+            />
+            <Route 
               path="/comments/reply/:commentId" 
               element={
                 <PrivateRoute>

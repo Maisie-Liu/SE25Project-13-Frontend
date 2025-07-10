@@ -140,6 +140,13 @@ const ItemPublish = () => {
     }
   };
   
+  const parentCategories = categories.filter(cat => !cat.parentId);
+  const subCategories = categories.filter(cat => cat.parentId);
+  const groupedCategories = parentCategories.map(parent => {
+    const children = subCategories.filter(sub => sub.parentId === parent.id);
+    return { parent, children };
+  });
+
   return (
     <div className="container" style={{ marginTop: 20, marginBottom: 40 }}>
       <Card>
@@ -172,12 +179,16 @@ const ItemPublish = () => {
                 rules={[{ required: true, message: '请选择物品分类' }]}
               >
                 <Select placeholder="选择物品分类">
-                  {(categories || []).length === 0 ? (
-                    <Option disabled value="">暂无数据</Option>
-                  ) : (
-                    categories.map(category => (
-                      <Option key={category.id} value={category.id}>{category.name}</Option>
-                    ))
+                  {groupedCategories.map(group =>
+                    group.children.length > 0 ? (
+                      <Select.OptGroup key={group.parent.id} label={group.parent.name}>
+                        {group.children.map(child => (
+                          <Option key={child.id} value={child.id}>{child.name}</Option>
+                        ))}
+                      </Select.OptGroup>
+                    ) : (
+                      <Option key={group.parent.id} value={group.parent.id}>{group.parent.name}</Option>
+                    )
                   )}
                 </Select>
               </Form.Item>
