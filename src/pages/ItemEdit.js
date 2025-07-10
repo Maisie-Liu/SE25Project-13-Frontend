@@ -97,17 +97,16 @@ const ItemEdit = () => {
       const formData = new FormData();
       formData.append('file', file);
       const res = await dispatch(uploadItemImage(formData));
-      const imageId = res.payload?.imageId || res.payload;
-      const url = `/api/image/${imageId}`;
-      // setFileList(prev => [
-      //   ...prev,
-      //   {
-      //     uid: `${Date.now()}`,
-      //     name: 'image.jpg',
-      //     status: 'done',
-      //     url,
-      //   },
-      // ]);
+      const { imageId, url } = res.payload || {};
+      setFileList(prev => [
+        ...prev,
+        {
+          uid: `${Date.now()}`,
+          name: file.name,
+          status: 'done',
+          url: url,
+        },
+      ]);
       setImageIdList(prev => [...prev, imageId]);
       message.success('图片上传成功');
       return imageId;

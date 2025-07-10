@@ -26,7 +26,8 @@ import {
   HomeOutlined,
   AppstoreOutlined,
   QuestionCircleOutlined,
-  SearchOutlined
+  SearchOutlined,
+  CommentOutlined
 } from '@ant-design/icons';
 import { selectIsAuthenticated, selectUser } from '../../store/slices/authSlice';
 import { logout } from '../../store/actions/authActions';
@@ -104,11 +105,24 @@ const Header = () => {
   // 获取未读消息数量
   useEffect(() => {
     if (isAuthenticated) {
-      dispatch(fetchUnreadMessagesCount());
-      dispatch(fetchUnreadMessagesByTypeCount('COMMENT'));
-      dispatch(fetchUnreadMessagesByTypeCount('FAVORITE'));
-      dispatch(fetchUnreadMessagesByTypeCount('ORDER'));
-      dispatch(fetchUnreadMessagesByTypeCount('CHAT'));
+      // 立即获取一次未读消息数量
+      const fetchUnreadCounts = () => {
+        dispatch(fetchUnreadMessagesCount());
+        dispatch(fetchUnreadMessagesByTypeCount('COMMENT'));
+        dispatch(fetchUnreadMessagesByTypeCount('FAVORITE'));
+        dispatch(fetchUnreadMessagesByTypeCount('ORDER'));
+        dispatch(fetchUnreadMessagesByTypeCount('CHAT'));
+      };
+      
+      fetchUnreadCounts();
+      
+      // 设置轮询，每30秒更新一次未读消息数量
+      const intervalId = setInterval(fetchUnreadCounts, 30000);
+      
+      // 清理函数
+      return () => {
+        clearInterval(intervalId);
+      };
     }
   }, [dispatch, isAuthenticated]);
   
@@ -218,6 +232,9 @@ const Header = () => {
               </Button>
               <Button type="link" onClick={() => navigate('/items')} className="nav-button">
                 <AppstoreOutlined /> 全部物品
+              </Button>
+              <Button type="link" onClick={() => navigate('/requests')} className="nav-button">
+                <CommentOutlined /> 求购论坛
               </Button>
               <Button type="link" onClick={() => navigate('/help')} className="nav-button">
                 <QuestionCircleOutlined /> 服务中心

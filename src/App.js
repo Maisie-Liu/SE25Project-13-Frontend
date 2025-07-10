@@ -32,6 +32,10 @@ import MessageFavorites from './pages/MessageFavorites';
 import MessageOrders from './pages/MessageOrders';
 import MessageChats from './pages/MessageChats';
 import Chat from './pages/Chat';
+import About from './pages/About';
+import UserPublicProfile from './pages/UserPublicProfile';
+import RequestPublish from './pages/RequestPublish';
+import RequestForum from './pages/RequestForum';
 import './App.css';
 
 const { Content } = Layout;
@@ -211,6 +215,17 @@ const App = () => {
             <Route path="/terms" element={<Terms />} />
             <Route path="/privacy" element={<Privacy />} />
             <Route path="/sitemap" element={<Sitemap />} />
+            <Route path="/about" element={<About />} />
+            <Route path="/users/:userId" element={<UserPublicProfile />} />
+            <Route path="/requests" element={<RequestForum />} />
+            <Route 
+              path="/publish-request" 
+              element={
+                <PrivateRoute>
+                  <RequestPublish />
+                </PrivateRoute>
+              } 
+            />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </div>

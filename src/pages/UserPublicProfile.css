@@ -1,0 +1,265 @@
+.user-public-profile-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+/* 加载和错误状态 */
+.loading-container, .not-found-container {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  min-height: 300px;
+  text-align: center;
+}
+
+.loading-container p {
+  margin-top: 16px;
+  color: #666;
+}
+
+/* 头部卡片 */
+.profile-header-card {
+  margin-bottom: 24px;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  overflow: hidden;
+}
+
+.avatar-col {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.user-avatar {
+  margin-bottom: 16px;
+  border: 3px solid #fff;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.username {
+  margin-bottom: 4px !important;
+}
+
+/* 用户信息 */
+.user-info {
+  padding: 0 8px;
+}
+
+.stat-card {
+  height: 100%;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
+  transition: all 0.3s;
+  padding: 16px;
+}
+
+.stat-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.user-bio {
+  margin-top: 20px;
+  padding: 16px;
+  background-color: #f9f9f9;
+  border-radius: 8px;
+}
+
+/* 内容卡片 */
+.profile-content-card {
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  min-height: 400px;
+}
+
+/* 选项卡样式 */
+.items-tabs .ant-tabs-nav, .ratings-tabs .ant-tabs-nav {
+  margin-bottom: 24px;
+}
+
+/* 物品列表样式 */
+.item-card {
+  width: 100%;
+  margin-bottom: 16px;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
+  transition: all 0.3s;
+}
+
+.item-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.08);
+}
+
+.item-image-container {
+  height: 180px;
+  overflow: hidden;
+  position: relative;
+}
+
+.item-image-container img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.3s;
+}
+
+.item-image-container.sold-item::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.4);
+}
+
+.sold-overlay {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: white;
+  font-size: 18px;
+  font-weight: bold;
+  z-index: 2;
+  background-color: rgba(220, 53, 69, 0.8);
+  padding: 6px 12px;
+  border-radius: 4px;
+}
+
+.item-info {
+  margin-top: 8px;
+}
+
+.item-price {
+  color: #f5222d;
+  font-weight: bold;
+  font-size: 16px;
+  display: block;
+  margin-bottom: 8px;
+}
+
+.item-tags {
+  margin-bottom: 8px;
+  display: flex;
+  gap: 4px;
+}
+
+.item-time {
+  font-size: 12px;
+  display: block;
+}
+
+/* 评价列表样式 */
+.rating-card {
+  margin-bottom: 16px;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
+  transition: all 0.3s;
+}
+
+.rating-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.rating-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.rater-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.rating-stars .ant-rate {
+  font-size: 16px;
+  margin-right: 8px;
+}
+
+.rating-content {
+  margin-bottom: 16px;
+}
+
+.rating-item-info {
+  background-color: #f9f9f9;
+  border-radius: 8px;
+  padding: 12px;
+  margin-top: 16px;
+}
+
+.rating-item-link {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: inherit;
+}
+
+.rating-item-image {
+  width: 60px;
+  height: 60px;
+  object-fit: cover;
+  border-radius: 4px;
+}
+
+.rating-item-details {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.rating-footer {
+  text-align: right;
+  border-top: 1px solid #f0f0f0;
+  padding-top: 12px;
+  margin-top: 12px;
+}
+
+/* 响应式调整 */
+@media (max-width: 768px) {
+  .avatar-col {
+    margin-bottom: 16px;
+  }
+  
+  .stat-card {
+    margin-bottom: 16px;
+  }
+  
+  .rating-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+  
+  .item-image-container {
+    height: 150px;
+  }
+}
+
+@media (max-width: 576px) {
+  .user-public-profile-container {
+    padding: 12px;
+  }
+  
+  .rating-item-link {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .rating-item-image {
+    width: 100%;
+    height: 120px;
+  }
+} 
