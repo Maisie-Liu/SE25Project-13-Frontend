@@ -162,7 +162,7 @@ const Home = () => {
   };
   
   const handleRequestItem = () => {
-    navigate('/requests/publish');
+    navigate('/publish-request');
     setShowPublishMenu(false);
   };
 

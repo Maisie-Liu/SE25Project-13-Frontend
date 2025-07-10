@@ -26,7 +26,8 @@ import {
   HomeOutlined,
   AppstoreOutlined,
   QuestionCircleOutlined,
-  SearchOutlined
+  SearchOutlined,
+  CommentOutlined
 } from '@ant-design/icons';
 import { selectIsAuthenticated, selectUser } from '../../store/slices/authSlice';
 import { logout } from '../../store/actions/authActions';
@@ -231,6 +232,9 @@ const Header = () => {
               </Button>
               <Button type="link" onClick={() => navigate('/items')} className="nav-button">
                 <AppstoreOutlined /> 全部物品
+              </Button>
+              <Button type="link" onClick={() => navigate('/requests')} className="nav-button">
+                <CommentOutlined /> 求购论坛
               </Button>
               <Button type="link" onClick={() => navigate('/help')} className="nav-button">
                 <QuestionCircleOutlined /> 服务中心

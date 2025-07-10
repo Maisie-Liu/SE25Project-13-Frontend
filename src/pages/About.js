@@ -1,5 +1,5 @@
 import React from 'react';
-import { Typography, Row, Col, Card, Divider, Avatar, Space, Button, Timeline, Image } from 'antd';
+import { Typography, Row, Col, Card, Divider, Avatar, Space, Button, Timeline, Image, Steps } from 'antd';
 import { TeamOutlined, HistoryOutlined, AimOutlined, EnvironmentOutlined, PhoneOutlined, MailOutlined, GlobalOutlined } from '@ant-design/icons';
 import './About.css';
 
@@ -8,29 +8,48 @@ const { Title, Paragraph, Text } = Typography;
 const About = () => {
   const teamMembers = [
     {
-      name: '张三',
-      title: '创始人 & CEO',
+      name: '00',
+      title: '团队负责人',
       avatar: 'https://xsgames.co/randomusers/avatar.php?g=male&0',
-      bio: '拥有多年互联网创业经验，曾创办多家校园服务平台。致力于用科技解决校园二手交易问题，让闲置资源发挥更大价值。'
+      bio: '软件工程专业大二学生，热爱编程，擅长项目管理和系统架构设计'
     },
     {
-      name: '李四',
-      title: '技术总监',
+      name: '小羊',
+      title: '后端开发',
       avatar: 'https://xsgames.co/randomusers/avatar.php?g=male&1',
-      bio: '毕业于知名高校计算机专业，拥有丰富的全栈开发经验。精通React、Node.js和微服务架构，追求打造极致用户体验的产品。'
+      bio: '软件工程专业大二学生，Java与Python全栈工程师，喜欢挑战未知技术领域。善于将新技术应用到实际项目中，对微服务架构和云原生开发有独特见解，是团队中的技术探索者。'
     },
     {
-      name: '王五',
-      title: '运营总监',
+      name: '痛痛',
+      title: '后端开发',
       avatar: 'https://xsgames.co/randomusers/avatar.php?g=female&2',
-      bio: '擅长市场分析和用户增长，负责平台的日常运营和推广策略制定。热爱与用户沟通，不断收集反馈优化平台服务。'
+      bio: '软件工程专业大二学生，后端技术专家，擅长数据库设计和API开发。'
     },
     {
-      name: '赵六',
-      title: '客户服务主管',
+      name: 'xiaote',
+      title: '前端开发',
       avatar: 'https://xsgames.co/randomusers/avatar.php?g=female&3',
-      bio: '拥有多年客服经验，致力于为用户提供专业、贴心的服务。负责平台用户投诉处理和纠纷解决，确保交易安全。'
+      bio: '软件工程专业大二学生，React狂热爱好者，对UI/UX设计有独特见解。课余时间喜欢参加各类编程竞赛，梦想是开发出让用户眼前一亮的应用。'
     },
+  ];
+
+  const timelineItems = [
+    {
+      title: '6.22',
+      description: '项目组成立'
+    },
+    {
+      title: '6.28',
+      description: '呈现界面原型'
+    },
+    {
+      title: '7.10',
+      description: '呈现技术原型'
+    },
+    {
+      title: '7.18',
+      description: '给出最终成型版本'
+    }
   ];
 
   return (
@@ -90,48 +109,17 @@ const About = () => {
         <Title level={2} className="section-title text-center">
           <HistoryOutlined /> 我们的历程
         </Title>
-        <Row justify="center">
-          <Col xs={24} md={18} lg={16}>
-            <Timeline mode="alternate" className="history-timeline">
-              <Timeline.Item color="#00B8A9">
-                <Card className="timeline-card">
-                  <Title level={4}>2021年9月</Title>
-                  <Paragraph>"交物通"项目立项，开始调研校园二手交易市场</Paragraph>
-                </Card>
-              </Timeline.Item>
-              <Timeline.Item color="#00B8A9">
-                <Card className="timeline-card">
-                  <Title level={4}>2022年3月</Title>
-                  <Paragraph>网站1.0版本上线，提供基本的二手物品交易功能</Paragraph>
-                </Card>
-              </Timeline.Item>
-              <Timeline.Item color="#00B8A9">
-                <Card className="timeline-card">
-                  <Title level={4}>2022年9月</Title>
-                  <Paragraph>移动端APP发布，用户可以随时随地交易物品</Paragraph>
-                </Card>
-              </Timeline.Item>
-              <Timeline.Item color="#00B8A9">
-                <Card className="timeline-card">
-                  <Title level={4}>2023年1月</Title>
-                  <Paragraph>引入第三方支付和担保交易，保障交易安全</Paragraph>
-                </Card>
-              </Timeline.Item>
-              <Timeline.Item color="#00B8A9">
-                <Card className="timeline-card">
-                  <Title level={4}>2023年6月</Title>
-                  <Paragraph>平台2.0版本上线，全面升级用户体验和交易流程</Paragraph>
-                </Card>
-              </Timeline.Item>
-              <Timeline.Item color="#00B8A9">
-                <Card className="timeline-card">
-                  <Title level={4}>至今</Title>
-                  <Paragraph>不断优化产品，为用户提供更好的校园二手交易服务</Paragraph>
-                </Card>
-              </Timeline.Item>
-            </Timeline>
-          </Col>
-        </Row>
+        <div className="history-timeline-horizontal">
+          <Steps 
+            current={3} 
+            progressDot 
+            className="horizontal-timeline"
+            items={timelineItems.map(item => ({
+              title: item.title,
+              description: item.description
+            }))}
+          />
+        </div>
       </div>
 
       <Divider className="fancy-divider" />
@@ -141,7 +129,7 @@ const About = () => {
           <TeamOutlined /> 我们的团队
         </Title>
         <Paragraph className="text-center team-intro">
-          我们拥有一支充满激情和创造力的团队，致力于为用户打造最佳的校园二手交易体验。
+          我们是一支来自校园的年轻团队，充满热情和创意，致力于用技术解决校园二手交易的痛点。
         </Paragraph>
         <Row gutter={[24, 24]} className="team-members">
           {teamMembers.map((member, index) => (

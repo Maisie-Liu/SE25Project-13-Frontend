@@ -1,0 +1,132 @@
+.item-publish-container {
+  max-width: 900px;
+  margin: 30px auto;
+  padding: 0 20px;
+}
+
+.item-publish-card {
+  border-radius: 12px;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
+  overflow: hidden;
+}
+
+.item-publish-header {
+  padding: 0 0 20px 0;
+  border-bottom: 1px solid #f0f0f0;
+  margin-bottom: 24px;
+}
+
+.item-publish-header h2 {
+  font-size: 24px;
+  color: #333;
+  margin-bottom: 8px;
+}
+
+.item-publish-header p {
+  color: #666;
+  font-size: 14px;
+}
+
+.item-form-section {
+  margin-bottom: 30px;
+}
+
+.section-title {
+  font-size: 16px;
+  font-weight: 600;
+  margin-bottom: 16px;
+  color: #333;
+  padding-left: 10px;
+  border-left: 3px solid #00B8A9;
+}
+
+/* 上传图片区域 */
+.upload-section {
+  background-color: #f9f9f9;
+  border-radius: 8px;
+  padding: 20px;
+  margin-bottom: 24px;
+}
+
+.upload-tip {
+  margin-top: 8px;
+  color: #999;
+  font-size: 13px;
+}
+
+/* 表单项样式 */
+.form-item-label {
+  font-weight: 500;
+}
+
+/* 操作按钮区域 */
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 30px;
+  padding-top: 20px;
+  border-top: 1px solid #f0f0f0;
+}
+
+.cancel-button {
+  margin-right: 16px;
+}
+
+.submit-button {
+  min-width: 120px;
+}
+
+/* 自定义上传按钮样式 */
+.custom-upload-button {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  border: 1px dashed #d9d9d9;
+  border-radius: 8px;
+  background-color: #fafafa;
+  width: 100px;
+  height: 100px;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.custom-upload-button:hover {
+  border-color: #00B8A9;
+}
+
+.custom-upload-icon {
+  font-size: 24px;
+  color: #999;
+  margin-bottom: 8px;
+}
+
+.upload-text {
+  color: #666;
+  font-size: 13px;
+}
+
+/* 响应式调整 */
+@media (max-width: 768px) {
+  .item-publish-container {
+    padding: 0 10px;
+  }
+  
+  .item-publish-card {
+    padding: 16px;
+  }
+  
+  .form-actions {
+    flex-direction: column-reverse;
+    gap: 10px;
+  }
+  
+  .cancel-button {
+    margin-right: 0;
+    margin-top: 10px;
+  }
+  
+  .submit-button {
+    width: 100%;
+  }
+} 

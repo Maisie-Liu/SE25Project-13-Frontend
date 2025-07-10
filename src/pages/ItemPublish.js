@@ -1,14 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
-import { Form, Input, Button, Select, InputNumber, Upload, Card, Typography, message, Row, Col, Spin } from 'antd';
-import { UploadOutlined, RollbackOutlined, SaveOutlined, SyncOutlined } from '@ant-design/icons';
+import { Form, Input, Button, Select, InputNumber, Upload, Card, Typography, message, Row, Col, Spin, Divider } from 'antd';
+import { UploadOutlined, RollbackOutlined, SaveOutlined, SyncOutlined, InfoCircleOutlined, DollarOutlined, TagOutlined, FileTextOutlined } from '@ant-design/icons';
 import { createItem, uploadItemImage, generateItemDescription, deleteFile } from '../store/actions/itemActions';
 import { selectCategories } from '../store/slices/categorySlice';
 import { fetchCategories } from '../store/actions/categoryActions';
 import ConditionSelect from '../components/condition/ConditionSelect';
+import './ItemPublish.css';
 
-const { Title } = Typography;
+const { Title, Paragraph } = Typography;
 const { Option } = Select;
 const { TextArea } = Input;
 
@@ -69,11 +70,6 @@ const ItemPublish = () => {
   
   // 提交表单
   const onFinish = async (values) => {
-    // 允许不传图片
-    // if (imageIds.length === 0) {
-    //   message.warning('请至少上传一张图片');
-    //   return;
-    // }
     // 准备提交数据
     const itemData = {
       ...values,
@@ -141,9 +137,12 @@ const ItemPublish = () => {
   };
   
   return (
-    <div className="container" style={{ marginTop: 20, marginBottom: 40 }}>
-      <Card>
-        <Title level={2}>发布闲置物品</Title>
+    <div className="item-publish-container">
+      <Card className="item-publish-card">
+        <div className="item-publish-header">
+          <Title level={2}>发布闲置物品</Title>
+          <Paragraph>填写物品信息，让它找到新的主人</Paragraph>
+        </div>
         
         <Form
           form={form}
@@ -154,118 +153,164 @@ const ItemPublish = () => {
             stock: 1,
           }}
         >
-          <Row gutter={24}>
-            <Col span={24}>
-              <Form.Item
-                name="name"
-                label="物品名称"
-                rules={[{ required: true, message: '请输入物品名称' }]}
-              >
-                <Input placeholder="请输入物品名称，建议30字以内" maxLength={30} />
-              </Form.Item>
-            </Col>
-            
-            <Col span={12}>
-              <Form.Item
-                name="categoryId"
-                label="物品分类"
-                rules={[{ required: true, message: '请选择物品分类' }]}
-              >
-                <Select placeholder="选择物品分类">
-                  {(categories || []).length === 0 ? (
-                    <Option disabled value="">暂无数据</Option>
-                  ) : (
-                    categories.map(category => (
-                      <Option key={category.id} value={category.id}>{category.name}</Option>
-                    ))
+          {/* 基础信息部分 */}
+          <div className="item-form-section">
+            <h3 className="section-title">
+              <InfoCircleOutlined /> 基础信息
+            </h3>
+            <Row gutter={24}>
+              <Col xs={24} md={16}>
+                <Form.Item
+                  name="name"
+                  label="物品名称"
+                  rules={[{ required: true, message: '请输入物品名称' }]}
+                  className="form-item-label"
+                >
+                  <Input placeholder="请输入物品名称，建议30字以内" maxLength={30} />
+                </Form.Item>
+              </Col>
+              
+              <Col xs={24} md={8}>
+                <Form.Item
+                  name="categoryId"
+                  label="物品分类"
+                  rules={[{ required: true, message: '请选择物品分类' }]}
+                  className="form-item-label"
+                >
+                  <Select placeholder="选择物品分类">
+                    {(categories || []).length === 0 ? (
+                      <Option disabled value="">暂无数据</Option>
+                    ) : (
+                      categories.map(category => (
+                        <Option key={category.id} value={category.id}>{category.name}</Option>
+                      ))
+                    )}
+                  </Select>
+                </Form.Item>
+              </Col>
+            </Row>
+          </div>
+          
+          {/* 价格与库存部分 */}
+          <div className="item-form-section">
+            <h3 className="section-title">
+              <DollarOutlined /> 价格与库存
+            </h3>
+            <Row gutter={24}>
+              <Col xs={24} sm={12} md={8}>
+                <Form.Item
+                  name="price"
+                  label="价格(元)"
+                  rules={[{ required: true, message: '请输入价格' }]}
+                  className="form-item-label"
+                >
+                  <InputNumber 
+                    min={0}
+                    precision={2}
+                    style={{ width: '100%' }}
+                    placeholder="请输入价格"
+                  />
+                </Form.Item>
+              </Col>
+              
+              <Col xs={24} sm={12} md={8}>
+                <Form.Item
+                  name="stock"
+                  label="库存"
+                  rules={[{ required: true, message: '请输入库存' }]}
+                  className="form-item-label"
+                >
+                  <InputNumber 
+                    min={1}
+                    style={{ width: '100%' }}
+                    placeholder="请输入库存"
+                  />
+                </Form.Item>
+              </Col>
+              
+              <Col xs={24} sm={12} md={8}>
+                <Form.Item
+                  name="condition"
+                  label="新旧程度"
+                  rules={[{ required: true, message: '请选择新旧程度' }]}
+                  className="form-item-label"
+                >
+                  <ConditionSelect />
+                </Form.Item>
+              </Col>
+            </Row>
+          </div>
+          
+          {/* 图片上传部分 */}
+          <div className="item-form-section">
+            <h3 className="section-title">
+              <TagOutlined /> 物品图片
+            </h3>
+            <div className="upload-section">
+              <Form.Item label="上传图片（最多5张）">
+                <Upload {...uploadProps} listType="picture-card" disabled={fileList.length >= 5 || uploading}>
+                  {fileList.length >= 5 ? null : (
+                    <div className="custom-upload-button">
+                      <UploadOutlined className="custom-upload-icon" />
+                      <div className="upload-text">上传图片</div>
+                    </div>
                   )}
-                </Select>
+                </Upload>
+                {uploading && <Spin tip="上传中..." />}
+                <div className="upload-tip">图片格式支持PNG、JPG，单张大小不超过5MB</div>
               </Form.Item>
-            </Col>
-            
-            <Col span={12}>
-              <Form.Item
-                name="condition"
-                label="新旧程度"
-                rules={[{ required: true, message: '请选择新旧程度' }]}
-              >
-                <ConditionSelect />
-              </Form.Item>
-            </Col>
-            
-            <Col span={12}>
-              <Form.Item
-                name="price"
-                label="价格(元)"
-                rules={[{ required: true, message: '请输入价格' }]}
-              >
-                <InputNumber 
-                  min={0}
-                  precision={2}
-                  style={{ width: '100%' }}
-                  placeholder="请输入价格"
-                />
-              </Form.Item>
-            </Col>
-            
-            <Col span={12}>
-              <Form.Item
-                name="stock"
-                label="库存"
-                rules={[{ required: true, message: '请输入库存' }]}
-              >
-                <InputNumber 
-                  min={1}
-                  style={{ width: '100%' }}
-                  placeholder="请输入库存"
-                />
-              </Form.Item>
-            </Col>
-          </Row>
+            </div>
+          </div>
           
-          <Form.Item label="物品图片（最多5张）">
-            <Upload {...uploadProps} listType="picture-card" disabled={fileList.length >= 5 || uploading}>
-              {fileList.length >= 5 ? null : (
-                <div>
-                  <UploadOutlined />
-                  <div style={{ marginTop: 8 }}>上传图片</div>
-                </div>
-              )}
-            </Upload>
-            {uploading && <Spin tip="上传中..." />}
-          </Form.Item>
+          {/* 描述信息部分 */}
+          <div className="item-form-section">
+            <h3 className="section-title">
+              <FileTextOutlined /> 详细描述
+            </h3>
+            <Form.Item
+              name="description"
+              label="物品描述"
+              rules={[{ required: true, message: '请输入物品描述' }]}
+              className="form-item-label"
+              extra={
+                <Button 
+                  type="link" 
+                  onClick={handleGenerateDescription} 
+                  icon={<SyncOutlined spin={generatingDescription} />}
+                  disabled={generatingDescription || imageUrls.length === 0}
+                >
+                  AI自动生成描述
+                </Button>
+              }
+            >
+              <TextArea 
+                rows={6} 
+                placeholder="描述一下您的物品，如品牌、型号、使用感受等，建议100字以上"
+                maxLength={1000} 
+                showCount
+              />
+            </Form.Item>
+          </div>
           
-          <Form.Item
-            name="description"
-            label="物品描述"
-            rules={[{ required: true, message: '请输入物品描述' }]}
-            extra={
-              <Button 
-                type="link" 
-                onClick={handleGenerateDescription} 
-                icon={<SyncOutlined spin={generatingDescription} />}
-                disabled={generatingDescription || imageUrls.length === 0}
-              >
-                AI自动生成描述
-              </Button>
-            }
-          >
-            <TextArea 
-              rows={6} 
-              placeholder="描述一下您的物品，如品牌、型号、使用感受等，建议100字以上"
-              maxLength={1000} 
-              showCount
-            />
-          </Form.Item>
-          
-          <Form.Item>
-            <Button type="default" icon={<RollbackOutlined />} style={{ marginRight: 16 }} onClick={() => navigate('/')}>
+          {/* 操作按钮部分 */}
+          <div className="form-actions">
+            <Button 
+              type="default" 
+              icon={<RollbackOutlined />} 
+              className="cancel-button"
+              onClick={() => navigate('/')}
+            >
               返回
             </Button>
-            <Button type="primary" htmlType="submit" icon={<SaveOutlined />}>
+            <Button 
+              type="primary" 
+              htmlType="submit" 
+              icon={<SaveOutlined />}
+              className="submit-button"
+            >
               发布物品
             </Button>
-          </Form.Item>
+          </div>
         </Form>
       </Card>
     </div>
