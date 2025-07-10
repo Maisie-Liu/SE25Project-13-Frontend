@@ -1,25 +1,18 @@
 import React, { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { Form, Input, Button, Card, Avatar, Upload, message, Tabs, List, Spin, Typography, Tag } from 'antd';
+import { Form, Input, Button, Card, Avatar, Upload, message, Tabs, List, Spin, Typography, Tag, Switch } from 'antd';
 import { UserOutlined, UploadOutlined, LockOutlined } from '@ant-design/icons';
-import { fetchCurrentUser, updateUserProfile, changePassword, uploadAvatar } from '../store/actions/authActions';
-import { selectUser, selectAuthLoading } from '../store/slices/authSlice';
+import { fetchCurrentUser, updateUserProfile, changePassword, uploadAvatar, getPersonalizedRecommendSetting, setPersonalizedRecommendSetting, getUserInterestProfile } from '../store/actions/authActions';
+import { selectUser, selectAuthLoading, selectPersonalizedRecommend, selectUserInterestProfile, selectUserInterestProfileLoading } from '../store/slices/authSlice';
 import { fetchMyItems } from '../store/actions/itemActions';
 import { fetchUserOrders } from '../store/actions/orderActions';
 import { selectItems } from '../store/slices/itemSlice';
 import { selectOrders } from '../store/slices/orderSlice';
 import { Link } from 'react-router-dom';
+import { Pie } from '@ant-design/plots';
 
 const { TabPane } = Tabs;
 const { Title, Paragraph } = Typography;
-
-const beforeUpload = () => {
-  // 空实现
-};
-
-const handleChange = () => {
-  // 空实现
-};
 
 const UserProfile = () => {
   const dispatch = useDispatch();
@@ -27,6 +20,9 @@ const UserProfile = () => {
   const loading = useSelector(selectAuthLoading);
   const myItems = useSelector(selectItems);
   const myOrders = useSelector(selectOrders);
+  const allowPersonalizedRecommend = useSelector(selectPersonalizedRecommend);
+  const userInterestProfile = useSelector(selectUserInterestProfile);
+  const userInterestProfileLoading = useSelector(selectUserInterestProfileLoading);
   
   const [profileForm] = Form.useForm();
   const [passwordForm] = Form.useForm();
@@ -52,6 +48,11 @@ const UserProfile = () => {
       }
     }
   }, [user, profileForm]);
+
+  useEffect(() => {
+    dispatch(getPersonalizedRecommendSetting());
+    dispatch(getUserInterestProfile());
+  }, [dispatch]);
 
   const handleProfileUpdate = (values) => {
     const updatedProfile = {
@@ -120,6 +121,51 @@ const UserProfile = () => {
   // 收集收到的评价
   const buyerComments = myOrders.filter(o => o.buyerComment && user && o.buyer?.id === user.id);
   const sellerComments = myOrders.filter(o => o.sellerComment && user && o.seller?.id === user.id);
+
+  const handleSwitchChange = async (checked) => {
+    try {
+      await dispatch(setPersonalizedRecommendSetting(checked));
+      message.success(checked ? '已开启个性化推荐' : '已关闭个性化推荐，平台将不再采集你的行为数据');
+    } catch (e) {
+      message.error('设置失败');
+    }
+  };
+
+  // 生成同色系渐变色数组（浅主色 -> 主色）
+  function getGradientColors(n) {
+    // 主色
+    const base = { r: 0, g: 184, b: 169 };
+    // 浅主色（主色和白色混合70%主色）
+    const light = {
+      r: Math.round(255 * 0.7 + base.r * 0.3),
+      g: Math.round(255 * 0.7 + base.g * 0.3),
+      b: Math.round(255 * 0.7 + base.b * 0.3)
+    };
+    const colors = [];
+    for (let i = 0; i < n; i++) {
+      const percent = n === 1 ? 1 : i / (n - 1);
+      const r = Math.round(light.r * (1 - percent) + base.r * percent);
+      const g = Math.round(light.g * (1 - percent) + base.g * percent);
+      const b = Math.round(light.b * (1 - percent) + base.b * percent);
+      colors.push(`rgb(${r},${g},${b})`);
+    }
+    return colors;
+  }
+
+  // 生成类别名数组和颜色映射
+  const categoryIdToName = userInterestProfile?.categoryIdToName || {};
+  const categoryInterest = userInterestProfile?.categoryInterest || {};
+  // 先将categoryId和categoryName按兴趣值从小到大排序
+  const sortedCategoryArr = Object.keys(categoryIdToName)
+    .map(id => ({
+      id,
+      name: categoryIdToName[id],
+      interest: categoryInterest[id] ?? 0
+    }))
+    .sort((a, b) => a.interest - b.interest);
+  const categoryIds = sortedCategoryArr.map(item => item.id);
+  const categoryNames = sortedCategoryArr.map(item => item.name);
+  const colors = getGradientColors(categoryNames.length);
 
   if (loading || !user) {
     return (
@@ -249,81 +295,6 @@ const UserProfile = () => {
             </Form>
           </TabPane>
           
-          <TabPane tab="我的物品" key="items">
-            {myItems && myItems.length > 0 ? (
-              <List
-                itemLayout="horizontal"
-                dataSource={myItems}
-                renderItem={item => (
-                  <List.Item
-                    actions={[
-                      <Link key="edit" to={`/items/edit/${item.id}`}>编辑</Link>,
-                      <Link key="view" to={`/items/${item.id}`}>查看</Link>
-                    ]}
-                  >
-                    <List.Item.Meta
-                      avatar={<Avatar src={item.images && item.images.length > 0 ? item.images[0] : null} shape="square" size={64} />}
-                      title={<Link to={`/items/${item.id}`}>{item.title}</Link>}
-                      description={
-                        <div>
-                          <p>价格: ¥{item.price}</p>
-                          <p>分类: {item.category}</p>
-                        </div>
-                      }
-                    />
-                  </List.Item>
-                )}
-              />
-            ) : (
-              <div style={{ textAlign: 'center', padding: '20px' }}>
-                <p>您还没有发布过物品</p>
-                <Button type="primary">
-                  <Link to="/items/publish">发布新物品</Link>
-                </Button>
-              </div>
-            )}
-          </TabPane>
-          
-          <TabPane tab="我的订单" key="orders">
-            {myOrders && myOrders.length > 0 ? (
-              <List
-                itemLayout="horizontal"
-                dataSource={myOrders}
-                renderItem={order => (
-                  <List.Item
-                    actions={[
-                      <Link key="view" to={`/orders/${order.id}`}>查看详情</Link>
-                    ]}
-                  >
-                    <List.Item.Meta
-                      avatar={<Avatar src={order.item.images && order.item.images.length > 0 ? order.item.images[0] : null} shape="square" size={64} />}
-                      title={<Link to={`/orders/${order.id}`}>{order.item.title}</Link>}
-                      description={
-                        <div>
-                          <p>价格: ¥{order.amount}</p>
-                          <p>状态: {
-                            order.status === 'PENDING' ? '待支付' : 
-                            order.status === 'PAID' ? '已支付' : 
-                            order.status === 'COMPLETED' ? '已完成' : 
-                            '已取消'
-                          }</p>
-                          <p>角色: {order.role === 'BUYER' ? '买家' : '卖家'}</p>
-                        </div>
-                      }
-                    />
-                  </List.Item>
-                )}
-              />
-            ) : (
-              <div style={{ textAlign: 'center', padding: '20px' }}>
-                <p>您还没有任何订单</p>
-                <Button type="primary">
-                  <Link to="/items">浏览物品</Link>
-                </Button>
-              </div>
-            )}
-          </TabPane>
-          
           <TabPane tab="收到的评价" key="comments">
             <Title level={4}>作为买家收到的评价</Title>
             <List
@@ -349,6 +320,61 @@ const UserProfile = () => {
                 </List.Item>
               )}
             />
+          </TabPane>
+          
+          <TabPane tab="设置" key="settings">
+            <div style={{ margin: '24px 0', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <span>个性化推荐与数据采集</span>
+              <div style={{ display: 'flex', alignItems: 'center' }}>
+                <Switch checked={allowPersonalizedRecommend} onChange={handleSwitchChange} />
+                <span style={{ marginLeft: 8, color: '#888' }}>
+                  {allowPersonalizedRecommend ? '已开启' : '已关闭'}
+                </span>
+              </div>
+            </div>
+          </TabPane>
+          
+          <TabPane tab="兴趣画像" key="interest">
+            {allowPersonalizedRecommend ? (
+              userInterestProfileLoading ? (
+                <Spin />
+              ) : userInterestProfile && userInterestProfile.categoryInterest && userInterestProfile.categoryIdToName ? (
+                <div
+                   style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}
+                >
+                   <Title level={3} style={{ width: '100%', textAlign: 'center', marginBottom: 24 }}>你的兴趣画像</Title>
+                   <Pie
+                    data={categoryIds.map((catId) => ({
+                      categoryName: categoryIdToName[catId],
+                      value: categoryInterest[catId] ?? 0
+                    }))}
+                    angleField="value"
+                    colorField="categoryName"
+                    radius={1}
+                    innerRadius={0.6}
+                    autoFit={false}
+                    height={400}
+                    legend={false}
+                    label={{
+                      position: 'spider',
+                      text: ({ categoryName}) => `${categoryName}`
+                    }}
+                    tooltip={false}
+                    scale={{
+                      color: {
+                        range: colors
+                      }
+                    }}
+                    statistic={false}
+                    style={{margin: '0 auto', inset: 1, display: 'block'}}
+                  />
+                </div>
+              ) : (
+                <div style={{ color: '#888' }}>暂无兴趣画像数据</div>
+              )
+            ) : (
+              <div style={{ color: '#888' }}>你已关闭个性化推荐与数据采集，平台不会展示你的兴趣画像。</div>
+            )}
           </TabPane>
         </Tabs>
       </Card>

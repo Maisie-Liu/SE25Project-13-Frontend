@@ -329,4 +329,22 @@ export const deleteFile = createAsyncThunk(
       );
     }
   }
-); 
+);
+
+// 分页获取推荐物品
+export const fetchRecommendedItemsPage = ({ pageNum = 1, pageSize = 10 } = {}) => async (dispatch) => {
+  try {
+    dispatch({ type: 'recommendedItemsPage/fetchStart' });
+    const response = await axios.get(`/recommend/items`, {
+      params: { pageNum, pageSize }
+    });
+    dispatch({
+      type: 'recommendedItemsPage/fetchSuccess',
+      payload: response.data
+    });
+    return response.data;
+  } catch (error) {
+    dispatch({ type: 'recommendedItemsPage/fetchError', error });
+    throw error;
+  }
+}; 

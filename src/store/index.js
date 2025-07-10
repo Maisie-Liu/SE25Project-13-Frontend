@@ -9,6 +9,8 @@ import favoriteReducer from './slices/favoriteSlice';
 import escrowReducer from './slices/escrowSlice';
 import messageReducer from './slices/messageSlice';
 import chatReducer from './slices/chatSlice';
+import { recommendedItemsPageSlice, userProfileInterestSlice } from './slices/itemSlice';
+import { personalizedRecommendSlice, userInterestProfileSlice } from './slices/authSlice';
 
 // 配置持久化存储
 const persistConfig = {
@@ -26,7 +28,11 @@ const rootReducer = combineReducers({
   favorites: favoriteReducer,
   escrow: escrowReducer,
   message: messageReducer,
-  chat: chatReducer
+  chat: chatReducer,
+  recommendedItemsPage: recommendedItemsPageSlice,
+  userProfileInterest: userProfileInterestSlice,
+  personalizedRecommend: personalizedRecommendSlice,
+  userInterestProfile: userInterestProfileSlice,
 });
 
 const persistedReducer = persistReducer(persistConfig, rootReducer);

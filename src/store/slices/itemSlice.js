@@ -309,4 +309,48 @@ export const selectItemError = (state) => state.item.error;
 export const selectUploadedImageUrl = (state) => state.item.uploadedImageUrl;
 export const selectGeneratedDescription = (state) => state.item.generatedDescription;
 
-export default itemSlice.reducer; 
+export default itemSlice.reducer;
+
+// 推荐物品分页
+const initialRecommendedItemsPageState = {
+  data: null,
+  loading: false,
+  error: null
+};
+
+export const recommendedItemsPageSlice = (state = initialRecommendedItemsPageState, action) => {
+  switch (action.type) {
+    case 'recommendedItemsPage/fetchStart':
+      return { ...state, loading: true, error: null };
+    case 'recommendedItemsPage/fetchSuccess':
+      return { ...state, loading: false, data: action.payload };
+    case 'recommendedItemsPage/fetchError':
+      return { ...state, loading: false, error: action.error };
+    default:
+      return state;
+  }
+};
+
+export const selectRecommendedItemsPage = (state) => state.recommendedItemsPage?.data;
+export const selectRecommendedItemsPageLoading = (state) => state.recommendedItemsPage?.loading;
+export const selectRecommendedItemsPageError = (state) => state.recommendedItemsPage?.error;
+
+// 用户兴趣画像聚合
+const initialUserProfileInterestState = {
+  updating: false,
+  error: null
+};
+
+export const userProfileInterestSlice = (state = initialUserProfileInterestState, action) => {
+  switch (action.type) {
+    case 'userProfileInterest/updateSuccess':
+      return { ...state, updating: false, error: null };
+    case 'userProfileInterest/updateError':
+      return { ...state, updating: false, error: action.error };
+    default:
+      return state;
+  }
+};
+
+export const selectUserProfileInterestUpdating = (state) => state.userProfileInterest?.updating;
+export const selectUserProfileInterestError = (state) => state.userProfileInterest?.error; 

@@ -122,3 +122,39 @@ export const changePassword = createAsyncThunk(
     }
   }
 ); 
+
+
+// 获取用户个性化推荐开关
+export const getPersonalizedRecommendSetting = () => async (dispatch) => {
+  try {
+    const res = await axios.get('/auth/current-user');
+    dispatch({ type: 'personalizedRecommend/getSuccess', payload: res.data.data.allowPersonalizedRecommend });
+    return res.data.data.allowPersonalizedRecommend;
+  } catch (error) {
+    dispatch({ type: 'personalizedRecommend/getError', error });
+    throw error;
+  }
+};
+
+// 设置用户个性化推荐开关
+export const setPersonalizedRecommendSetting = (allow) => async (dispatch) => {
+  try {
+    await axios.post('/user-profile/personalized-recommend', null, { params: { allow } });
+    dispatch({ type: 'personalizedRecommend/setSuccess', payload: allow });
+  } catch (error) {
+    dispatch({ type: 'personalizedRecommend/setError', error });
+    throw error;
+  }
+};
+
+// 获取用户兴趣画像内容
+export const getUserInterestProfile = () => async (dispatch) => {
+  try {
+    const res = await axios.get('/user-profile/interest');
+    dispatch({ type: 'userInterestProfile/getSuccess', payload: res.data.data });
+    return res.data.data;
+  } catch (error) {
+    dispatch({ type: 'userInterestProfile/getError', error });
+    throw error;
+  }
+}; 

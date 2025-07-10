@@ -10,7 +10,7 @@ import {
   EnvironmentOutlined, CommentOutlined, ShareAltOutlined,
   UserOutlined, ClockCircleOutlined, SafetyOutlined
 } from '@ant-design/icons';
-import { fetchItemById } from '../store/actions/itemActions';
+import { fetchItemById, updateUserProfileInterest } from '../store/actions/itemActions';
 import { createOrder } from '../store/actions/orderActions';
 import { selectIsAuthenticated, selectUser } from '../store/slices/authSlice';
 import { addFavorite, removeFavorite, checkIsFavorite, removeFavoriteByItemId } from '../store/actions/favoriteActions';
