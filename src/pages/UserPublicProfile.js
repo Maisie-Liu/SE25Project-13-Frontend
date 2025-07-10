@@ -33,6 +33,9 @@ import {
 } from '@ant-design/icons';
 import axios from 'axios';
 import './UserPublicProfile.css';
+import { useDispatch, useSelector } from 'react-redux';
+import {fetchUserPublicProfile} from '../store/actions/userPublicProfileActions';
+import {clearUserPublicProfile} from '../store/slices/userPublicProfileSlice';
 
 const { Title, Text, Paragraph } = Typography;
 const { TabPane } = Tabs;
@@ -56,8 +59,8 @@ axios.interceptors.response.use(
 
 const UserPublicProfile = () => {
   const { userId } = useParams();
-  const [profile, setProfile] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const dispatch = useDispatch();
+  const { loading, data: profile, error } = useSelector(state => state.userPublicProfile);
   const [activeTab, setActiveTab] = useState('items');
   const [debugInfo, setDebugInfo] = useState(null);
   const [stats, setStats] = useState({
@@ -90,68 +93,43 @@ const UserPublicProfile = () => {
   };
 
   useEffect(() => {
-    // 首先检查调试接口
     checkDebugAccess();
-    
-    const fetchUserData = async () => {
-      try {
-        setLoading(true);
-        console.log(`正在获取用户ID: ${userId}的资料`);
-        
-        // 直接使用后端提供的统一API接口获取用户完整资料
-        const response = await axios.get(`/api/users/${userId}`);
-        
-        if (response.data && response.data.code === 200) {
-          console.log('获取用户资料成功:', response.data.data);
-          setProfile(response.data.data);
-          
-          // 计算统计数据
-          const user = response.data.data.user;
-          const items = response.data.data.items || [];
-          const ratings = response.data.data.ratings || [];
-          
-          const sellerRatings = ratings.filter(rating => rating.role === 'SELLER');
-          const buyerRatings = ratings.filter(rating => rating.role === 'BUYER');
-          
-          const availableItems = items.filter(item => item.status === 1);
-          const soldItems = items.filter(item => item.status === 3);
-          
-          const calculateSellerRating = () => {
-            if (sellerRatings.length === 0) return 0;
-            const sum = sellerRatings.reduce((acc, curr) => acc + curr.rating, 0);
-            return (sum / sellerRatings.length).toFixed(1);
-          };
-          
-          const calculateBuyerRating = () => {
-            if (buyerRatings.length === 0) return 0;
-            const sum = buyerRatings.reduce((acc, curr) => acc + curr.rating, 0);
-            return (sum / buyerRatings.length).toFixed(1);
-          };
-          
-          setStats({
-            sellerRating: calculateSellerRating(),
-            buyerRating: calculateBuyerRating(),
-            totalSold: soldItems.length,
-            totalItems: items.length,
-            joinDate: user.createTime,
-            location: user.location || '未知',
-          });
-        } else {
-          console.error('获取用户资料失败:', response.data);
-          message.error('获取用户信息失败');
-          setProfile(null);
-        }
-        
-        setLoading(false);
-      } catch (error) {
-        console.error('Failed to fetch user data:', error);
-        message.error('获取用户信息失败');
-        setLoading(false);
-      }
+    dispatch(fetchUserPublicProfile(userId));
+    return () => {
+      dispatch(clearUserPublicProfile());
     };
-    
-    fetchUserData();
-  }, [userId]);
+  }, [userId, dispatch]);
+
+  // 统计数据逻辑：profile 变化时重新计算
+  useEffect(() => {
+    if (profile && profile.user) {
+      const user = profile.user;
+      const items = profile.items || [];
+      const ratings = profile.ratings || [];
+      const sellerRatings = ratings.filter(rating => rating.role === 'SELLER');
+      const buyerRatings = ratings.filter(rating => rating.role === 'BUYER');
+      const availableItems = items.filter(item => item.status === 1);
+      const soldItems = items.filter(item => item.status === 3);
+      const calculateSellerRating = () => {
+        if (sellerRatings.length === 0) return 0;
+        const sum = sellerRatings.reduce((acc, curr) => acc + curr.rating, 0);
+        return (sum / sellerRatings.length).toFixed(1);
+      };
+      const calculateBuyerRating = () => {
+        if (buyerRatings.length === 0) return 0;
+        const sum = buyerRatings.reduce((acc, curr) => acc + curr.rating, 0);
+        return (sum / buyerRatings.length).toFixed(1);
+      };
+      setStats({
+        sellerRating: calculateSellerRating(),
+        buyerRating: calculateBuyerRating(),
+        totalSold: soldItems.length,
+        totalItems: items.length,
+        joinDate: user.createTime,
+        location: user.location || '未知',
+      });
+    }
+  }, [profile]);
 
   // 评价等级描述
   const ratingDescriptions = ['差', '一般', '良好', '很好', '优秀'];
@@ -376,7 +354,7 @@ const UserPublicProfile = () => {
                               <div className="item-image-container">
                                 <img 
                                   alt={item.name} 
-                                  src={item.imageUrls && item.imageUrls.length > 0 ? item.imageUrls[0] : 'https://via.placeholder.com/150'} 
+                                  src={item.images && item.images.length > 0 ? item.images[0] : 'https://via.placeholder.com/150'}
                                 />
                               </div>
                             }
@@ -420,7 +398,7 @@ const UserPublicProfile = () => {
                               <div className="item-image-container sold-item">
                                 <img 
                                   alt={item.name} 
-                                  src={item.imageUrls && item.imageUrls.length > 0 ? item.imageUrls[0] : 'https://via.placeholder.com/150'} 
+                                  src={item.images && item.images.length > 0 ? item.images[0] : 'https://via.placeholder.com/150'}
                                 />
                                 <div className="sold-overlay">已售出</div>
                               </div>
