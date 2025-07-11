@@ -289,6 +289,9 @@ const ItemDetail = () => {
     );
   }
   
+  // 获取图片数组，兼容 imageUrls 和 images 字段
+  const images = item.imageUrls && item.imageUrls.length > 0 ? item.imageUrls : item.images;
+  
   return (
     <div className="container" style={{ padding: '20px 0' }}>
       <Card className="item-detail-card">
@@ -297,39 +300,31 @@ const ItemDetail = () => {
           <Col xs={24} sm={24} md={12} lg={10}>
             <div className="item-image-container">
               <Image.PreviewGroup>
-                <div style={{ textAlign: 'center' }}>
-                  <img
-                    src={item.images && item.images.length > 0 ? item.images[0] : undefined}
-                    alt={item.name}
-                    style={{ 
-                      maxWidth: '100%', 
-                      maxHeight: '400px', 
-                      objectFit: 'contain',
-                      borderRadius: '8px',
-                      boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)'
-                    }}
-                  />
+                <div className="main-image-wrapper">
+                  {images && images.length > 0 ? (
+                    <img
+                      src={images[0]}
+                      alt={item.name}
+                      className="main-item-image"
+                    />
+                  ) : (
+                    <div style={{width: '100%', height: '100%', background: '#f5f5f5'}} />
+                  )}
                 </div>
-                <div style={{ display: 'flex', justifyContent: 'center', marginTop: 16, flexWrap: 'wrap' }}>
-                  {item.images && item.images.slice(1).map((img, index) => (
-                    <div 
-                      key={index} 
-                      className="thumbnail-container"
-                    >
-                      <img
-                        src={img}
-                        alt={`${item.name}-${index+1}`}
-                        width={80}
-                        height={80}
-                        style={{ 
-                          objectFit: 'cover', 
-                          borderRadius: '6px',
-                          border: '1px solid #f0f0f0'
-                        }}
-                      />
-                    </div>
-                  ))}
-                </div>
+                {/* 只有多于1张图片时才显示缩略图 */}
+                {images && images.length > 1 && (
+                  <div className="thumbnail-list">
+                    {images.slice(1).map((img, index) => (
+                      <div key={index} className="thumbnail-container">
+                        <img
+                          src={img}
+                          alt={`${item.name}-${index+1}`}
+                          className="thumbnail-image"
+                        />
+                      </div>
+                    ))}
+                  </div>
+                )}
               </Image.PreviewGroup>
             </div>
           </Col>

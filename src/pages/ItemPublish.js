@@ -36,6 +36,7 @@ const ItemPublish = () => {
       const formData = new FormData();
       formData.append('file', file);
       const res = await dispatch(uploadItemImage(formData));
+      console.log("res: ", res);
       // 适配新返回值
       const { imageId, url } = res.payload || {};
       setImageIds(prev => [...prev, imageId]);
@@ -49,6 +50,7 @@ const ItemPublish = () => {
           url: url,
         },
       ]);
+      console.log("imageId: ", imageId);
       message.success('图片上传成功');
       return imageId;
     } catch (error) {
@@ -60,7 +62,7 @@ const ItemPublish = () => {
   
   // 处理自动生成描述
   const handleGenerateDescription = async () => {
-    if (imageUrls.length === 0) {
+    if (imageIds.length === 0) {
       message.warning('请先上传图片');
       return;
     }
@@ -113,7 +115,7 @@ const ItemPublish = () => {
       }
       // 手动上传
       handleUpload(file);
-      // setFileList([...fileList, file]); // 由 handleUpload 处理
+      // setFileList([...fileList, file]);
       return false; // 阻止自动上传
     },
     onRemove: async (file) => {
