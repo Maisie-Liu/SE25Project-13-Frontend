@@ -10,7 +10,7 @@ import {
   EnvironmentOutlined, CommentOutlined, ShareAltOutlined,
   UserOutlined, ClockCircleOutlined, SafetyOutlined
 } from '@ant-design/icons';
-import { fetchItemById } from '../store/actions/itemActions';
+import { fetchItemById, updateUserProfileInterest } from '../store/actions/itemActions';
 import { createOrder } from '../store/actions/orderActions';
 import { selectIsAuthenticated, selectUser } from '../store/slices/authSlice';
 import { addFavorite, removeFavorite, checkIsFavorite, removeFavoriteByItemId } from '../store/actions/favoriteActions';
@@ -307,91 +307,143 @@ const ItemDetail = () => {
     );
   }
   
+  // 获取图片数组，兼容 imageUrls 和 images 字段
+  const images = item.imageUrls && item.imageUrls.length > 0 ? item.imageUrls : item.images;
+  
   return (
     <div className="container" style={{ padding: '20px 0' }}>
-      <Card>
-        <Row gutter={[24, 24]}>
+      <Card className="item-detail-card">
+        <Row gutter={[32, 24]}>
           {/* 物品图片 */}
           <Col xs={24} sm={24} md={12} lg={10}>
-            <Image.PreviewGroup>
-              <div style={{ textAlign: 'center' }}>
-                <img
-                  src={item.images && item.images.length > 0 ? item.images[0] : undefined}
-                  alt={item.name}
-                  style={{ maxWidth: '100%', maxHeight: '400px', objectFit: 'contain' }}
-                />
-              </div>
-              <div style={{ display: 'flex', justifyContent: 'center', marginTop: 10 }}>
-                {item.images && item.images.slice(1).map((img, index) => (
-                  <img
-                    key={index}
-                    src={img}
-                    alt={`${item.name}-${index+1}`}
-                    width={80}
-                    height={80}
-                    style={{ marginRight: 8, objectFit: 'cover' }}
-                  />
-                ))}
-              </div>
-            </Image.PreviewGroup>
+            <div className="item-image-container">
+              <Image.PreviewGroup>
+                <div className="main-image-wrapper">
+                  {images && images.length > 0 ? (
+                    <img
+                      src={images[0]}
+                      alt={item.name}
+                      className="main-item-image"
+                    />
+                  ) : (
+                    <div style={{width: '100%', height: '100%', background: '#f5f5f5'}} />
+                  )}
+                </div>
+                {/* 只有多于1张图片时才显示缩略图 */}
+                {images && images.length > 1 && (
+                  <div className="thumbnail-list">
+                    {images.slice(1).map((img, index) => (
+                      <div key={index} className="thumbnail-container">
+                        <img
+                          src={img}
+                          alt={`${item.name}-${index+1}`}
+                          className="thumbnail-image"
+                        />
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </Image.PreviewGroup>
+            </div>
           </Col>
           
           {/* 物品信息 */}
           <Col xs={24} sm={24} md={12} lg={14}>
-            <Title level={2}>{item.name}</Title>
-            
-            <Divider />
-            
-            <Title level={3} type="danger" style={{ marginBottom: 24 }}>
-              ￥{item.price?.toFixed(2)}
-            </Title>
-            
-            <Descriptions column={1} bordered>
-              <Descriptions.Item label="物品分类">{item.categoryName}</Descriptions.Item>
-              <Descriptions.Item label="新旧程度">{<ConditionTag condition={item.condition} />}</Descriptions.Item>
-              <Descriptions.Item label="浏览量">{item.popularity}</Descriptions.Item>
-              <Descriptions.Item label="卖家信息">
-                <Space>
-                  <Avatar size="small" icon={<UserOutlined />} src={item.userAvatar} />
-                  {item.username}
-                  {isAuthenticated && user?.id !== item.userId && (
-                    <Button size="small" type="primary" onClick={handleGoToChat} style={{ marginLeft: 8 }}>
-                      去私聊
-                    </Button>
+            <div className="item-info-container">
+              <div className="item-header">
+                <Title level={2}>{item.name}</Title>
+                <div className="item-status-tag">
+                  {item.status === 1 ? (
+                    <Tag color="green">可预订</Tag>
+                  ) : item.status === 2 ? (
+                    <Tag color="orange">已预订</Tag>
+                  ) : item.status === 3 ? (
+                    <Tag color="red">已售出</Tag>
+                  ) : (
+                    <Tag color="default">未上架</Tag>
                   )}
-                </Space>
-              </Descriptions.Item>
-              <Descriptions.Item label="发布时间">{formatTime(item.createTime)}</Descriptions.Item>
-              <Descriptions.Item label="物品状态">
-                {item.status === 1 ? (
-                  <Tag color="green">可预订</Tag>
-                ) : item.status === 2 ? (
-                  <Tag color="orange">已预订</Tag>
-                ) : item.status === 3 ? (
-                  <Tag color="red">已售出</Tag>
-                ) : (
-                  <Tag color="default">未上架</Tag>
-                )}
-              </Descriptions.Item>
-              <Descriptions.Item label="库存">
-                {item.stock > 0 ? item.stock : <span style={{color:'red'}}>已售罄</span>}
-              </Descriptions.Item>
-            </Descriptions>
-            
-            <div style={{ marginTop: 24 }}>
-              <Space>
+                </div>
+              </div>
+              
+              <div className="item-price-section">
+                <Title level={3} type="danger">
+                  ￥{item.price?.toFixed(2)}
+                </Title>
+              </div>
+              
+              {/* 物品描述 */}
+              <div className="item-description-card">
+                <div className="item-description-header">
+                  <SafetyOutlined /> 物品描述
+                </div>
+                <Paragraph style={{ whiteSpace: 'pre-wrap', fontSize: 15, padding: '12px' }}>
+                  {item.description || '暂无描述'}
+                </Paragraph>
+              </div>
+              
+              <div className="item-meta-info">
+                <Row gutter={[16, 16]}>
+                  <Col span={12}>
+                    <div className="item-meta-item">
+                      <span className="item-meta-label">物品分类</span>
+                      <span className="item-meta-value">{item.categoryName}</span>
+                    </div>
+                  </Col>
+                  <Col span={12}>
+                    <div className="item-meta-item">
+                      <span className="item-meta-label">新旧程度</span>
+                      <span className="item-meta-value"><ConditionTag condition={item.condition} /></span>
+                    </div>
+                  </Col>
+                  <Col span={12}>
+                    <div className="item-meta-item">
+                      <span className="item-meta-label">浏览量</span>
+                      <span className="item-meta-value">{item.popularity || 0}</span>
+                    </div>
+                  </Col>
+                  <Col span={12}>
+                    <div className="item-meta-item">
+                      <span className="item-meta-label">库存</span>
+                      <span className="item-meta-value">
+                        {item.stock > 0 ? item.stock : <span style={{color:'red'}}>已售罄</span>}
+                      </span>
+                    </div>
+                  </Col>
+                </Row>
+              </div>
+              
+              <div className="item-seller-info">
+                <div className="seller-avatar" onClick={() => navigate(`/users/${item.userId}`)} style={{ cursor: 'pointer' }}>
+                  <Avatar size="small" icon={<UserOutlined />} src={item.userAvatar} />
+                </div>
+                <div className="seller-details">
+                  <span 
+                    className="seller-name" 
+                    onClick={() => navigate(`/users/${item.userId}`)} 
+                    style={{ cursor: 'pointer' }}
+                  >
+                    {item.username}
+                  </span>
+                  <span className="publish-time">
+                    <ClockCircleOutlined /> {formatTime(item.createTime)}
+                  </span>
+                </div>
+              </div>
+              
+              <div className="item-actions">
                 <Button 
                   type="primary" 
                   size="large" 
                   icon={<ShoppingCartOutlined />}
                   onClick={handleOrder}
                   disabled={item.status !== 1 || item.stock <= 0}
+                  className="order-button"
                 >
                   立即预订
                 </Button>
                 
                 <Button
-                  type="text"
+                  className="favorite-button"
                   icon={isFavorite ? <HeartFilled style={{ color: '#ff4d4f' }} /> : <HeartOutlined />}
                   onClick={handleToggleFavorite}
                   loading={favoriteLoading}
@@ -399,41 +451,32 @@ const ItemDetail = () => {
                 >
                   {isFavorite ? '已收藏' : '收藏'}
                 </Button>
-              </Space>
-            </div>
-            
-            <div style={{ marginTop: 16 }}>
+              </div>
               
-    
+              {/* 评论区 - 上移 */}
+              <div className="comments-section">
+                <div className="comments-header">
+                  <CommentOutlined /> 评论区
+                </div>
+                <CommentForm
+                  value={commentContent}
+                  onChange={setCommentContent}
+                  onSubmit={handleSubmitComment}
+                  submitting={submitting && !replyingId}
+                />
+                <CommentList
+                  comments={comments}
+                  onReply={handleReply}
+                  submitting={submitting && !!replyingId}
+                  replyContent={replyContent}
+                  onChangeReply={setReplyContent}
+                  onSubmitReply={handleSubmitReply}
+                  replyingId={replyingId}
+                />
+              </div>
             </div>
-            
-            {/* 评论区 */}
-            <Divider orientation="left">评论区</Divider>
-            <CommentForm
-              value={commentContent}
-              onChange={setCommentContent}
-              onSubmit={handleSubmitComment}
-              submitting={submitting && !replyingId}
-            />
-            <CommentList
-              comments={comments}
-              onReply={handleReply}
-              submitting={submitting && !!replyingId}
-              replyContent={replyContent}
-              onChangeReply={setReplyContent}
-              onSubmitReply={handleSubmitReply}
-              replyingId={replyingId}
-            />
           </Col>
         </Row>
-        
-        <Divider orientation="left">物品详情</Divider>
-        
-        <div style={{ padding: '0 16px' }}>
-          <Paragraph style={{ whiteSpace: 'pre-wrap', fontSize: 16 }}>
-            {item.description || '暂无描述'}
-          </Paragraph>
-        </div>
       </Card>
       
       {/* 预订弹窗 */}
@@ -442,6 +485,7 @@ const ItemDetail = () => {
         open={orderModalVisible}
         onCancel={() => setOrderModalVisible(false)}
         footer={null}
+        className="order-modal"
       >
         <Form
           form={orderForm}

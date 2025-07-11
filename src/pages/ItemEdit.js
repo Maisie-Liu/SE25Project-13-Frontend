@@ -25,6 +25,7 @@ const ItemEdit = () => {
   
   const [fileList, setFileList] = useState([]);
   const [imageIdList, setImageIdList] = useState([]);
+  // const [imageUrls, setImageUrls] = useState([]);
   const [uploading, setUploading] = useState(false);
 
   useEffect(() => {
@@ -50,7 +51,7 @@ const ItemEdit = () => {
           uid: `-${index}`,
           name: `image-${index}`,
           status: 'done',
-          url,
+          url: url,
         }));
         setFileList(initialFileList);
         const initialImageIds = item.images.map(url => {
@@ -97,18 +98,17 @@ const ItemEdit = () => {
       const formData = new FormData();
       formData.append('file', file);
       const res = await dispatch(uploadItemImage(formData));
-      const imageId = res.payload?.imageId || res.payload;
-      const url = `/api/image/${imageId}`;
-      // setFileList(prev => [
-      //   ...prev,
-      //   {
-      //     uid: `${Date.now()}`,
-      //     name: 'image.jpg',
-      //     status: 'done',
-      //     url,
-      //   },
-      // ]);
+      const { imageId, url } = res.payload || {};
       setImageIdList(prev => [...prev, imageId]);
+      setFileList(prev => [
+        ...prev,
+        {
+          uid: `${Date.now()}`,
+          name: file.name,
+          status: 'done',
+          url: url,
+        },
+      ]);
       message.success('图片上传成功');
       return imageId;
       // return false;
@@ -161,7 +161,7 @@ const ItemEdit = () => {
 
       // 手动上传
       handleUpload(file);
-      setFileList([...fileList, file]);
+      // setFileList([...fileList, file]);
 
       return false; // 阻止自动上传
     },
@@ -173,6 +173,10 @@ const ItemEdit = () => {
       const newImageIdList = [...imageIdList];
       newImageIdList.splice(index, 1);
       setImageIdList(newImageIdList);
+      // // 兼容老逻辑
+      // const newImageUrls = [...imageUrls];
+      // newImageUrls.splice(index, 1);
+      // setImageUrls(newImageUrls);
       const url = file.url;
       const match = url && url.match(/\/api\/image\/([a-fA-F0-9]+)/);
       const imageId = match ? match[1] : url;

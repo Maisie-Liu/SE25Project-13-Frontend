@@ -65,6 +65,8 @@ export const markChatMessagesAsRead = createAsyncThunk(
       const response = await axios.put(`/chats/${chatId}/read`);
       return { chatId };
     } catch (error) {
+      console.error(`标记聊天 ${chatId} 的所有消息为已读失败:`, error);
+      console.error('错误详情:', error.response?.data || error.message);
       return rejectWithValue(error.response?.data?.message || '标记消息已读失败');
     }
   }

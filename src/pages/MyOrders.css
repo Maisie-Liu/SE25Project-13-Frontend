@@ -1,0 +1,198 @@
+.my-orders-container {
+  background: linear-gradient(to bottom, #ffffff, #f8f9fa);
+  padding: 30px;
+  border-radius: 12px;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
+  min-height: 600px;
+  margin-bottom: 30px;
+}
+
+.my-orders-header {
+  margin-bottom: 24px;
+}
+
+.my-orders-header h2 {
+  font-size: 24px;
+  color: #333;
+  margin-bottom: 8px;
+  font-weight: 600;
+}
+
+.my-orders-header p {
+  color: #666;
+  font-size: 14px;
+}
+
+.my-orders-tabs .ant-tabs-tab {
+  padding: 12px 24px;
+  margin: 0 10px 0 0;
+  font-size: 16px;
+  transition: all 0.3s;
+}
+
+.my-orders-tabs .ant-tabs-tab-active {
+  font-weight: 600;
+}
+
+.my-orders-tabs .ant-tabs-ink-bar {
+  height: 3px;
+  background: #00B8A9;
+}
+
+.order-table-container {
+  margin-top: 20px;
+}
+
+.order-item-card {
+  display: flex;
+  align-items: center;
+  padding: 10px 0;
+}
+
+.order-item-image {
+  width: 70px;
+  height: 70px;
+  object-fit: cover;
+  border-radius: 8px;
+  margin-right: 15px;
+  transition: transform 0.3s;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.order-item-image:hover {
+  transform: scale(1.05);
+}
+
+.order-item-title {
+  font-weight: 500;
+  color: #333;
+  transition: color 0.3s;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 200px;
+}
+
+.order-item-title:hover {
+  color: #00B8A9;
+}
+
+.order-price {
+  font-weight: 600;
+  color: #ff4d4f;
+}
+
+.order-status-tag {
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-weight: 500;
+  display: inline-block;
+}
+
+.order-action-buttons {
+  display: flex;
+  gap: 10px;
+}
+
+.order-detail-button {
+  color: #00B8A9;
+}
+
+.order-detail-button:hover {
+  color: #008e83;
+}
+
+.order-action-button {
+  border-radius: 20px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s;
+}
+
+.order-action-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+.empty-orders {
+  margin: 60px 0;
+  text-align: center;
+}
+
+.empty-orders .ant-empty-image {
+  height: 120px;
+}
+
+.empty-orders .ant-empty-description {
+  color: #999;
+  font-size: 16px;
+}
+
+.comment-modal .ant-modal-content {
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.comment-modal .ant-modal-header {
+  background: #00B8A9;
+  color: white;
+  padding: 16px 24px;
+}
+
+.comment-modal .ant-modal-title {
+  color: white;
+  font-weight: 600;
+}
+
+.comment-modal .ant-input {
+  border-radius: 8px;
+  margin-top: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  border: 1px solid #eee;
+}
+
+.comment-modal .ant-btn-primary {
+  background: #00B8A9;
+  border-color: #00B8A9;
+}
+
+.comment-modal .ant-btn-primary:hover {
+  background: #008e83;
+  border-color: #008e83;
+}
+
+.ant-table-row {
+  transition: all 0.3s;
+}
+
+.ant-table-row:hover {
+  background-color: #f0f9ff !important;
+}
+
+/* 自定义加载效果 */
+.orders-loading {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 300px;
+}
+
+/* 响应式调整 */
+@media (max-width: 768px) {
+  .my-orders-container {
+    padding: 20px 15px;
+  }
+  
+  .order-item-title {
+    max-width: 120px;
+  }
+  
+  .my-orders-tabs .ant-tabs-tab {
+    padding: 8px 16px;
+    font-size: 14px;
+  }
+  
+  .order-item-image {
+    width: 50px;
+    height: 50px;
+  }
+} 

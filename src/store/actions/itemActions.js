@@ -211,9 +211,9 @@ export const uploadItemImage = createAsyncThunk(
 // 生成物品描述
 export const generateItemDescription = createAsyncThunk(
   'item/generateItemDescription',
-  async (imageUrl, { rejectWithValue }) => {
+  async (imageId, { rejectWithValue }) => {
     try {
-      const response = await axios.post('/items/generate-description', { imageUrl });
+      const response = await axios.post('/items/generate-description', null, { params: { imageId }, timeout: 300000 });
       return response.data.data;
     } catch (error) {
       return rejectWithValue(
@@ -329,4 +329,22 @@ export const deleteFile = createAsyncThunk(
       );
     }
   }
-); 
+);
+
+// 分页获取推荐物品
+export const fetchRecommendedItemsPage = ({ pageNum = 1, pageSize = 10 } = {}) => async (dispatch) => {
+  try {
+    dispatch({ type: 'recommendedItemsPage/fetchStart' });
+    const response = await axios.get(`/recommend/items`, {
+      params: { pageNum, pageSize }
+    });
+    dispatch({
+      type: 'recommendedItemsPage/fetchSuccess',
+      payload: response.data
+    });
+    return response.data;
+  } catch (error) {
+    dispatch({ type: 'recommendedItemsPage/fetchError', error });
+    throw error;
+  }
+}; 

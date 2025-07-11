@@ -136,17 +136,30 @@ export const markMessageAsRead = (messageId) => async (dispatch) => {
   dispatch({ type: 'MARK_MESSAGE_READ_REQUEST' });
   
   try {
+    console.log(`尝试标记消息 ${messageId} 为已读`);
     const response = await axios.put(`/messages/${messageId}/read`);
+    console.log(`标记消息 ${messageId} 为已读成功:`, response.data);
+    
     dispatch({
       type: 'MARK_MESSAGE_READ_SUCCESS',
       payload: { messageId }
     });
     return response.data;
   } catch (error) {
+    console.error(`标记消息 ${messageId} 为已读失败:`, error);
+    console.error('错误详情:', error.response?.data || error.message);
+    
     dispatch({
       type: 'MARK_MESSAGE_READ_FAILURE',
       payload: error.response?.data?.message || '标记消息已读失败'
     });
+    
+    // 即使API调用失败，也在Redux中更新状态
+    dispatch({
+      type: 'MARK_MESSAGE_READ_SUCCESS',
+      payload: { messageId }
+    });
+    
     throw error;
   }
 };
@@ -218,11 +231,23 @@ export const fetchUnreadMessagesByTypeCount = (messageType) => async (dispatch) 
     const response = await axios.get(`/messages/unread/count/${messageType}`);
     console.log(`fetchUnreadMessagesByTypeCount - ${messageType} 响应:`, response.data);
     
+    // 确保data是数字
+    let count = 0;
+    if (response.data) {
+      if (response.data.data !== undefined) {
+        count = typeof response.data.data === 'number' ? response.data.data : parseInt(response.data.data, 10) || 0;
+      } else if (typeof response.data === 'number') {
+        count = response.data;
+      } else if (response.data.count !== undefined) {
+        count = typeof response.data.count === 'number' ? response.data.count : parseInt(response.data.count, 10) || 0;
+      }
+    }
+    
     dispatch({
       type: 'FETCH_UNREAD_MESSAGES_BY_TYPE_COUNT_SUCCESS',
       payload: {
         messageType,
-        ...response.data  // 包含 { code: 200, data: count }
+        data: count
       }
     });
     return response.data;

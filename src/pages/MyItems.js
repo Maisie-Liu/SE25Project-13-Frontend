@@ -66,7 +66,7 @@ const MyItems = () => {
     },
     {
       title: '分类',
-      dataIndex: 'category',
+      dataIndex: 'categoryName',
       key: 'category',
     },
     {
@@ -76,17 +76,17 @@ const MyItems = () => {
       render: status => {
         let color = 'blue';
         let text = '未知';
-        
+        // 物品状态：0-下架，1-上架，2-已售出
         switch(status) {
-          case 'ON_SALE':
+          case 1:
             color = 'green';
             text = '在售';
             break;
-          case 'SOLD_OUT':
+          case 2:
             color = 'red';
             text = '已售出';
             break;
-          case 'OFF_SHELF':
+          case 0:
             color = 'gray';
             text = '已下架';
             break;

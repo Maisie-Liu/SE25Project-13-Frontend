@@ -279,7 +279,10 @@ const messageSlice = createSlice({
     },
     fetchUnreadMessagesByTypeCountSuccess: (state, action) => {
       state.loading = false;
-      const { messageType, count } = action.payload;
+      const { messageType, data } = action.payload;
+      
+      // 确保数据是数字类型
+      const count = typeof data === 'number' ? data : parseInt(data, 10) || 0;
       
       // 根据消息类型更新相应的未读消息数量
       switch (messageType) {
@@ -298,6 +301,12 @@ const messageSlice = createSlice({
         default:
           break;
       }
+      
+      // 更新总未读消息数
+      state.unreadCount = (Number(state.unreadCommentCount) || 0) + 
+                         (Number(state.unreadFavoriteCount) || 0) + 
+                         (Number(state.unreadOrderCount) || 0) + 
+                         (Number(state.unreadChatCount) || 0);
     },
     fetchUnreadMessagesByTypeCountFailure: (state, action) => {
       state.loading = false;
@@ -450,8 +459,29 @@ const messageSlice = createSlice({
       .addCase('FETCH_UNREAD_MESSAGES_BY_TYPE_COUNT_SUCCESS', (state, action) => {
         state.loading = false;
         const { messageType, data } = action.payload;
-        if (messageType && state.unreadCountByType.hasOwnProperty(messageType)) {
-          state.unreadCountByType[messageType] = data || 0;
+        // 确保数据是数字类型
+        const count = typeof data === 'number' ? data : parseInt(data, 10) || 0;
+        
+        if (messageType) {
+          switch (messageType) {
+            case 'COMMENT':
+              state.unreadCountByType.COMMENT = count;
+              break;
+            case 'FAVORITE':
+              state.unreadCountByType.FAVORITE = count;
+              break;
+            case 'ORDER':
+              state.unreadCountByType.ORDER = count;
+              break;
+            case 'CHAT':
+              state.unreadCountByType.CHAT = count;
+              break;
+            default:
+              break;
+          }
+          
+          // 更新总未读消息数
+          state.unreadCount = Object.values(state.unreadCountByType).reduce((sum, val) => sum + (val || 0), 0);
         }
         state.error = null;
       })
@@ -505,10 +535,10 @@ export const selectOrderMessages = state => state.message.orderMessages;
 export const selectChatMessages = state => state.message.chatMessages;
 export const selectAllUserChatMessages = state => state.message.allUserChatMessages;
 export const selectUnreadCount = state => state.message.unreadCount;
-export const selectUnreadCommentCount = state => state.message.unreadCommentCount;
-export const selectUnreadFavoriteCount = state => state.message.unreadFavoriteCount;
-export const selectUnreadOrderCount = state => state.message.unreadOrderCount;
-export const selectUnreadChatCount = state => state.message.unreadChatCount;
+export const selectUnreadCommentCount = state => state.message.unreadCountByType.COMMENT || 0;
+export const selectUnreadFavoriteCount = state => state.message.unreadCountByType.FAVORITE || 0;
+export const selectUnreadOrderCount = state => state.message.unreadCountByType.ORDER || 0;
+export const selectUnreadChatCount = state => state.message.unreadCountByType.CHAT || 0;
 export const selectMessageLoading = state => state.message.loading;
 export const selectMessageError = state => state.message.error;
 export const selectMessagePagination = state => state.message.pagination;

@@ -1708,3 +1708,370 @@
     margin-bottom: 10px;
   }
 }
+
+/* 物品详情页样式 */
+.item-detail-card {
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  overflow: hidden;
+}
+
+.item-image-container {
+  height: 400px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  background: #fff;
+}
+
+.main-image-wrapper {
+  width: 100%;
+  height: 400px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.main-item-image {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.thumbnail-list {
+  display: flex;
+  justify-content: center;
+  margin-top: 16px;
+  flex-wrap: wrap;
+}
+
+.thumbnail-image {
+  width: 80px;
+  height: 80px;
+  object-fit: cover;
+  border-radius: 6px;
+  border: 1px solid #f0f0f0;
+}
+
+.thumbnail-container {
+  margin: 5px;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.thumbnail-container:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.1);
+}
+
+.item-info-container {
+  padding: 10px 5px;
+}
+
+.item-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.item-status-tag {
+  flex-shrink: 0;
+}
+
+.item-price-section {
+  margin-bottom: 20px;
+}
+
+.item-description-card {
+  background-color: rgba(24, 144, 255, 0.05);
+  border-radius: 8px;
+  margin-bottom: 24px;
+  border: 1px solid rgba(24, 144, 255, 0.1);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+.item-description-header {
+  padding: 10px 12px;
+  font-size: 16px;
+  font-weight: 500;
+  color: #1890ff;
+  border-bottom: 1px solid rgba(24, 144, 255, 0.1);
+  background-color: rgba(24, 144, 255, 0.03);
+}
+
+.item-meta-info {
+  background-color: #f9f9f9;
+  border-radius: 8px;
+  padding: 16px;
+  margin-bottom: 20px;
+  border: 1px solid #f0f0f0;
+}
+
+.item-meta-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.item-meta-label {
+  color: #666;
+  font-size: 14px;
+}
+
+.item-meta-value {
+  font-weight: 500;
+  color: #333;
+}
+
+.item-seller-info {
+  display: flex;
+  align-items: center;
+  padding: 12px;
+  background-color: #f5f5f5;
+  border-radius: 8px;
+  margin-bottom: 20px;
+  border: 1px dashed #e8e8e8;
+}
+
+.seller-avatar {
+  margin-right: 10px;
+}
+
+.seller-details {
+  display: flex;
+  flex-direction: column;
+}
+
+.seller-name {
+  font-weight: 500;
+  margin-bottom: 4px;
+}
+
+.publish-time {
+  font-size: 12px;
+  color: #999;
+}
+
+.item-actions {
+  display: flex;
+  margin-bottom: 24px;
+  gap: 12px;
+}
+
+.order-button {
+  flex: 2;
+  height: 42px;
+  border-radius: 21px;
+  font-size: 16px;
+}
+
+.favorite-button {
+  flex: 1;
+  height: 42px;
+  border-radius: 21px;
+}
+
+.comments-section {
+  background-color: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+  border: 1px solid #f0f0f0;
+  overflow: hidden;
+}
+
+.comments-header {
+  padding: 12px 16px;
+  font-size: 16px;
+  font-weight: 500;
+  color: #333;
+  background-color: #f5f5f5;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.order-modal .ant-modal-content {
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+/* 响应式调整 */
+@media (max-width: 768px) {
+  .item-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .item-status-tag {
+    margin-top: 8px;
+  }
+  
+  .item-actions {
+    flex-direction: column;
+  }
+  
+  .order-button,
+  .favorite-button {
+    width: 100%;
+  }
+}
+
+/* 评论组件样式 */
+.comment-form-container {
+  padding: 16px;
+  background-color: #fafafa;
+  border-radius: 8px;
+  margin-bottom: 20px;
+}
+
+.comment-form-header {
+  display: flex;
+  margin-bottom: 12px;
+}
+
+.comment-form-avatar {
+  margin-right: 12px;
+  margin-top: 8px;
+}
+
+.comment-form-input {
+  flex: 1;
+}
+
+.comment-input {
+  border-radius: 8px;
+  resize: none;
+  border: 1px solid #e8e8e8;
+  transition: all 0.3s;
+}
+
+.comment-input:hover, .comment-input:focus {
+  border-color: #1890ff;
+  box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.1);
+}
+
+.comment-form-footer {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 12px;
+}
+
+.comment-list-container {
+  padding: 0 16px 16px;
+}
+
+.comment-list-header {
+  font-size: 14px;
+  color: #666;
+  margin-bottom: 16px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.no-comments {
+  text-align: center;
+  padding: 20px 0;
+  color: #999;
+  font-size: 14px;
+}
+
+.comment-item {
+  display: flex;
+  margin-bottom: 20px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid #f5f5f5;
+}
+
+.comment-avatar {
+  margin-right: 12px;
+}
+
+.comment-content {
+  flex: 1;
+}
+
+.comment-author {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.comment-time {
+  font-size: 12px;
+}
+
+.comment-text {
+  margin-bottom: 12px;
+  line-height: 1.6;
+}
+
+.comment-actions {
+  margin-bottom: 12px;
+}
+
+.comment-replies {
+  background-color: #f9f9f9;
+  border-radius: 8px;
+  padding: 12px;
+  margin-bottom: 12px;
+}
+
+.reply-item {
+  display: flex;
+  margin-bottom: 10px;
+  padding-bottom: 10px;
+  border-bottom: 1px dashed #f0f0f0;
+}
+
+.reply-item:last-child {
+  margin-bottom: 0;
+  padding-bottom: 0;
+  border-bottom: none;
+}
+
+.reply-avatar {
+  margin-right: 8px;
+}
+
+.reply-content {
+  flex: 1;
+}
+
+.reply-author {
+  margin-bottom: 4px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.reply-to {
+  font-size: 12px;
+}
+
+.reply-text {
+  font-size: 14px;
+  margin-bottom: 4px;
+}
+
+.reply-time {
+  font-size: 12px;
+}
+
+.reply-form {
+  background-color: #f9f9f9;
+  border-radius: 8px;
+  padding: 12px;
+}
+
+.reply-input {
+  margin-bottom: 8px;
+}
+
+.reply-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}

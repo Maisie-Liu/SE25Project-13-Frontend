@@ -19,7 +19,8 @@ import {
   List,
   Space,
   message,
-  Select
+  Select,
+  Pagination
 } from 'antd';
 import { 
   SearchOutlined, 
@@ -48,11 +49,13 @@ import {
   CloseOutlined,
   AppstoreOutlined
 } from '@ant-design/icons';
-import { fetchItems, fetchRecommendedItems, fetchHotItems } from '../store/actions/itemActions';
+import { fetchItems, fetchRecommendedItems, fetchHotItems, fetchRecommendedItemsPage } from '../store/actions/itemActions';
 import { 
   selectItems, 
   selectRecommendedItems, 
-  selectItemLoading 
+  selectItemLoading,
+  selectRecommendedItemsPage,
+  selectRecommendedItemsPageLoading
 } from '../store/slices/itemSlice';
 import { selectCategories, selectCategoryLoading } from '../store/slices/categorySlice';
 import { fetchCategories } from '../store/actions/categoryActions';
@@ -77,8 +80,10 @@ const Home = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const items = useSelector(selectItems);
-  const recommendedItems = useSelector(selectRecommendedItems);
+  // const recommendedItems = useSelector(selectRecommendedItems);
   const loading = useSelector(selectItemLoading);
+  const recommendedItemsPage = useSelector(selectRecommendedItemsPage);
+  const recommendedItemsPageLoading = useSelector(selectRecommendedItemsPageLoading);
   const [showPublishMenu, setShowPublishMenu] = useState(false);
   const menuRef = useRef(null);
   const btnRef = useRef(null);
@@ -91,11 +96,13 @@ const Home = () => {
   });
   const categories = useSelector(selectCategories);
   const categoryLoading = useSelector(selectCategoryLoading);
+  const [recPageNum, setRecPageNum] = useState(1);
+  const recPageSize = 4;
 
   // 加载最新物品和推荐物品
   useEffect(() => {
     dispatch(fetchItems({ pageNum: 1, pageSize: 8, sort: 'createTime', order: 'desc' }));
-    dispatch(fetchRecommendedItems({ pageNum: 1, pageSize: 4 }));
+    // dispatch(fetchRecommendedItems({ pageNum: 1, pageSize: 4 }));
   }, [dispatch]);
 
   useEffect(() => {
@@ -110,6 +117,10 @@ const Home = () => {
     };
     loadHotItems();
   }, [dispatch]);
+
+  useEffect(() => {
+    dispatch(fetchRecommendedItemsPage({ pageNum: recPageNum, pageSize: recPageSize }));
+  }, [dispatch, recPageNum]);
 
   // 获取平台统计数据
   useEffect(() => {
@@ -171,7 +182,7 @@ const Home = () => {
   };
   
   const handleRequestItem = () => {
-    navigate('/requests/publish');
+    navigate('/publish-request');
     setShowPublishMenu(false);
   };
 
@@ -377,25 +388,32 @@ const Home = () => {
               )}
             </div>
             
-            {/* 推荐物品 */}
+            {/* 推荐物品分页 */}
             <div className="xianyu-section">
               <div className="xianyu-section-header">
                 <Title level={4} className="xianyu-section-title">
                   <FireOutlined className="xianyu-section-icon" /> 推荐物品
                 </Title>
-                <Button type="link" onClick={() => navigate('/items')} className="xianyu-more-btn">
-                  查看更多 <RightOutlined />
-                </Button>
               </div>
-              
-              {loading ? (
+              {recommendedItemsPageLoading ? (
                 <div className="xianyu-loading">
                   <Spin size="large" />
                 </div>
-              ) : recommendedItems.length > 0 ? (
-                <Row gutter={[16, 16]}>
-                  {recommendedItems.slice(0, 3).map(item => renderItemCard(item))}
-                </Row>
+              ) : recommendedItemsPage && recommendedItemsPage.content && recommendedItemsPage.content.length > 0 ? (
+                <>
+                  <Row gutter={[16, 16]}>
+                    {recommendedItemsPage.content.map(item => renderItemCard(item))}
+                  </Row>
+                  <div style={{ textAlign: 'center', marginTop: 16 }}>
+                    <Pagination
+                      current={recPageNum}
+                      pageSize={recPageSize}
+                      total={recommendedItemsPage.totalElements}
+                      onChange={setRecPageNum}
+                      showSizeChanger={false}
+                    />
+                  </div>
+                </>
               ) : (
                 <Empty description="暂无推荐物品" />
               )}

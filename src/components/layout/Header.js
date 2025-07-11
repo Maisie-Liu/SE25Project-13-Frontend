@@ -26,10 +26,19 @@ import {
   HomeOutlined,
   AppstoreOutlined,
   QuestionCircleOutlined,
-  SearchOutlined
+  SearchOutlined,
+  CommentOutlined
 } from '@ant-design/icons';
 import { selectIsAuthenticated, selectUser } from '../../store/slices/authSlice';
 import { logout } from '../../store/actions/authActions';
+import { 
+  selectUnreadCount,
+  selectUnreadCommentCount,
+  selectUnreadFavoriteCount,
+  selectUnreadOrderCount,
+  selectUnreadChatCount
+} from '../../store/slices/messageSlice';
+import { fetchUnreadMessagesCount, fetchUnreadMessagesByTypeCount } from '../../store/actions/messageActions';
 
 const { Header: AntHeader } = Layout;
 const { Search } = Input;
@@ -74,11 +83,48 @@ const Header = () => {
   const user = useSelector(selectUser);
   const [headerSearch, setHeaderSearch] = useState('');
   
+  // 获取未读消息数量
+  const unreadCount = useSelector(selectUnreadCount);
+  const unreadCommentCount = useSelector(selectUnreadCommentCount);
+  const unreadFavoriteCount = useSelector(selectUnreadFavoriteCount);
+  const unreadOrderCount = useSelector(selectUnreadOrderCount);
+  const unreadChatCount = useSelector(selectUnreadChatCount);
+  
+  // 计算总未读消息数
+  const totalUnreadCount = (Number(unreadCommentCount) || 0) + 
+                          (Number(unreadFavoriteCount) || 0) + 
+                          (Number(unreadOrderCount) || 0) + 
+                          (Number(unreadChatCount) || 0);
+  
   useEffect(() => {
     if (location.pathname === '/items') {
       setHeaderSearch('');
     }
   }, [location.pathname]);
+  
+  // 获取未读消息数量
+  useEffect(() => {
+    if (isAuthenticated) {
+      // 立即获取一次未读消息数量
+      const fetchUnreadCounts = () => {
+        dispatch(fetchUnreadMessagesCount());
+        dispatch(fetchUnreadMessagesByTypeCount('COMMENT'));
+        dispatch(fetchUnreadMessagesByTypeCount('FAVORITE'));
+        dispatch(fetchUnreadMessagesByTypeCount('ORDER'));
+        dispatch(fetchUnreadMessagesByTypeCount('CHAT'));
+      };
+      
+      fetchUnreadCounts();
+      
+      // 设置轮询，每30秒更新一次未读消息数量
+      const intervalId = setInterval(fetchUnreadCounts, 30000);
+      
+      // 清理函数
+      return () => {
+        clearInterval(intervalId);
+      };
+    }
+  }, [dispatch, isAuthenticated]);
   
   const handleSearch = (value) => {
     if (value.trim()) {
@@ -187,6 +233,9 @@ const Header = () => {
               <Button type="link" onClick={() => navigate('/items')} className="nav-button">
                 <AppstoreOutlined /> 全部物品
               </Button>
+              <Button type="link" onClick={() => navigate('/requests')} className="nav-button">
+                <CommentOutlined /> 求购论坛
+              </Button>
               <Button type="link" onClick={() => navigate('/help')} className="nav-button">
                 <QuestionCircleOutlined /> 服务中心
               </Button>
@@ -196,7 +245,7 @@ const Header = () => {
               <Space size="middle">
                 {isAuthenticated ? (
                   <>
-                    <Badge count={3} size="small" className="notification-badge">
+                    <Badge count={totalUnreadCount > 0 ? totalUnreadCount : 0} size="small" className="notification-badge">
                       <Button 
                         type="text" 
                         icon={<MessageOutlined />} 
@@ -215,7 +264,7 @@ const Header = () => {
                         <Avatar 
                           size="default" 
                           icon={<UserOutlined />} 
-                          src={user?.avatar} 
+                          src={user?.avatarUrl} 
                           className="user-avatar"
                         />
                         <span className="username">{user?.username || '用户'}</span>
