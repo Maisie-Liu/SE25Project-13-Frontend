@@ -6,10 +6,7 @@ import {
   Card, 
   Avatar, 
   Rate, 
-  Divider, 
-  List, 
   Tag, 
-  Statistic, 
   Row, 
   Col, 
   Empty, 
@@ -23,9 +20,6 @@ import {
   ShopOutlined, 
   StarOutlined, 
   ClockCircleOutlined, 
-  LikeOutlined, 
-  DislikeOutlined, 
-  MessageOutlined,
   ShoppingOutlined,
   CheckCircleOutlined,
   EnvironmentOutlined,
@@ -60,7 +54,7 @@ axios.interceptors.response.use(
 const UserPublicProfile = () => {
   const { userId } = useParams();
   const dispatch = useDispatch();
-  const { loading, data: profile, error } = useSelector(state => state.userPublicProfile);
+  const { loading, data: profile } = useSelector(state => state.userPublicProfile);
   const [activeTab, setActiveTab] = useState('items');
   const [debugInfo, setDebugInfo] = useState(null);
   const [stats, setStats] = useState({
@@ -234,309 +228,318 @@ const UserPublicProfile = () => {
 
   return (
     <div className="user-public-profile-container">
-      <Card className="profile-header-card">
-        <Row gutter={[24, 24]} align="middle">
-          <Col xs={24} sm={8} md={6} className="avatar-col">
+      <div className="profile-sidebar">
+        <Card className="profile-header-card">
+          <div className="avatar-col">
             <Avatar 
-              size={120} 
+              size={160}
               src={user.avatarUrl} 
               icon={<UserOutlined />} 
               className="user-avatar"
             />
             <Title level={3} className="username">{user.username}</Title>
             <Text type="secondary">注册于 {formatDate(stats.joinDate)}</Text>
-          </Col>
-          
-          <Col xs={24} sm={16} md={18}>
-            <div className="user-info">
-              <Row gutter={[24, 16]}>
-                <Col xs={24} sm={12} md={8} lg={6}>
-                  <Card className="stat-card">
-                    <Statistic 
-                      title="卖家评分" 
-                      value={stats.sellerRating} 
-                      suffix={
-                        <Rate 
-                          disabled 
-                          allowHalf 
-                          value={stats.sellerRating} 
-                          style={{ fontSize: 14, marginLeft: 8 }} 
-                        />
-                      }
-                      valueStyle={{ color: '#fa8c16' }}
-                      prefix={<ShopOutlined />}
-                    />
-                    <Text type="secondary">{sellerRatings.length} 个评价</Text>
-                  </Card>
-                </Col>
-                
-                <Col xs={24} sm={12} md={8} lg={6}>
-                  <Card className="stat-card">
-                    <Statistic 
-                      title="买家评分" 
-                      value={stats.buyerRating} 
-                      suffix={
-                        <Rate 
-                          disabled 
-                          allowHalf 
-                          value={stats.buyerRating} 
-                          style={{ fontSize: 14, marginLeft: 8 }} 
-                        />
-                      }
-                      valueStyle={{ color: '#52c41a' }}
-                      prefix={<ShoppingOutlined />}
-                    />
-                    <Text type="secondary">{buyerRatings.length} 个评价</Text>
-                  </Card>
-                </Col>
-                
-                <Col xs={24} sm={12} md={8} lg={6}>
-                  <Card className="stat-card">
-                    <Statistic 
-                      title="售出物品" 
-                      value={stats.totalSold} 
-                      prefix={<CheckCircleOutlined />}
-                      valueStyle={{ color: '#1890ff' }}
-                    />
-                    <Text type="secondary">共发布 {stats.totalItems} 个</Text>
-                  </Card>
-                </Col>
-                
-                <Col xs={24} sm={12} md={8} lg={6}>
-                  <Card className="stat-card">
-                    <Statistic 
-                      title="所在地区" 
-                      value={stats.location} 
-                      prefix={<EnvironmentOutlined />}
-                      valueStyle={{ color: '#722ed1' }}
-                    />
-                    <Text type="secondary">交易地点</Text>
-                  </Card>
-                </Col>
-              </Row>
-              
-              {user.bio && (
-                <div className="user-bio">
-                  <Title level={5}>个人简介</Title>
-                  <Paragraph ellipsis={{ rows: 2, expandable: true, symbol: '更多' }}>
-                    {user.bio}
-                  </Paragraph>
-                </div>
-              )}
+          </div>
+
+          <div className="user-stats">
+            <div className="stat-item">
+              <ShopOutlined className="stat-icon" />
+              <span>卖家评分</span>
+              <div className="rating-stars-container">
+                <span className="rating-stars">
+                  <Rate disabled allowHalf value={parseFloat(stats.sellerRating)} style={{ fontSize: 16 }} />
+                </span>
+                <span className="rating-value">{stats.sellerRating}</span>
+              </div>
             </div>
-          </Col>
-        </Row>
-      </Card>
-      
-      <Card className="profile-content-card">
-        <Tabs activeKey={activeTab} onChange={setActiveTab}>
-          <TabPane 
-            tab={
-              <span>
-                <ShopOutlined />
-                物品列表
-              </span>
-            } 
-            key="items"
-          >
-            <Tabs defaultActiveKey="available" className="items-tabs">
-              <TabPane tab="在售物品" key="available">
-                {availableItems.length > 0 ? (
-                  <List
-                    grid={{ gutter: 16, xs: 1, sm: 2, md: 3, lg: 4, xl: 4, xxl: 5 }}
-                    dataSource={availableItems}
-                    renderItem={item => (
-                      <List.Item>
-                        <Link to={`/items/${item.id}`}>
-                          <Card
-                            hoverable
-                            cover={
-                              <div className="item-image-container">
-                                <img 
-                                  alt={item.name} 
-                                  src={item.images && item.images.length > 0 ? item.images[0] : 'https://via.placeholder.com/150'}
-                                />
+            <div className="stat-item">
+              <ShoppingOutlined className="stat-icon" />
+              <span>买家评分</span>
+              <div className="rating-stars-container">
+                <span className="rating-stars">
+                  <Rate disabled allowHalf value={parseFloat(stats.buyerRating)} style={{ fontSize: 16 }} />
+                </span>
+                <span className="rating-value">{stats.buyerRating}</span>
+              </div>
+            </div>
+            <div className="stat-item">
+              <CheckCircleOutlined className="stat-icon" />
+              <span>已售出商品</span>
+              <div className="rating-stars-container">
+                <span className="rating-value">{stats.totalSold} 件</span>
+              </div>
+            </div>
+            <div className="stat-item">
+              <EnvironmentOutlined className="stat-icon" />
+              <span>交易地点</span>
+              <div className="rating-stars-container">
+                <span className="rating-value">{stats.location}</span>
+              </div>
+            </div>
+          </div>
+
+          {user.bio && (
+            <div className="user-bio">
+              <Title level={5}>个人简介</Title>
+              <Paragraph>{user.bio}</Paragraph>
+            </div>
+          )}
+        </Card>
+      </div>
+
+      <div className="profile-main">
+        <Card className="profile-content-card">
+          <Tabs activeKey={activeTab} onChange={setActiveTab}>
+            <TabPane 
+              tab={
+                <span>
+                  <ShopOutlined />
+                  在售商品 ({availableItems.length})
+                </span>
+              } 
+              key="items"
+            >
+              <div className="items-grid">
+                {availableItems.map(item => (
+                  <div className="item-wrapper" key={item.id}>
+                    <Link to={`/items/${item.id}`}>
+                      <Card
+                        hoverable
+                        className="item-card"
+                        cover={
+                          <div className="item-image-container">
+                            <img alt={item.title} src={item.images?.[0] || 'https://via.placeholder.com/300'} />
+                          </div>
+                        }
+                      >
+                        <Card.Meta
+                          title={item.title}
+                          description={
+                            <div className="item-info">
+                              <span className="item-price">¥{item.price.toFixed(2)}</span>
+                              <div className="item-tags">
+                                {item.tags?.map(tag => (
+                                  <Tag key={tag}>{tag}</Tag>
+                                ))}
                               </div>
-                            }
-                            className="item-card"
-                          >
-                            <Card.Meta
-                              title={item.name}
-                              description={
-                                <div className="item-info">
-                                  <Text className="item-price">¥{item.price}</Text>
-                                  <div className="item-tags">
-                                    <Tag color="green">在售</Tag>
-                                    <Tag color="blue">{item.categoryName || '未分类'}</Tag>
-                                  </div>
-                                  <Text type="secondary" className="item-time">
-                                    <ClockCircleOutlined /> {formatDate(item.createTime)}
-                                  </Text>
-                                </div>
-                              }
-                            />
-                          </Card>
-                        </Link>
-                      </List.Item>
-                    )}
-                  />
-                ) : (
-                  <Empty description="暂无在售物品" />
-                )}
-              </TabPane>
-              <TabPane tab="已售物品" key="sold">
-                {soldItems.length > 0 ? (
-                  <List
-                    grid={{ gutter: 16, xs: 1, sm: 2, md: 3, lg: 4, xl: 4, xxl: 5 }}
-                    dataSource={soldItems}
-                    renderItem={item => (
-                      <List.Item>
-                        <Link to={`/items/${item.id}`}>
-                          <Card
-                            hoverable
-                            cover={
-                              <div className="item-image-container sold-item">
-                                <img 
-                                  alt={item.name} 
-                                  src={item.images && item.images.length > 0 ? item.images[0] : 'https://via.placeholder.com/150'}
-                                />
-                                <div className="sold-overlay">已售出</div>
+                              <span className="item-time">
+                                <ClockCircleOutlined /> {formatDate(item.createTime)}
+                              </span>
+                            </div>
+                          }
+                        />
+                      </Card>
+                    </Link>
+                  </div>
+                ))}
+              </div>
+            </TabPane>
+
+            <TabPane 
+              tab={
+                <span>
+                  <CheckCircleOutlined />
+                  已售商品 ({soldItems.length})
+                </span>
+              } 
+              key="sold"
+            >
+              <div className="items-grid">
+                {soldItems.map(item => (
+                  <div className="item-wrapper" key={item.id}>
+                    <Link to={`/items/${item.id}`}>
+                      <Card
+                        hoverable
+                        className="item-card"
+                        cover={
+                          <div className="item-image-container sold-item">
+                            <img alt={item.title} src={item.images?.[0] || 'https://via.placeholder.com/300'} />
+                            <div className="sold-overlay">已售出</div>
+                          </div>
+                        }
+                      >
+                        <Card.Meta
+                          title={item.title}
+                          description={
+                            <div className="item-info">
+                              <span className="item-price">¥{item.price.toFixed(2)}</span>
+                              <div className="item-tags">
+                                {item.tags?.map(tag => (
+                                  <Tag key={tag}>{tag}</Tag>
+                                ))}
                               </div>
-                            }
-                            className="item-card"
-                          >
-                            <Card.Meta
-                              title={item.name}
-                              description={
-                                <div className="item-info">
-                                  <Text className="item-price">¥{item.price}</Text>
-                                  <div className="item-tags">
-                                    <Tag color="red">已售</Tag>
-                                    <Tag color="blue">{item.categoryName || '未分类'}</Tag>
-                                  </div>
-                                  <Text type="secondary" className="item-time">
-                                    <ClockCircleOutlined /> {formatDate(item.updateTime || item.createTime)}
-                                  </Text>
-                                </div>
-                              }
-                            />
-                          </Card>
-                        </Link>
-                      </List.Item>
-                    )}
-                  />
-                ) : (
-                  <Empty description="暂无已售物品" />
-                )}
-              </TabPane>
-            </Tabs>
-          </TabPane>
-          
-          <TabPane 
-            tab={
-              <span>
-                <StarOutlined />
-                用户评价
-              </span>
-            } 
-            key="ratings"
-          >
-            <Tabs defaultActiveKey="seller" className="ratings-tabs">
-              <TabPane tab="作为卖家的评价" key="seller">
-                {sellerRatings.length > 0 ? (
-                  <List
-                    itemLayout="vertical"
-                    dataSource={sellerRatings}
-                    renderItem={rating => (
-                      <Card className="rating-card">
-                        <List.Item>
+                              <span className="item-time">
+                                <ClockCircleOutlined /> {formatDate(item.createTime)}
+                              </span>
+                            </div>
+                          }
+                        />
+                      </Card>
+                    </Link>
+                  </div>
+                ))}
+              </div>
+            </TabPane>
+
+            <TabPane 
+              tab={
+                <span>
+                  <StarOutlined />
+                  收到的评价 ({ratings.length})
+                </span>
+              } 
+              key="ratings"
+            >
+              <Tabs 
+                defaultActiveKey="seller" 
+                className="rating-type-tabs"
+                tabBarStyle={{ textAlign: 'center' }}
+              >
+                <TabPane
+                  tab={
+                    <span>
+                      <ShopOutlined />
+                      作为卖家的评价 ({sellerRatings.length})
+                    </span>
+                  }
+                  key="seller"
+                >
+                  <Card className="rating-stats-card">
+                    <div className="stats-header">卖家评价统计</div>
+                    <div className="stats-content">
+                      <div className="stats-item">
+                        <div className="stats-item-value">{stats.sellerRating}</div>
+                        <div className="stats-item-title">平均评分</div>
+                        <div className="stars-container">
+                          <Rate disabled allowHalf value={parseFloat(stats.sellerRating)} />
+                        </div>
+                      </div>
+                      <div className="stats-item">
+                        <div className="stats-item-value">{sellerRatings.length}</div>
+                        <div className="stats-item-title">总评价数</div>
+                      </div>
+                      <div className="stats-item">
+                        <div className="stats-item-value">
+                          {sellerRatings.length > 0 ? 
+                            Math.round(sellerRatings.filter(r => r.rating >= 4).length / sellerRatings.length * 100) : 0}%
+                        </div>
+                        <div className="stats-item-title">好评率</div>
+                      </div>
+                    </div>
+                  </Card>
+                  
+                  <Row gutter={[16, 16]}>
+                    {sellerRatings.map(rating => (
+                      <Col xs={24} sm={24} md={12} lg={12} xl={12} key={rating.id}>
+                        <Card className="rating-card">
                           <div className="rating-header">
                             <div className="rater-info">
-                              <Avatar src={rating.rater?.avatarUrl} icon={<UserOutlined />} />
-                              <Text strong>{rating.rater?.username || '匿名用户'}</Text>
+                              <Avatar size="small" src={rating.raterAvatar} icon={<UserOutlined />} />
+                              <Text strong>{rating.raterName}</Text>
                             </div>
                             <div className="rating-stars">
-                              <Rate disabled value={rating.rating} />
+                              <Rate disabled defaultValue={rating.rating} />
                               <Text type="secondary">{ratingDescriptions[Math.floor(rating.rating) - 1]}</Text>
                             </div>
                           </div>
                           <div className="rating-content">
-                            <Paragraph>{rating.comment || '该用户未留下评价内容'}</Paragraph>
-                            <div className="rating-item-info">
-                              <Link to={`/items/${rating.item.id}`} className="rating-item-link">
-                                <img 
-                                  src={rating.item.images && rating.item.images.length > 0 ? rating.item.images[0] : 'https://via.placeholder.com/50'} 
-                                  alt={rating.item.name} 
-                                  className="rating-item-image" 
-                                />
-                                <div className="rating-item-details">
-                                  <Text strong>{rating.item.name}</Text>
-                                  <Text type="secondary">¥{rating.item.price}</Text>
-                                </div>
-                              </Link>
-                            </div>
+                            <Paragraph>{rating.comment}</Paragraph>
+                            {rating.itemId && (
+                              <div className="rating-item-info">
+                                <Link to={`/items/${rating.itemId}`} className="rating-item-link">
+                                  <img 
+                                    className="rating-item-image" 
+                                    src={rating.itemImage || 'https://via.placeholder.com/60'} 
+                                    alt={rating.itemTitle} 
+                                  />
+                                  <div className="rating-item-details">
+                                    <Text strong>{rating.itemTitle}</Text>
+                                    <Text type="secondary">交易时间：{formatDate(rating.createTime)}</Text>
+                                  </div>
+                                </Link>
+                              </div>
+                            )}
                           </div>
-                          <div className="rating-footer">
-                            <Text type="secondary">{formatDate(rating.createTime)}</Text>
-                          </div>
-                        </List.Item>
-                      </Card>
-                    )}
-                  />
-                ) : (
-                  <Empty description="暂无卖家评价" />
-                )}
-              </TabPane>
-              
-              <TabPane tab="作为买家的评价" key="buyer">
-                {buyerRatings.length > 0 ? (
-                  <List
-                    itemLayout="vertical"
-                    dataSource={buyerRatings}
-                    renderItem={rating => (
-                      <Card className="rating-card">
-                        <List.Item>
+                        </Card>
+                      </Col>
+                    ))}
+                  </Row>
+                </TabPane>
+                <TabPane
+                  tab={
+                    <span>
+                      <ShoppingOutlined />
+                      作为买家的评价 ({buyerRatings.length})
+                    </span>
+                  }
+                  key="buyer"
+                >
+                  <Card className="rating-stats-card">
+                    <div className="stats-header">买家评价统计</div>
+                    <div className="stats-content">
+                      <div className="stats-item">
+                        <div className="stats-item-value">{stats.buyerRating}</div>
+                        <div className="stats-item-title">平均评分</div>
+                        <div className="stars-container">
+                          <Rate disabled allowHalf value={parseFloat(stats.buyerRating)} />
+                        </div>
+                      </div>
+                      <div className="stats-item">
+                        <div className="stats-item-value">{buyerRatings.length}</div>
+                        <div className="stats-item-title">总评价数</div>
+                      </div>
+                      <div className="stats-item">
+                        <div className="stats-item-value">
+                          {buyerRatings.length > 0 ? 
+                            Math.round(buyerRatings.filter(r => r.rating >= 4).length / buyerRatings.length * 100) : 0}%
+                        </div>
+                        <div className="stats-item-title">好评率</div>
+                      </div>
+                    </div>
+                  </Card>
+                  
+                  <Row gutter={[16, 16]}>
+                    {buyerRatings.map(rating => (
+                      <Col xs={24} sm={24} md={12} lg={12} xl={12} key={rating.id}>
+                        <Card className="rating-card">
                           <div className="rating-header">
                             <div className="rater-info">
-                              <Avatar src={rating.rater?.avatarUrl} icon={<UserOutlined />} />
-                              <Text strong>{rating.rater?.username || '匿名用户'}</Text>
+                              <Avatar size="small" src={rating.raterAvatar} icon={<UserOutlined />} />
+                              <Text strong>{rating.raterName}</Text>
                             </div>
                             <div className="rating-stars">
-                              <Rate disabled value={rating.rating} />
+                              <Rate disabled defaultValue={rating.rating} />
                               <Text type="secondary">{ratingDescriptions[Math.floor(rating.rating) - 1]}</Text>
                             </div>
                           </div>
                           <div className="rating-content">
-                            <Paragraph>{rating.comment || '该用户未留下评价内容'}</Paragraph>
-                            <div className="rating-item-info">
-                              <Link to={`/items/${rating.item.id}`} className="rating-item-link">
-                                <img 
-                                  src={rating.item.images && rating.item.images.length > 0 ? rating.item.images[0] : 'https://via.placeholder.com/50'} 
-                                  alt={rating.item.name} 
-                                  className="rating-item-image" 
-                                />
-                                <div className="rating-item-details">
-                                  <Text strong>{rating.item.name}</Text>
-                                  <Text type="secondary">¥{rating.item.price}</Text>
-                                </div>
-                              </Link>
-                            </div>
+                            <Paragraph>{rating.comment}</Paragraph>
+                            {rating.itemId && (
+                              <div className="rating-item-info">
+                                <Link to={`/items/${rating.itemId}`} className="rating-item-link">
+                                  <img 
+                                    className="rating-item-image" 
+                                    src={rating.itemImage || 'https://via.placeholder.com/60'} 
+                                    alt={rating.itemTitle} 
+                                  />
+                                  <div className="rating-item-details">
+                                    <Text strong>{rating.itemTitle}</Text>
+                                    <Text type="secondary">交易时间：{formatDate(rating.createTime)}</Text>
+                                  </div>
+                                </Link>
+                              </div>
+                            )}
                           </div>
-                          <div className="rating-footer">
-                            <Text type="secondary">{formatDate(rating.createTime)}</Text>
-                          </div>
-                        </List.Item>
-                      </Card>
-                    )}
-                  />
-                ) : (
-                  <Empty description="暂无买家评价" />
-                )}
-              </TabPane>
-            </Tabs>
-          </TabPane>
-        </Tabs>
-      </Card>
+                        </Card>
+                      </Col>
+                    ))}
+                  </Row>
+                </TabPane>
+              </Tabs>
+            </TabPane>
+          </Tabs>
+        </Card>
+      </div>
     </div>
   );
 };
