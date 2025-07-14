@@ -21,14 +21,7 @@ const MyItems = () => {
   }, [dispatch, user]);
 
   const handleDelete = (id) => {
-    dispatch(deleteItem(id))
-      .then(() => {
-        message.success('物品删除成功');
-        dispatch(fetchMyItems());
-      })
-      .catch(() => {
-        message.error('删除失败，请重试');
-      });
+    // 删除功能已移除
   };
 
   const handleStatusChange = (id, status) => {
@@ -108,21 +101,24 @@ const MyItems = () => {
       key: 'action',
       render: (_, record) => (
         <div>
-          <Button 
-            type="link" 
-            onClick={() => navigate(`/items/edit/${record.id}`)}
-          >
-            编辑
-          </Button>
-          
-          {record.status === 'ON_SALE' ? (
+          {/* 仅非已售出物品可编辑 */}
+          {(record.status !== 2 && record.status !== 'SOLD') && (
+            <Button 
+              type="link" 
+              onClick={() => navigate(`/items/edit/${record.id}`)}
+            >
+              编辑
+            </Button>
+          )}
+          {record.status === 'ON_SALE' || record.status === 1 ? (
             <Button 
               type="link" 
               onClick={() => handleStatusChange(record.id, 'OFF_SHELF')}
             >
               下架
             </Button>
-          ) : record.status === 'OFF_SHELF' ? (
+          ) : null}
+          {record.status === 'OFF_SHELF' || record.status === 0 ? (
             <Button 
               type="link" 
               onClick={() => handleStatusChange(record.id, 'ON_SALE')}
@@ -130,15 +126,6 @@ const MyItems = () => {
               上架
             </Button>
           ) : null}
-          
-          <Popconfirm
-            title="确定要删除这个物品吗？"
-            onConfirm={() => handleDelete(record.id)}
-            okText="确定"
-            cancelText="取消"
-          >
-            <Button type="link" danger>删除</Button>
-          </Popconfirm>
         </div>
       ),
     },
@@ -168,6 +155,20 @@ const MyItems = () => {
     );
   }
 
+  // 优化显示顺序：上架 > 下架 > 已售出
+  const sortedItems = myItems
+    ? [...myItems].sort((a, b) => {
+        // 1-上架，0-下架，2-已售出
+        const statusOrder = (status) => {
+          if (status === 1 || status === 'ON_SALE') return 0;
+          if (status === 0 || status === 'OFF_SHELF') return 1;
+          if (status === 2 || status === 'SOLD') return 2;
+          return 3;
+        };
+        return statusOrder(a.status) - statusOrder(b.status);
+      })
+    : [];
+
   return (
     <div className="my-items-container">
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
@@ -179,7 +180,7 @@ const MyItems = () => {
       
       <Table 
         columns={columns} 
-        dataSource={myItems.map(item => ({ ...item, key: item.id }))} 
+        dataSource={sortedItems.map(item => ({ ...item, key: item.id }))} 
         pagination={{
           current: currentPage,
           pageSize: pageSize,
