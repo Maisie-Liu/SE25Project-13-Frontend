@@ -134,8 +134,15 @@ const Header = () => {
   
   const handleLogout = () => {
     dispatch(logout());
-    navigate('/login');
+    // 不再 navigate('/login')
   };
+  
+  // 在Header组件内部添加如下useEffect
+  useEffect(() => {
+    if (!isAuthenticated) {
+      navigate('/login');
+    }
+  }, [isAuthenticated, navigate]);
   
   // 定义菜单项数组，符合Ant Design v5的要求
   const menuItems = [

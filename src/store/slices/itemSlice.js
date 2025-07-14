@@ -4,7 +4,6 @@ import {
   fetchItemById,
   createItem,
   updateItem,
-  deleteItem,
   publishItem,
   unpublishItem,
   fetchUserItems,
@@ -113,18 +112,18 @@ const itemSlice = createSlice({
       state.error = action.payload || '更新物品失败';
     });
 
-    // 删除物品
-    builder.addCase(deleteItem.pending, (state) => {
-      state.loading = true;
-      state.error = null;
-    });
-    builder.addCase(deleteItem.fulfilled, (state) => {
-      state.loading = false;
-    });
-    builder.addCase(deleteItem.rejected, (state, action) => {
-      state.loading = false;
-      state.error = action.payload || '删除物品失败';
-    });
+    // // 删除物品
+    // builder.addCase(deleteItem.pending, (state) => {
+    //   state.loading = true;
+    //   state.error = null;
+    // });
+    // builder.addCase(deleteItem.fulfilled, (state) => {
+    //   state.loading = false;
+    // });
+    // builder.addCase(deleteItem.rejected, (state, action) => {
+    //   state.loading = false;
+    //   state.error = action.payload || '删除物品失败';
+    // });
 
     // 上架物品
     builder.addCase(publishItem.pending, (state) => {

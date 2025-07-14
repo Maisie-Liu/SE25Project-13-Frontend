@@ -49,11 +49,15 @@ instance.interceptors.response.use(
   (error) => {
     if (error.response) {
       // 服务器返回错误
-      if (error.response.status === 401) {
-        // 未授权，可能是token过期
+      if (error.response.status === 401 || error.response.status === 403) {
+        // 未授权或禁止访问，可能是token过期或未登录
         // 触发登出操作
         store.dispatch(logout());
-        console.log('Token已过期或无效，已自动登出');
+        // 清除本地token（如果有）
+        localStorage.removeItem('token');
+        // 跳转到登录页
+        window.location.href = '/login';
+        console.log('未授权或禁止访问，已自动登出并跳转登录页');
       }
       // 日志输出错误响应
       console.log('[Axios Error Response]', {
