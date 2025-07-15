@@ -140,7 +140,7 @@
   min-width: 0; /* 防止flex子项目溢出 */
 }
 
-/* 头部卡片 */
+/* 侧边栏样式优化 - 参考QQ空间风格 */
 .profile-header-card {
   border-radius: 12px;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
@@ -625,7 +625,7 @@
   position: absolute;
   top: 50%;
   left: 50%;
-  transform: translate(-50%, -50%);
+  transform: translate(-50%, -50%) rotate(-15deg);
   color: white;
   font-size: 16px;
   font-weight: bold;
@@ -633,6 +633,7 @@
   background-color: rgba(184, 151, 149, 0.8);
   padding: 4px 10px;
   border-radius: 4px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
 }
 
 .item-info {
@@ -642,13 +643,12 @@
 .item-price {
   color: #b89795; /* 莫兰迪红 */
   font-weight: bold;
-  font-size: 16px;
-  display: block;
-  margin-bottom: 8px;
+  font-size: 20px;
+  margin-bottom: 12px;
 }
 
 .item-tags {
-  margin-bottom: 8px;
+  margin-bottom: 12px;
   display: flex;
   gap: 4px;
   flex-wrap: wrap;
@@ -815,7 +815,9 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 16px;
+  padding: 16px 20px;
+  background: linear-gradient(to right, #f0f5ff, #fff);
+  border-bottom: 1px solid #f0f0f0;
 }
 
 .rater-info {
@@ -873,13 +875,14 @@
 .rating-item-link {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 16px;
   color: inherit;
+  text-decoration: none;
 }
 
 .rating-item-image {
-  width: 60px;
-  height: 60px;
+  width: 80px;
+  height: 80px;
   object-fit: cover;
   border-radius: 8px;
   transition: all 0.3s;
@@ -890,9 +893,66 @@
 }
 
 .rating-item-details {
+  flex: 1;
+  min-width: 0;
+}
+
+/* 评价统计卡片样式 - QQ空间风格 */
+.rating-stats-card {
+  margin-bottom: 24px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #f0f5ff 0%, #fff 100%);
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
+  border: none;
+  overflow: hidden;
+}
+
+.rating-stats-card .ant-card-body {
+  padding: 0;
+}
+
+.stats-header {
+  background: linear-gradient(to right, #1890ff, #722ed1);
+  color: white;
+  padding: 16px 24px;
+  font-size: 18px;
+  font-weight: bold;
+}
+
+.stats-content {
   display: flex;
-  flex-direction: column;
-  gap: 4px;
+  justify-content: space-around;
+  padding: 24px;
+}
+
+.stats-item {
+  text-align: center;
+  padding: 0 16px;
+}
+
+.stats-item-value {
+  font-size: 28px;
+  font-weight: bold;
+  color: #1890ff;
+  margin-bottom: 8px;
+}
+
+.stats-item-title {
+  color: #8c8c8c;
+  font-size: 14px;
+}
+
+.stars-container {
+  margin-top: 8px;
+  font-size: 20px;
+  color: #faad14;
+}
+
+.rating-type-tabs {
+  background: #fff;
+  padding: 16px;
+  border-radius: 12px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
 }
 
 .rating-footer {
@@ -1026,7 +1086,8 @@
   
   .rating-item-link {
     flex-direction: column;
-    align-items: flex-start;
+    align-items: center;
+    gap: 16px;
   }
   
   .rating-item-image {

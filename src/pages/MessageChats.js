@@ -42,6 +42,7 @@ import {
   markAllMessagesByTypeAsRead,
   fetchUnreadMessagesByTypeCount
 } from '../store/actions/messageActions';
+import { sendChatMessage, fetchTotalUnreadCount } from '../store/actions/chatActions';
 
 const { Title, Text, Paragraph } = Typography;
 const { Search } = Input;
@@ -96,13 +97,11 @@ const MessageChats = () => {
           const groups = {};
           messages.forEach(msg => {
             if (!groups[msg.chatId]) {
-              // 确定对方用户
-              const otherUser = Number(msg.sender?.id) !== Number(currentUserId) ? msg.sender : null;
-              
+              // 创建新的聊天分组
               groups[msg.chatId] = {
                 chatId: msg.chatId,
                 messages: [],
-                otherUser: otherUser,
+                otherUser: null,  // 先设为null，稍后确定
                 itemId: msg.itemId,
                 itemName: msg.itemName,
                 itemImage: msg.itemImage,
@@ -125,9 +124,18 @@ const MessageChats = () => {
               groups[msg.chatId].lastMessage = msg.content;
               groups[msg.chatId].lastMessageTime = msg.createdAt;
             }
+            
+            // 如果是对方发送的消息，更新otherUser
+            if (Number(msg.sender?.id) !== Number(currentUserId) && msg.sender) {
+              groups[msg.chatId].otherUser = msg.sender;
+            }
+            // 如果是自己发送的消息，更新otherUser为接收者
+            else if (msg.recipient && Number(msg.recipient.id) !== Number(currentUserId)) {
+              groups[msg.chatId].otherUser = msg.recipient;
+            }
           });
           
-          // 按最后消息时间排序
+          // 对消息进行排序，并确保每个分组都有otherUser
           Object.values(groups).forEach(group => {
             group.messages.sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
           });
@@ -391,12 +399,79 @@ const MessageChats = () => {
   };
   
   // 发送消息
-  const sendMessage = () => {
+  const sendMessage = async () => {
     if (!newMessage.trim() || !selectedChatId) return;
     
-    // 这里应该调用发送消息的API
-    console.log('发送消息:', newMessage, '到聊天:', selectedChatId);
-    setNewMessage('');
+    try {
+      await dispatch(sendChatMessage({ 
+        chatId: parseInt(selectedChatId), 
+        content: newMessage.trim() 
+      })).unwrap();
+      
+      console.log('发送消息成功:', newMessage, '到聊天:', selectedChatId);
+      setNewMessage('');
+      
+      // 重新获取未读消息数量
+      await dispatch(fetchTotalUnreadCount());
+      await dispatch(fetchUnreadMessagesByTypeCount('CHAT'));
+      
+      // 重新加载聊天消息
+      const result = await dispatch(fetchAllUserChatMessages(pagination.current - 1, pagination.pageSize));
+      const response = result.payload || result;
+      if (response && response.code === 200 && response.data) {
+        // 更新聊天消息
+        const messages = response.data.list || [];
+        setChatMessages(messages);
+        
+        // 更新分组
+        const groups = {};
+        messages.forEach(msg => {
+          if (!groups[msg.chatId]) {
+            // 创建新的聊天分组
+            groups[msg.chatId] = {
+              chatId: msg.chatId,
+              messages: [],
+              otherUser: null,  // 先设为null，稍后确定
+              itemId: msg.itemId,
+              itemName: msg.itemName,
+              itemImage: msg.itemImage,
+              unreadCount: 0,
+              lastMessage: null,
+              lastMessageTime: null
+            };
+          }
+          
+          groups[msg.chatId].messages.push(msg);
+          
+          if (!msg.read && Number(msg.sender?.id) !== Number(currentUserId)) {
+            groups[msg.chatId].unreadCount += 1;
+          }
+          
+          if (!groups[msg.chatId].lastMessageTime || new Date(msg.createdAt) > new Date(groups[msg.chatId].lastMessageTime)) {
+            groups[msg.chatId].lastMessage = msg.content;
+            groups[msg.chatId].lastMessageTime = msg.createdAt;
+          }
+          
+          // 如果是对方发送的消息，更新otherUser
+          if (Number(msg.sender?.id) !== Number(currentUserId) && msg.sender) {
+            groups[msg.chatId].otherUser = msg.sender;
+          }
+          // 如果是自己发送的消息，更新otherUser为接收者
+          else if (msg.recipient && Number(msg.recipient.id) !== Number(currentUserId)) {
+            groups[msg.chatId].otherUser = msg.recipient;
+          }
+        });
+        
+        Object.values(groups).forEach(group => {
+          group.messages.sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
+        });
+        
+        setChatGroups(groups);
+      }
+    } catch (error) {
+      console.error('发送消息失败:', error);
+      message.error('发送消息失败');
+    }
   };
   
   // 查看物品详情
@@ -615,30 +690,36 @@ const MessageChats = () => {
                 )}
               </div>
               
-              {/* 聊天输入区域 */}
-              <div style={{ backgroundColor: '#fff', borderTop: '1px solid #e8e8e8', padding: '12px 20px' }}>
+              {/* 聊天输入框 */}
+              <div style={{ padding: '10px 20px', display: 'flex', flexDirection: 'column', borderTop: '1px solid #eee' }}>
                 <div style={{ display: 'flex', marginBottom: '10px' }}>
-                  <Button type="text" icon={<SmileOutlined />} />
-                  <Button type="text" icon={<PictureOutlined />} />
+                  <Button icon={<PictureOutlined />} style={{ marginRight: '8px' }} />
+                  <Button icon={<SmileOutlined />} />
                 </div>
-                <TextArea
-                  placeholder="输入消息..."
-                  autoSize={{ minRows: 2, maxRows: 4 }}
-                  value={newMessage}
-                  onChange={e => setNewMessage(e.target.value)}
-                  style={{ marginBottom: '10px', borderRadius: '18px', resize: 'none' }}
-                />
-                <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+                <div style={{ display: 'flex', alignItems: 'flex-end' }}>
+                  <TextArea 
+                    placeholder="输入消息..." 
+                    autoSize={{ minRows: 2, maxRows: 4 }}
+                    value={newMessage}
+                    onChange={(e) => setNewMessage(e.target.value)}
+                    onPressEnter={(e) => {
+                      if (!e.shiftKey) {
+                        e.preventDefault();
+                        sendMessage();
+                      }
+                    }}
+                    style={{ flex: 1, marginRight: '12px' }}
+                  />
                   <Button 
                     type="primary" 
                     icon={<SendOutlined />} 
                     onClick={sendMessage}
-                    style={{ borderRadius: '18px' }}
                   >
                     发送
                   </Button>
                 </div>
               </div>
+              
             </>
           ) : (
             <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%', backgroundColor: '#fff' }}>

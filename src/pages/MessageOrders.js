@@ -76,7 +76,12 @@ const MessageOrders = () => {
         // 处理嵌套的响应格式
         if (response && response.code === 200 && response.data) {
           console.log('订单消息内容:', response.data);
-          setOrderMessages(response.data.list || []);
+          const messages = response.data.list || [];
+          setOrderMessages(messages);
+          
+          // 调试：输出所有订单状态值
+          console.log('所有订单状态值:', messages.map(msg => msg.status));
+          
           setPagination({
             ...pagination,
             total: response.data.total || 0
@@ -156,13 +161,15 @@ const MessageOrders = () => {
     
     // 按状态筛选
     if (filter === 'created') {
-      filtered = filtered.filter(msg => msg.status === 'created');
+      filtered = filtered.filter(msg => msg.status && msg.status.toLowerCase() === 'created');
     } else if (filter === 'paid') {
-      filtered = filtered.filter(msg => msg.status === 'confirmed');
+      filtered = filtered.filter(msg => 
+        msg.status && (msg.status.toLowerCase() === 'paid' || msg.status.toLowerCase() === 'confirmed')
+      );
     } else if (filter === 'shipping') {
-      filtered = filtered.filter(msg => msg.status === 'shipping');
+      filtered = filtered.filter(msg => msg.status && msg.status.toLowerCase() === 'shipping');
     } else if (filter === 'completed') {
-      filtered = filtered.filter(msg => msg.status === 'completed');
+      filtered = filtered.filter(msg => msg.status && msg.status.toLowerCase() === 'completed');
     }
     
     // 按关键词搜索
@@ -185,9 +192,11 @@ const MessageOrders = () => {
   
   // 获取状态图标
   const getStatusIcon = (status) => {
-    switch (status) {
+    const statusLower = status ? status.toLowerCase() : '';
+    switch (statusLower) {
       case 'created':
         return <ClockCircleOutlined style={{ color: '#1890ff' }} />;
+      case 'paid':
       case 'confirmed':
         return <DollarCircleOutlined style={{ color: '#52c41a' }} />;
       case 'shipping':
@@ -200,9 +209,11 @@ const MessageOrders = () => {
   };
   
   const getStatusColor = (status) => {
-    switch (status) {
+    const statusLower = status ? status.toLowerCase() : '';
+    switch (statusLower) {
       case 'created':
         return '#1890ff';
+      case 'paid':
       case 'confirmed':
         return '#52c41a';
       case 'shipping':
@@ -215,9 +226,11 @@ const MessageOrders = () => {
   };
   
   const getStatusText = (status) => {
-    switch (status) {
+    const statusLower = status ? status.toLowerCase() : '';
+    switch (statusLower) {
       case 'created':
         return '已创建';
+      case 'paid':
       case 'confirmed':
         return '已支付';
       case 'shipping':
@@ -225,14 +238,16 @@ const MessageOrders = () => {
       case 'completed':
         return '已完成';
       default:
-        return '未知状态';
+        return status || '未知状态';
     }
   };
   
   const getStatusDescription = (status) => {
-    switch (status) {
+    const statusLower = status ? status.toLowerCase() : '';
+    switch (statusLower) {
       case 'created':
         return '订单已创建，等待支付';
+      case 'paid':
       case 'confirmed':
         return '买家已支付，请准备发货';
       case 'shipping':
@@ -240,14 +255,16 @@ const MessageOrders = () => {
       case 'completed':
         return '交易已完成';
       default:
-        return '订单状态未知';
+        return '订单状态更新';
     }
   };
   
   const getStepNumber = (status) => {
-    switch (status) {
+    const statusLower = status ? status.toLowerCase() : '';
+    switch (statusLower) {
       case 'created':
         return 0;
+      case 'paid':
       case 'confirmed':
         return 1;
       case 'shipping':
@@ -437,7 +454,7 @@ const MessageOrders = () => {
                       
                       <div className="order-message-steps">
                         <Steps 
-                          current={item.step !== undefined ? item.step : getStepNumber(item.status)}
+                          current={getStepNumber(item.status)}
                           size="small"
                           labelPlacement="vertical"
                         >
