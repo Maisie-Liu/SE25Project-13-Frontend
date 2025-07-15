@@ -16,7 +16,9 @@ import {
   Alert,
   Badge,
   Image,
-  Tooltip
+  Tooltip,
+  Statistic,
+  List
 } from 'antd';
 import { 
   UserOutlined, 
@@ -37,7 +39,8 @@ import {
   TeamOutlined,
   EyeOutlined,
   ArrowRightOutlined,
-  ArrowLeftOutlined
+  ArrowLeftOutlined,
+  LikeOutlined
 } from '@ant-design/icons';
 import axios from 'axios';
 import './UserPublicProfile.css';
