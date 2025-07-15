@@ -77,21 +77,6 @@ export const updateItem = createAsyncThunk(
   }
 );
 
-// 删除物品
-export const deleteItem = createAsyncThunk(
-  'item/deleteItem',
-  async (id, { rejectWithValue }) => {
-    try {
-      const response = await axios.delete(`/items/${id}`);
-      return response.data.data;
-    } catch (error) {
-      return rejectWithValue(
-        error.response?.data?.message || '删除物品失败'
-      );
-    }
-  }
-);
-
 // 上架物品
 export const publishItem = createAsyncThunk(
   'item/publishItem',
@@ -273,21 +258,22 @@ export const updateItemStatus = createAsyncThunk(
   async ({ id, status }, { rejectWithValue }) => {
     try {
       let endpoint = '';
-      
       switch (status) {
-        case 'PUBLISHED':
+        case 'ON_SALE':
+        case 1:
           endpoint = `/items/${id}/publish`;
           break;
-        case 'UNPUBLISHED':
+        case 'OFF_SHELF':
+        case 0:
           endpoint = `/items/${id}/unpublish`;
           break;
         case 'SOLD':
+        case 2:
           endpoint = `/items/${id}/mark-sold`;
           break;
         default:
           endpoint = `/items/${id}/status`;
       }
-      
       const response = await axios.put(endpoint, { status });
       return response.data.data;
     } catch (error) {

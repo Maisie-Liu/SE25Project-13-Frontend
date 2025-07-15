@@ -40,6 +40,7 @@ const ItemDetail = () => {
   const [isFavorite, setIsFavorite] = useState(false);
   const [hasLoaded, setHasLoaded] = useState(false);
   const [favoriteLoading, setFavoriteLoading] = useState(false);
+  const [mainIndex, setMainIndex] = useState(0);
   
   // 评论相关
   const [comments, setComments] = useState([]);
@@ -320,31 +321,36 @@ const ItemDetail = () => {
             <Image.PreviewGroup>
                 <div className="main-image-wrapper">
                   {images && images.length > 0 ? (
-                <img
-                      src={images[0]}
-                  alt={item.name}
+                    <img
+                      src={images[mainIndex]}
+                      alt={item.name}
                       className="main-item-image"
                 />
                   ) : (
-                    <div style={{width: '100%', height: '100%', background: '#f5f5f5'}} />
+                    <div style={{width: '100%', height: '100%', background: '#f5f5f5', position: 'absolute', top: 0, left: 0}} />
                   )}
-              </div>
-                {/* 只有多于1张图片时才显示缩略图 */}
-                {images && images.length > 1 && (
-                  <div className="thumbnail-list">
-                    {images.slice(1).map((img, index) => (
-                      <div key={index} className="thumbnail-container">
-                        <img
-                    src={img}
-                    alt={`${item.name}-${index+1}`}
-                          className="thumbnail-image"
-                  />
-                      </div>
+                </div>
+              </Image.PreviewGroup>
+            </div>
+            
+            {/* 缩略图 - 移到外部，不影响主图容器比例 */}
+            {images && images.length > 1 && (
+              <div className="thumbnail-list" style={{marginTop: '20px'}}>
+                {images.map((img, index) => (
+                  <div
+                    key={index}
+                    className={`thumbnail-container${mainIndex === index ? ' active' : ''}`}
+                    onClick={() => setMainIndex(index)}
+                  >
+                    <img
+                      src={img}
+                      alt={`${item.name}-${index+1}`}
+                      className={`thumbnail-image${mainIndex === index ? ' selected' : ''}`}
+                    />
+                  </div>
                 ))}
               </div>
-                )}
-            </Image.PreviewGroup>
-            </div>
+            )}
           </Col>
           
           {/* 物品信息 */}

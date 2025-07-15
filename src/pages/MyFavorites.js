@@ -163,11 +163,10 @@ const MyFavorites = () => {
                   <div 
                     className="item-image-container" 
                     style={{ 
-                      height: '200px', 
+                      position: 'relative',
+                      width: '100%',
+                      paddingTop: '100%', /* 保持1:1比例 */
                       overflow: 'hidden',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
                       background: '#f0f0f0'
                     }}
                   >
@@ -175,10 +174,28 @@ const MyFavorites = () => {
                       <img 
                         alt={item.name} 
                         src={item.images[0]} 
-                        style={{ width: '100%', height: '100%', objectFit: 'cover' }} 
+                        style={{ 
+                          position: 'absolute',
+                          top: 0,
+                          left: 0,
+                          width: '100%',
+                          height: '100%',
+                          objectFit: 'cover'
+                        }} 
                       />
                     ) : (
-                      <div style={{ color: '#999', fontSize: '14px' }}>暂无图片</div>
+                      <div style={{ 
+                        position: 'absolute',
+                        top: 0,
+                        left: 0,
+                        width: '100%',
+                        height: '100%',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        color: '#999',
+                        fontSize: '14px'
+                      }}>暂无图片</div>
                     )}
                   </div>
                 }

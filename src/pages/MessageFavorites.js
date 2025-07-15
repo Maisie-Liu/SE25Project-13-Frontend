@@ -201,7 +201,7 @@ const MessageFavorites = () => {
                 >
                   <div className="favorite-message-header">
                     <div className="favorite-message-user">
-                      <Avatar src={item.sender?.avatarImageId} icon={<UserOutlined />} />
+                      <Avatar src={item.sender?.avatarUrl} icon={<UserOutlined />} />
                       <div className="favorite-message-user-info">
                         <Text strong>{item.sender?.nickname || item.sender?.username || '未知用户'}</Text>
                         <Text type="secondary" className="favorite-time">{formatTime(item.createdAt)}</Text>

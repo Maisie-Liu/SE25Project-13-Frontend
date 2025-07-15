@@ -10,9 +10,7 @@ import {
   selectUserInterestProfile,
   selectUserInterestProfileLoading
 } from '../store/slices/authSlice';
-import { fetchMyItems } from '../store/actions/itemActions';
 import { fetchUserOrders } from '../store/actions/orderActions';
-import { selectItems } from '../store/slices/itemSlice';
 import { selectOrders } from '../store/slices/orderSlice';
 import { Link } from 'react-router-dom';
 import './UserProfile.css';
@@ -25,7 +23,6 @@ const UserProfile = () => {
   const dispatch = useDispatch();
   const user = useSelector(selectUser);
   const loading = useSelector(selectAuthLoading);
-  const myItems = useSelector(selectItems);
   const myOrders = useSelector(selectOrders);
   const allowPersonalizedRecommend = useSelector(selectPersonalizedRecommend);
   const userInterestProfile = useSelector(selectUserInterestProfile);
@@ -38,7 +35,6 @@ const UserProfile = () => {
 
   useEffect(() => {
     dispatch(fetchCurrentUser());
-    dispatch(fetchMyItems());
     dispatch(fetchUserOrders({}));
   }, [dispatch]);
 
@@ -356,8 +352,25 @@ const UserProfile = () => {
           <Row gutter={[24, 24]} className="profile-content">
               <Col span={24}>
                 <Card className="comments-card">
-                  <Tabs defaultActiveKey="buyer" className="comments-tabs">
-                    <TabPane tab="作为买家收到的评价" key="buyer">
+                  <div className="comments-header">
+                    <Title level={4}>我的评价记录</Title>
+                    <div className="comments-stats">
+                      <Tag color="#7d989b">总评价: {buyerComments.length + sellerComments.length}</Tag>
+                      <Tag color="#a69b8a">买家评价: {sellerComments.length}</Tag>
+                      <Tag color="#b89795">卖家评价: {buyerComments.length}</Tag>
+                    </div>
+                  </div>
+                  
+                  <Tabs defaultActiveKey="buyer" className="comments-tabs" tabBarStyle={{ marginBottom: 24 }}>
+                    <TabPane 
+                      tab={
+                        <span className="tab-with-tag">
+                          <span className="tab-tag tab-tag-buyer"></span>
+                          作为买家收到的评价
+                        </span>
+                      } 
+                      key="buyer"
+                    >
                       {buyerComments && buyerComments.length > 0 ? (
                         <List
                           className="comments-list"
@@ -370,14 +383,19 @@ const UserProfile = () => {
                                   <span className="user-name">{order.sellerName || '匿名卖家'}</span>
                                 </div>
                                 <div className="comment-order">
-                                  <span className="order-number">订单号：{order.orderNo}</span>
+                                  <div className="order-info">
+                                    <span className="order-label">订单号</span>
+                                    <span className="order-number">{order.orderNo}</span>
+                                  </div>
                                   <span className="comment-time">
                                     {order.updateTime ? new Date(order.updateTime).toLocaleString() : ''}
                                   </span>
                                 </div>
                               </div>
                               <div className="comment-content">
-                                <Tag color="blue">卖家评价</Tag>
+                                <div className="comment-rating">
+                                  <Tag color="#7d989b" className="rating-tag">卖家评价</Tag>
+                                </div>
                                 <Paragraph className="comment-text">{order.buyerComment}</Paragraph>
                               </div>
                               <div className="comment-item-info">
@@ -391,11 +409,20 @@ const UserProfile = () => {
                         <div className="empty-comments">
                           <img src="/empty-comment.png" alt="暂无评价" className="empty-image" />
                           <p>暂无卖家对您的评价</p>
+                          <Button type="primary" className="empty-action-btn">去购买商品</Button>
                         </div>
                       )}
                     </TabPane>
                     
-                    <TabPane tab="作为卖家收到的评价" key="seller">
+                    <TabPane 
+                      tab={
+                        <span className="tab-with-tag">
+                          <span className="tab-tag tab-tag-seller"></span>
+                          作为卖家收到的评价
+                        </span>
+                      } 
+                      key="seller"
+                    >
                       {sellerComments && sellerComments.length > 0 ? (
                         <List
                           className="comments-list"
@@ -408,14 +435,19 @@ const UserProfile = () => {
                                   <span className="user-name">{order.buyerName || '匿名买家'}</span>
                                 </div>
                                 <div className="comment-order">
-                                  <span className="order-number">订单号：{order.orderNo}</span>
+                                  <div className="order-info">
+                                    <span className="order-label">订单号</span>
+                                    <span className="order-number">{order.orderNo}</span>
+                                  </div>
                                   <span className="comment-time">
                                     {order.updateTime ? new Date(order.updateTime).toLocaleString() : ''}
                                   </span>
                                 </div>
                               </div>
                               <div className="comment-content">
-                                <Tag color="orange">买家评价</Tag>
+                                <div className="comment-rating">
+                                  <Tag color="#a69b8a" className="rating-tag">买家评价</Tag>
+                                </div>
                                 <Paragraph className="comment-text">{order.sellerComment}</Paragraph>
                               </div>
                               <div className="comment-item-info">
@@ -429,6 +461,7 @@ const UserProfile = () => {
                         <div className="empty-comments">
                           <img src="/empty-comment.png" alt="暂无评价" className="empty-image" />
                           <p>暂无买家对您的评价</p>
+                          <Button type="primary" className="empty-action-btn">去发布物品</Button>
                         </div>
                       )}
                     </TabPane>
