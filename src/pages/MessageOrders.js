@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { 
   Typography, 
   Button, 
@@ -51,6 +51,8 @@ const { Step } = Steps;
 const MessageOrders = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
+  // 获取当前登录用户id
+  const currentUserId = useSelector(state => state.auth.user?.id);
   const [loading, setLoading] = useState(true);
   const [orderMessages, setOrderMessages] = useState([]);
   const [filter, setFilter] = useState('all');
@@ -77,10 +79,15 @@ const MessageOrders = () => {
         if (response && response.code === 200 && response.data) {
           console.log('订单消息内容:', response.data);
           const messages = response.data.list || [];
-          setOrderMessages(messages);
+          
+          // 对订单消息进行去重，每个订单只保留最新状态的消息
+          const uniqueMessages = getUniqueOrderMessages(messages, currentUserId);
+          console.log('去重后的订单消息:', uniqueMessages);
+          
+          setOrderMessages(uniqueMessages);
           
           // 调试：输出所有订单状态值
-          console.log('所有订单状态值:', messages.map(msg => msg.status));
+          console.log('所有订单状态值:', uniqueMessages.map(msg => msg.status));
           
           setPagination({
             ...pagination,
@@ -107,7 +114,26 @@ const MessageOrders = () => {
     };
     
     loadOrderMessages();
-  }, [dispatch, pagination.current, pagination.pageSize]);
+  }, [dispatch, pagination.current, pagination.pageSize, currentUserId]);
+  
+  // 对订单消息进行去重，每个订单只保留最新状态的消息
+  const getUniqueOrderMessages = (messages, userId) => {    
+    // 创建一个Map，按订单ID分组
+    const orderMap = new Map();
+    
+    // 遍历所有消息
+    messages.forEach(message => {
+      const orderId = message.orderId;
+      
+      // 不再过滤接收者，而是纯粹基于时间获取每个订单的最新消息
+      if (!orderMap.has(orderId) || new Date(message.createdAt) > new Date(orderMap.get(orderId).createdAt)) {
+        orderMap.set(orderId, message);
+      }
+    });
+    
+    // 从Map中获取所有值（已去重的消息）
+    return Array.from(orderMap.values());
+  };
   
   // 标记为已读
   const markAsRead = async (messageId) => {
