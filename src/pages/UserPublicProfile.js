@@ -19,9 +19,7 @@ import {
   Alert,
   Badge,
   Image,
-  Tooltip,
-  Statistic,
-  List
+  Tooltip
 } from 'antd';
 import { 
   UserOutlined, 

@@ -22,8 +22,6 @@ const OrderDetail = () => {
   const [commentContent, setCommentContent] = useState('');
   const [commentSubmitting, setCommentSubmitting] = useState(false);
   const [rating, setRating] = useState(5);
-  const [deliverModalVisible, setDeliverModalVisible] = useState(false);
-  const [trackingNumber, setTrackingNumber] = useState('');
 
   const isBuyer = user && order && String(user.id) === String(order.buyerId);
   const isSeller = user && order && String(user.id) === String(order.sellerId);
@@ -92,26 +90,6 @@ const OrderDetail = () => {
     }
   };
 
-  const handleDeliverOrder = async () => {
-    setDeliverModalVisible(true);
-  };
-
-  const handleSubmitDeliver = async () => {
-    if (!trackingNumber.trim()) {
-      message.warning('请输入快递单号');
-      return;
-    }
-    try {
-      await dispatch(deliverOrder({ orderId: id, trackingNumber })).unwrap();
-      message.success('发货成功');
-      setDeliverModalVisible(false);
-      setTrackingNumber('');
-      dispatch(fetchOrderById(id));
-    } catch (e) {
-      message.error('发货失败');
-    }
-  };
-
   const handleConfirmReceive = async () => {
     try {
       await dispatch(confirmReceive(id)).unwrap();
@@ -170,9 +148,6 @@ const OrderDetail = () => {
           <Button type="primary" onClick={handleConfirmOrder} style={{marginRight: 8}}>确认订单</Button>
           <Button danger onClick={handleRejectOrder}>拒绝预定</Button>
         </>;
-      }
-      if (status === 1) {
-        return <Button type="primary" onClick={handleDeliverOrder}>发货</Button>;
       }
       if (order.status === 3 && !order.buyerComment && isSeller) {
         return <Button type="primary" onClick={handleOpenComment}>评价买家</Button>;
@@ -368,23 +343,6 @@ const OrderDetail = () => {
           placeholder="请输入评价内容"
         />
       </Modal>
-
-      {isSeller && (
-        <Modal
-          title="填写快递单号"
-          open={deliverModalVisible}
-          onOk={handleSubmitDeliver}
-          onCancel={() => setDeliverModalVisible(false)}
-          okText="提交"
-          cancelText="取消"
-        >
-          <Input
-            value={trackingNumber}
-            onChange={e => setTrackingNumber(e.target.value)}
-            placeholder="请输入快递单号"
-          />
-        </Modal>
-      )}
     </div>
   );
 };
