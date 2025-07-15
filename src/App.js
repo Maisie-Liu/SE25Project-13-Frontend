@@ -36,6 +36,7 @@ import About from './pages/About';
 import UserPublicProfile from './pages/UserPublicProfile';
 import RequestPublish from './pages/RequestPublish';
 import RequestForum from './pages/RequestForum';
+import RequestDetail from './pages/RequestDetail';
 import './App.css';
 
 const { Content } = Layout;
@@ -164,6 +165,14 @@ const App = () => {
               } 
             />
             <Route 
+              path="/chat" 
+              element={
+                <PrivateRoute>
+                  <Chat />
+                </PrivateRoute>
+              } 
+            />
+            <Route 
               path="/comments/reply/:commentId" 
               element={
                 <PrivateRoute>
@@ -218,8 +227,17 @@ const App = () => {
             <Route path="/about" element={<About />} />
             <Route path="/users/:userId" element={<UserPublicProfile />} />
             <Route path="/requests" element={<RequestForum />} />
+            <Route path="/request/:id" element={<RequestDetail />} />
             <Route 
               path="/publish-request" 
+              element={
+                <PrivateRoute>
+                  <RequestPublish />
+                </PrivateRoute>
+              } 
+            />
+            <Route 
+              path="/publish-request/:id" 
               element={
                 <PrivateRoute>
                   <RequestPublish />

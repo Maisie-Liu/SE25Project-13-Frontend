@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { 
   Card, 
@@ -31,7 +31,8 @@ import {
   sendChatMessage, 
   markChatMessagesAsRead,
   fetchUserChats,
-  fetchTotalUnreadCount
+  fetchTotalUnreadCount,
+  createChat
 } from '../store/actions/chatActions';
 import { 
   selectChatMessages, 
@@ -62,6 +63,11 @@ const Chat = () => {
   const [loadingChats, setLoadingChats] = useState(true);
   const messagesEndRef = useRef(null);
   
+  const location = useLocation();
+  const params = new URLSearchParams(location.search);
+  const userId = params.get('userId');
+  const itemId = params.get('itemId');
+  
   // 获取所有聊天会话
   useEffect(() => {
     const fetchChats = async () => {
@@ -85,7 +91,6 @@ const Chat = () => {
   useEffect(() => {
     const fetchChatData = async () => {
       if (!chatId) return;
-      
       try {
         // 获取聊天消息
         const messagesData = await dispatch(fetchChatMessages({ chatId: parseInt(chatId) })).unwrap();
@@ -127,17 +132,46 @@ const Chat = () => {
             itemPrice: firstMessage.itemPrice,
             otherUser: otherUser
           });
+        } else {
+          // 没有消息时，从 chats 列表中查找当前会话
+          const chat = chats.find(c => String(c.id) === String(chatId));
+          if (chat) {
+            setChatInfo({
+              chatId: chat.id,
+              itemId: chat.itemId,
+              itemName: chat.itemName,
+              itemImage: chat.itemImage,
+              itemPrice: chat.itemPrice,
+              otherUser: chat.otherUser,
+            });
+          }
         }
       } catch (error) {
         console.error('获取聊天数据失败:', error);
         message.error('获取聊天数据失败');
       }
     };
-    
     if (chatId && currentUser) {
       fetchChatData();
     }
-  }, [chatId, currentUser, dispatch]);
+  }, [chatId, currentUser, dispatch, chats]);
+
+  useEffect(() => {
+    if (userId && itemId && currentUser) {
+      dispatch(createChat({ otherUserId: userId, itemId }))
+        .unwrap()
+        .then(chat => {
+          if (chat && chat.id) {
+            navigate(`/chat/${chat.id}`);
+          } else {
+            message.error('会话创建失败，未返回chatId');
+          }
+        })
+        .catch(err => {
+          message.error('发起私聊失败: ' + err);
+        });
+    }
+  }, [userId, itemId, currentUser, dispatch, navigate]);
   
   // 滚动到最新消息
   useEffect(() => {
@@ -214,8 +248,7 @@ const Chat = () => {
         dataSource={chats}
         renderItem={(chat) => {
           const isActive = chat.id === parseInt(chatId);
-          const otherUser = chat.participants?.find(p => p.id !== currentUser?.id) || {};
-          
+          const otherUser = chat.otherUser || {};
           return (
             <List.Item 
               className={`chat-list-item ${isActive ? 'active' : ''}`}
@@ -224,7 +257,7 @@ const Chat = () => {
               <List.Item.Meta
                 avatar={
                   <Badge dot={chat.unreadCount > 0}>
-                    <Avatar src={otherUser.avatarUrl} icon={<UserOutlined />} />
+                    <Avatar src={otherUser.avatarUrl || otherUser.avatarImageId} icon={<UserOutlined />} />
                   </Badge>
                 }
                 title={<span>{otherUser.username || '未知用户'}</span>}
@@ -284,9 +317,13 @@ const Chat = () => {
     return (
       <>
         <Card className="chat-header-card">
-          <Avatar src={chatInfo.otherUser?.avatarImageId} size="large" />
+          <Avatar src={chatInfo?.otherUser?.avatarUrl || chatInfo?.otherUser?.avatarImageId} size="large" />
           <div className="chat-user-info">
-            <Title level={4} style={{ margin: 0 }}>{chatInfo.otherUser?.username}</Title>
+            <Title level={4} style={{ margin: 0 }}>
+              {chatInfo?.otherUser?.username && String(chatInfo.otherUser.username).trim() !== ''
+                ? chatInfo.otherUser.username
+                : '未知用户'}
+            </Title>
           </div>
         </Card>
         

@@ -27,12 +27,21 @@ const orderSlice = createSlice({
       state.error = null;
     },
     setOrders: (state, action) => {
-      state.orders = action.payload.orders;
-      state.pagination = {
-        ...state.pagination,
-        total: action.payload.total || action.payload.orders.length,
-        current: action.payload.current || state.pagination.current
-      };
+      if (Array.isArray(action.payload)) {
+        state.orders = action.payload;
+        state.pagination = {
+          ...state.pagination,
+          total: action.payload.length,
+          current: 1
+        };
+      } else {
+        state.orders = action.payload.orders;
+        state.pagination = {
+          ...state.pagination,
+          total: action.payload.total || (action.payload.orders ? action.payload.orders.length : 0),
+          current: action.payload.current || state.pagination.current
+        };
+      }
       state.loading = false;
     },
     setCurrentOrder: (state, action) => {

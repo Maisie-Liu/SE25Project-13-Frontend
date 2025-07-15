@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { 
@@ -51,6 +51,9 @@ const ItemDetail = () => {
   const [replyContent, setReplyContent] = useState('');
   const [replyingUserId, setReplyingUserId] = useState(null);
   const [replyingUsername, setReplyingUsername] = useState('');
+  
+  // 浏览量
+  // const [viewCount, setViewCount] = useState(0); // 移除本地 viewCount 状态
   
   // 获取物品详情
   useEffect(() => {
@@ -131,7 +134,7 @@ const ItemDetail = () => {
     try {
       const orderData = {
         itemId: id,
-        tradeType: values.tradeType,
+        tradeType: 1, // 只允许线下交易
         tradeLocation: values.tradeLocation,
         buyerMessage: values.buyerMessage
       };
@@ -273,6 +276,21 @@ const ItemDetail = () => {
     }
   };
   
+  // 在 ItemDetail 组件内添加私聊跳转逻辑
+  const handleGoToChat = () => {
+    if (!isAuthenticated) {
+      message.warning('请先登录');
+      navigate('/login');
+      return;
+    }
+    if (item.userId === user?.id) {
+      message.info('不能和自己私聊');
+      return;
+    }
+    // 假设 chat 页面支持 /chat?userId=xxx 或 /chat/xxx
+    navigate(`/chat?userId=${item.userId}&itemId=${item.id}`);
+  };
+  
   if (loading) {
     return (
       <div style={{ textAlign: 'center', padding: '50px 0' }}>
@@ -300,14 +318,14 @@ const ItemDetail = () => {
           {/* 物品图片 */}
           <Col xs={24} sm={24} md={12} lg={10}>
             <div className="item-image-container">
-              <Image.PreviewGroup>
+            <Image.PreviewGroup>
                 <div className="main-image-wrapper">
                   {images && images.length > 0 ? (
                     <img
                       src={images[mainIndex]}
                       alt={item.name}
                       className="main-item-image"
-                    />
+                />
                   ) : (
                     <div style={{width: '100%', height: '100%', background: '#f5f5f5', position: 'absolute', top: 0, left: 0}} />
                   )}
@@ -339,17 +357,17 @@ const ItemDetail = () => {
           <Col xs={24} sm={24} md={12} lg={14}>
             <div className="item-info-container">
               <div className="item-header">
-                <Title level={2}>{item.name}</Title>
+            <Title level={2}>{item.name}</Title>
                 <div className="item-status-tag">
-                  {item.status === 1 ? (
-                    <Tag color="green">可预订</Tag>
-                  ) : item.status === 2 ? (
-                    <Tag color="orange">已预订</Tag>
-                  ) : item.status === 3 ? (
-                    <Tag color="red">已售出</Tag>
-                  ) : (
-                    <Tag color="default">未上架</Tag>
-                  )}
+                {item.status === 1 ? (
+                  <Tag color="green">可预订</Tag>
+                ) : item.status === 2 ? (
+                  <Tag color="orange">已预订</Tag>
+                ) : item.status === 3 ? (
+                  <Tag color="red">已售出</Tag>
+                ) : (
+                  <Tag color="default">未上架</Tag>
+                )}
                 </div>
               </div>
               
@@ -439,28 +457,28 @@ const ItemDetail = () => {
                 >
                   {isFavorite ? '已收藏' : '收藏'}
                 </Button>
-              </div>
+            </div>
               
               {/* 评论区 - 上移 */}
               <div className="comments-section">
                 <div className="comments-header">
                   <CommentOutlined /> 评论区
-                </div>
-                <CommentForm
-                  value={commentContent}
-                  onChange={setCommentContent}
-                  onSubmit={handleSubmitComment}
-                  submitting={submitting && !replyingId}
-                />
-                <CommentList
-                  comments={comments}
-                  onReply={handleReply}
-                  submitting={submitting && !!replyingId}
-                  replyContent={replyContent}
-                  onChangeReply={setReplyContent}
-                  onSubmitReply={handleSubmitReply}
-                  replyingId={replyingId}
-                />
+            </div>
+            <CommentForm
+              value={commentContent}
+              onChange={setCommentContent}
+              onSubmit={handleSubmitComment}
+              submitting={submitting && !replyingId}
+            />
+            <CommentList
+              comments={comments}
+              onReply={handleReply}
+              submitting={submitting && !!replyingId}
+              replyContent={replyContent}
+              onChangeReply={setReplyContent}
+              onSubmitReply={handleSubmitReply}
+              replyingId={replyingId}
+            />
               </div>
             </div>
           </Col>
@@ -509,7 +527,8 @@ const ItemDetail = () => {
           }}
           className="order-form"
         >
-          <Form.Item
+          {/* 删除交易方式选择，只保留线下交易 */}
+          {/* <Form.Item
             name="tradeType"
             label={<span className="order-form-label">交易方式</span>}
             rules={[{ required: true, message: '请选择交易方式' }]}
@@ -534,8 +553,7 @@ const ItemDetail = () => {
                 </div>
               </Radio.Button>
             </Radio.Group>
-          </Form.Item>
-          
+          </Form.Item> */}
           <Form.Item
             name="tradeLocation"
             label={<span className="order-form-label">交易地点</span>}
@@ -547,7 +565,6 @@ const ItemDetail = () => {
               className="order-input"
             />
           </Form.Item>
-          
           <Form.Item
             name="buyerMessage"
             label={<span className="order-form-label">买家留言</span>}

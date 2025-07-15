@@ -12,6 +12,7 @@ import chatReducer from './slices/chatSlice';
 import userPublicProfileReducer from './slices/userPublicProfileSlice';
 import { recommendedItemsPageSlice, userProfileInterestSlice } from './slices/itemSlice';
 import { personalizedRecommendSlice, userInterestProfileSlice } from './slices/authSlice';
+import buyRequestReducer from './slices/buyRequestSlice';
 
 // 配置持久化存储
 const persistConfig = {
@@ -35,6 +36,7 @@ const rootReducer = combineReducers({
   personalizedRecommend: personalizedRecommendSlice,
   userInterestProfile: userInterestProfileSlice,
   userPublicProfile: userPublicProfileReducer,
+  buyRequest: buyRequestReducer,
 });
 
 const persistedReducer = persistReducer(persistConfig, rootReducer);

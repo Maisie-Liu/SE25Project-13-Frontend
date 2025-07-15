@@ -32,8 +32,6 @@ const OrderDetail = () => {
   const [commentContent, setCommentContent] = useState('');
   const [commentSubmitting, setCommentSubmitting] = useState(false);
   const [rating, setRating] = useState(5);
-  const [deliverModalVisible, setDeliverModalVisible] = useState(false);
-  const [trackingNumber, setTrackingNumber] = useState('');
 
   const isBuyer = user && order && user.id === (order.buyer?.id || order.buyerId);
   const isSeller = user && order && user.id === (order.seller?.id || order.sellerId);
@@ -45,6 +43,20 @@ const OrderDetail = () => {
   if (order && order.status === 3 && hasCommented) {
     displayStatus = 4;
   }
+
+  // 物品成色映射表
+  const conditionMap = {
+    0: '全新',
+    1: '9成新',
+    2: '8成新',
+    3: '7成新',
+    4: '6成新',
+    5: '5成新',
+    6: '4成新',
+    7: '3成新',
+    8: '2成新',
+    9: '1成新'
+  };
 
   useEffect(() => {
     if (id) {
@@ -85,26 +97,6 @@ const OrderDetail = () => {
       dispatch(fetchOrderById(id));
     } catch (e) {
       message.error('操作失败');
-    }
-  };
-
-  const handleDeliverOrder = async () => {
-    setDeliverModalVisible(true);
-  };
-
-  const handleSubmitDeliver = async () => {
-    if (!trackingNumber.trim()) {
-      message.warning('请输入快递单号');
-      return;
-    }
-    try {
-      await dispatch(deliverOrder({ orderId: id, trackingNumber })).unwrap();
-      message.success('发货成功');
-      setDeliverModalVisible(false);
-      setTrackingNumber('');
-      dispatch(fetchOrderById(id));
-    } catch (e) {
-      message.error('发货失败');
     }
   };
 

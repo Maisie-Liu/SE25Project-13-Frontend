@@ -50,6 +50,8 @@ import {
 } from '@ant-design/icons';
 import { fetchItems } from '../store/actions/itemActions';
 import { selectItems, selectItemLoading, selectItemPagination } from '../store/slices/itemSlice';
+import { selectCategories, selectCategoryLoading } from '../store/slices/categorySlice';
+import { fetchCategories } from '../store/actions/categoryActions';
 import queryString from 'query-string';
 import { formatPrice, DEFAULT_IMAGE } from '../utils/helpers';
 import ConditionTag from '../components/condition/ConditionTag';
@@ -78,15 +80,6 @@ const sortOptions = [
   { value: 'favorites-desc', label: '收藏最多' }
 ];
 
-// 校区选项
-const campusOptions = [
-  { value: '', label: '全部校区' },
-  { value: 'main', label: '主校区' },
-  { value: 'south', label: '南校区' },
-  { value: 'north', label: '北校区' },
-  { value: 'east', label: '东校区' }
-];
-
 // 自定义BarsOutlined组件
 const BarsOutlined = () => (
   <svg viewBox="0 0 1024 1024" width="1em" height="1em" fill="currentColor">
@@ -103,6 +96,39 @@ const ItemList = () => {
   const items = useSelector(selectItems);
   const loading = useSelector(selectItemLoading);
   const pagination = useSelector(selectItemPagination);
+  const categories = useSelector(selectCategories);
+  const categoryLoading = useSelector(selectCategoryLoading);
+
+  useEffect(() => {
+    dispatch(fetchCategories());
+  }, [dispatch]);
+
+  const categoryIcons = {
+    1: <MobileOutlined />,
+    2: <BookOutlined />,
+    3: <HomeOutlined />,
+    4: <SkinOutlined />,
+    5: <TrophyOutlined />,
+    6: <GiftOutlined />,
+    9: <BookOutlined /> // 假设小说id为9，如实际为其他请调整
+  };
+
+  // 替换 parentCategories 相关逻辑，直接平铺所有分类
+  const categoryOptions = [
+    { value: '', label: '全部分类' },
+    ...(
+      categories && categories.length > 0
+        ? categories.map(cat => ({
+            value: String(cat.id),
+            label: (
+              <span>
+                {categoryIcons[cat.id] || <AppstoreOutlined />} {cat.name}
+              </span>
+            )
+          }))
+        : []
+    )
+  ];
   
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(12);
@@ -114,7 +140,6 @@ const ItemList = () => {
   const [condition, setCondition] = useState('all');
   const [viewMode, setViewMode] = useState('grid');
   const [showFilters, setShowFilters] = useState(false);
-  const [campus, setCampus] = useState('');
   const [hasImage, setHasImage] = useState(false);
 
   // 处理搜索和筛选参数变化
@@ -129,7 +154,6 @@ const ItemList = () => {
       condition: condition !== 'all' ? condition : undefined,
       minPrice: priceRange[0] > 0 ? priceRange[0] : undefined,
       maxPrice: priceRange[1] < 5000 ? priceRange[1] : undefined,
-      campus: campus || undefined,
       hasImage: hasImage || undefined
     };
     
@@ -137,13 +161,12 @@ const ItemList = () => {
     Object.keys(params).forEach(key => params[key] === undefined && delete params[key]);
     
     dispatch(fetchItems(params));
-  }, [dispatch, currentPage, pageSize, keyword, category, sortBy, sortOrder, condition, priceRange, campus, hasImage]);
+  }, [dispatch, currentPage, pageSize, keyword, category, sortBy, sortOrder, condition, priceRange, hasImage]);
 
   // 从URL参数中获取搜索和筛选条件
   useEffect(() => {
     const keywordParam = queryParams.get('keyword');
     const categoryParam = queryParams.get('category');
-    const campusParam = queryParams.get('campus');
     
     if (keywordParam) {
       setKeyword(keywordParam);
@@ -151,10 +174,6 @@ const ItemList = () => {
     
     if (categoryParam) {
       setCategory(categoryParam);
-    }
-
-    if (campusParam) {
-      setCampus(campusParam);
     }
   }, [location.search]);
 
@@ -437,6 +456,7 @@ const ItemList = () => {
                     placeholder="选择分类"
                     style={{ width: 120 }}
                     options={categoryOptions}
+                    loading={categoryLoading}
                     styles={{
                       popup: {
                         root: {
@@ -453,23 +473,6 @@ const ItemList = () => {
                     onChange={handleSortChange}
                     style={{ width: 140 }}
                     options={sortOptions}
-                    styles={{
-                      popup: {
-                        root: {
-                          borderRadius: '8px'
-                        }
-                      }
-                    }}
-                  />
-                </Space>
-
-                <Space>
-                  <Select
-                    value={campus}
-                    onChange={(value) => setCampus(value)}
-                    placeholder="选择校区"
-                    style={{ width: 120 }}
-                    options={campusOptions}
                     styles={{
                       popup: {
                         root: {

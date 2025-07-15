@@ -122,8 +122,12 @@ const UserProfile = () => {
   };
 
   // 收集收到的评价
-  const buyerComments = myOrders.filter(o => o.buyerComment && user && o.buyer?.id === user.id);
-  const sellerComments = myOrders.filter(o => o.sellerComment && user && o.seller?.id === user.id);
+  const buyerComments = myOrders.filter(
+    o => o.buyerComment && user && Number(o.buyerId) === Number(user.id)
+  );
+  const sellerComments = myOrders.filter(
+    o => o.sellerComment && user && Number(o.sellerId) === Number(user.id)
+  );
 
   const handleSwitchChange = async (checked) => {
     try {
@@ -177,6 +181,11 @@ const UserProfile = () => {
       </div>
     );
   }
+
+  console.log('user', user);
+  console.log('myOrders', myOrders);
+  console.log('buyerComments', buyerComments);
+  console.log('sellerComments', sellerComments);
 
   return (
     <div className="user-profile-container">
@@ -371,11 +380,7 @@ const UserProfile = () => {
                             <List.Item className="comment-item">
                               <div className="comment-header">
                                 <div className="comment-user">
-                                  <Avatar src={order.seller?.avatarUrl} icon={<UserOutlined />} size={48} />
-                                  <div className="user-info-block">
-                                    <span className="user-name">{order.seller?.username || '匿名卖家'}</span>
-                                    <span className="user-role">卖家</span>
-                                  </div>
+                                  <span className="user-name">{order.sellerName || '匿名卖家'}</span>
                                 </div>
                                 <div className="comment-order">
                                   <div className="order-info">
@@ -383,7 +388,7 @@ const UserProfile = () => {
                                     <span className="order-number">{order.orderNo}</span>
                                   </div>
                                   <span className="comment-time">
-                                    {new Date(order.updateTime).toLocaleString()}
+                                    {order.updateTime ? new Date(order.updateTime).toLocaleString() : ''}
                                   </span>
                                 </div>
                               </div>
@@ -393,20 +398,9 @@ const UserProfile = () => {
                                 </div>
                                 <Paragraph className="comment-text">{order.buyerComment}</Paragraph>
                               </div>
-                              <div className="comment-item-detail">
-                                <div className="comment-item-image">
-                                  <img 
-                                    src={order.item.images && order.item.images.length > 0 ? order.item.images[0] : 'https://via.placeholder.com/100'} 
-                                    alt={order.item.title} 
-                                  />
-                                </div>
-                                <div className="comment-item-info">
-                                  <Link to={`/items/${order.item.id}`} className="item-title-link">{order.item.title || order.item.name}</Link>
-                                  <div className="transaction-info">
-                                    <span className="transaction-price">交易金额：¥{order.amount}</span>
-                                    <span className="transaction-date">交易日期：{new Date(order.createTime).toLocaleDateString()}</span>
-                                  </div>
-                                </div>
+                              <div className="comment-item-info">
+                                <span>物品：{order.itemName || (order.item && order.item.name)}</span>
+                                <span>交易金额：¥{order.itemPrice || order.amount}</span>
                               </div>
                             </List.Item>
                           )}
@@ -438,11 +432,7 @@ const UserProfile = () => {
                             <List.Item className="comment-item">
                               <div className="comment-header">
                                 <div className="comment-user">
-                                  <Avatar src={order.buyer?.avatarUrl} icon={<UserOutlined />} size={48} />
-                                  <div className="user-info-block">
-                                    <span className="user-name">{order.buyer?.username || '匿名买家'}</span>
-                                    <span className="user-role">买家</span>
-                                  </div>
+                                  <span className="user-name">{order.buyerName || '匿名买家'}</span>
                                 </div>
                                 <div className="comment-order">
                                   <div className="order-info">
@@ -450,7 +440,7 @@ const UserProfile = () => {
                                     <span className="order-number">{order.orderNo}</span>
                                   </div>
                                   <span className="comment-time">
-                                    {new Date(order.updateTime).toLocaleString()}
+                                    {order.updateTime ? new Date(order.updateTime).toLocaleString() : ''}
                                   </span>
                                 </div>
                               </div>
@@ -460,20 +450,9 @@ const UserProfile = () => {
                                 </div>
                                 <Paragraph className="comment-text">{order.sellerComment}</Paragraph>
                               </div>
-                              <div className="comment-item-detail">
-                                <div className="comment-item-image">
-                                  <img 
-                                    src={order.item.images && order.item.images.length > 0 ? order.item.images[0] : 'https://via.placeholder.com/100'} 
-                                    alt={order.item.title} 
-                                  />
-                                </div>
-                                <div className="comment-item-info">
-                                  <Link to={`/items/${order.item.id}`} className="item-title-link">{order.item.title || order.item.name}</Link>
-                                  <div className="transaction-info">
-                                    <span className="transaction-price">交易金额：¥{order.amount}</span>
-                                    <span className="transaction-date">交易日期：{new Date(order.createTime).toLocaleDateString()}</span>
-                                  </div>
-                                </div>
+                              <div className="comment-item-info">
+                                <span>物品：{order.itemName || (order.item && order.item.name)}</span>
+                                <span>交易金额：¥{order.itemPrice || order.amount}</span>
                               </div>
                             </List.Item>
                           )}
