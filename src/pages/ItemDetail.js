@@ -309,29 +309,30 @@ const ItemDetail = () => {
                       className="main-item-image"
                     />
                   ) : (
-                    <div style={{width: '100%', height: '100%', background: '#f5f5f5'}} />
+                    <div style={{width: '100%', height: '100%', background: '#f5f5f5', position: 'absolute', top: 0, left: 0}} />
                   )}
                 </div>
-                {/* 缩略图 */}
-                {images && images.length > 1 && (
-                  <div className="thumbnail-list">
-                    {images.map((img, index) => (
-                      <div
-                        key={index}
-                        className={`thumbnail-container${mainIndex === index ? ' active' : ''}`}
-                        onClick={() => setMainIndex(index)}
-                      >
-                        <img
-                          src={img}
-                          alt={`${item.name}-${index+1}`}
-                          className={`thumbnail-image${mainIndex === index ? ' selected' : ''}`}
-                        />
-                      </div>
-                    ))}
-                  </div>
-                )}
               </Image.PreviewGroup>
             </div>
+            
+            {/* 缩略图 - 移到外部，不影响主图容器比例 */}
+            {images && images.length > 1 && (
+              <div className="thumbnail-list" style={{marginTop: '20px'}}>
+                {images.map((img, index) => (
+                  <div
+                    key={index}
+                    className={`thumbnail-container${mainIndex === index ? ' active' : ''}`}
+                    onClick={() => setMainIndex(index)}
+                  >
+                    <img
+                      src={img}
+                      alt={`${item.name}-${index+1}`}
+                      className={`thumbnail-image${mainIndex === index ? ' selected' : ''}`}
+                    />
+                  </div>
+                ))}
+              </div>
+            )}
           </Col>
           
           {/* 物品信息 */}
