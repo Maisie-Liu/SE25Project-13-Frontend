@@ -469,12 +469,37 @@ const ItemDetail = () => {
       
       {/* 预订弹窗 */}
       <Modal
-        title="预订物品"
+        title={
+          <div className="order-modal-title">
+            <ShoppingCartOutlined style={{ marginRight: 8, color: '#40c4c4' }} />
+            <span>预订物品</span>
+          </div>
+        }
         open={orderModalVisible}
         onCancel={() => setOrderModalVisible(false)}
         footer={null}
         className="order-modal"
+        width={520}
+        centered
+        destroyOnClose
+        maskClosable={false}
+        bodyStyle={{ padding: '24px 24px 12px' }}
       >
+        <div className="order-modal-item-info">
+          <div className="order-modal-item-image">
+            <img 
+              src={images && images.length > 0 ? images[0] : 'https://via.placeholder.com/100x100?text=No+Image'}
+              alt={item.name}
+            />
+          </div>
+          <div className="order-modal-item-details">
+            <div className="order-modal-item-name">{item.name}</div>
+            <div className="order-modal-item-price">¥{item.price?.toFixed(2)}</div>
+          </div>
+        </div>
+        
+        <Divider style={{ margin: '16px 0' }} />
+        
         <Form
           form={orderForm}
           layout="vertical"
@@ -482,58 +507,204 @@ const ItemDetail = () => {
           initialValues={{
             tradeType: 1, // 默认线下交易
           }}
+          className="order-form"
         >
           <Form.Item
             name="tradeType"
-            label="交易方式"
+            label={<span className="order-form-label">交易方式</span>}
             rules={[{ required: true, message: '请选择交易方式' }]}
           >
-            <Radio.Group>
-              <Radio value={2}>线上交易</Radio>
-              <Radio value={1}>线下交易</Radio>
+            <Radio.Group className="order-radio-group">
+              <Radio.Button value={1} className="order-radio-button">
+                <div className="order-radio-content">
+                  <div className="order-radio-icon">🤝</div>
+                  <div>
+                    <div className="order-radio-title">线下交易</div>
+                    <div className="order-radio-desc">面对面交易更安全</div>
+                  </div>
+                </div>
+              </Radio.Button>
+              <Radio.Button value={2} className="order-radio-button">
+                <div className="order-radio-content">
+                  <div className="order-radio-icon">🚚</div>
+                  <div>
+                    <div className="order-radio-title">线上交易</div>
+                    <div className="order-radio-desc">支持快递发货</div>
+                  </div>
+                </div>
+              </Radio.Button>
             </Radio.Group>
           </Form.Item>
           
           <Form.Item
             name="tradeLocation"
-            label="交易地点"
+            label={<span className="order-form-label">交易地点</span>}
             rules={[{ required: true, message: '请输入交易地点' }]}
           >
             <Input 
-              prefix={<EnvironmentOutlined />} 
+              prefix={<EnvironmentOutlined style={{ color: '#40c4c4' }} />} 
               placeholder="请输入交易地点，如：学校图书馆门口" 
+              className="order-input"
             />
           </Form.Item>
           
           <Form.Item
             name="buyerMessage"
-            label="买家留言"
+            label={<span className="order-form-label">买家留言</span>}
           >
             <TextArea 
-              rows={4} 
+              rows={3} 
               placeholder="可以留言给卖家，如：期望的交易时间、特殊要求等" 
+              className="order-textarea"
+              maxLength={200}
+              showCount
             />
           </Form.Item>
           
-          <Form.Item>
-            <div style={{ textAlign: 'right' }}>
-              <Button 
-                style={{ marginRight: 8 }} 
-                onClick={() => setOrderModalVisible(false)}
-              >
-                取消
-              </Button>
-              <Button 
-                type="primary" 
-                htmlType="submit" 
-                loading={submitting}
-              >
-                确认预订
-              </Button>
-            </div>
+          <Form.Item className="order-form-actions">
+            <Button 
+              style={{ marginRight: 12 }} 
+              onClick={() => setOrderModalVisible(false)}
+              size="large"
+            >
+              取消
+            </Button>
+            <Button 
+              type="primary" 
+              htmlType="submit" 
+              loading={submitting}
+              size="large"
+              style={{ backgroundColor: '#40c4c4', borderColor: '#40c4c4' }}
+              icon={<ShoppingCartOutlined />}
+            >
+              确认预订
+            </Button>
           </Form.Item>
         </Form>
       </Modal>
+
+      <style jsx="true">{`
+        .order-modal .ant-modal-content {
+          border-radius: 12px;
+          overflow: hidden;
+          box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+        }
+        
+        .order-modal .ant-modal-header {
+          padding: 16px 24px;
+          border-bottom: 1px solid #f0f0f0;
+        }
+        
+        .order-modal-title {
+          display: flex;
+          align-items: center;
+          font-size: 18px;
+          font-weight: 600;
+        }
+        
+        .order-modal-item-info {
+          display: flex;
+          align-items: center;
+          padding: 0 0 12px;
+        }
+        
+        .order-modal-item-image {
+          width: 80px;
+          height: 80px;
+          border-radius: 8px;
+          overflow: hidden;
+          margin-right: 16px;
+          flex-shrink: 0;
+          background: #f5f5f5;
+          border: 1px solid #eee;
+        }
+        
+        .order-modal-item-image img {
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+        }
+        
+        .order-modal-item-details {
+          flex: 1;
+        }
+        
+        .order-modal-item-name {
+          font-size: 16px;
+          font-weight: 500;
+          margin-bottom: 8px;
+          color: #333;
+        }
+        
+        .order-modal-item-price {
+          font-size: 18px;
+          font-weight: 600;
+          color: #ff4d4f;
+        }
+        
+        .order-form-label {
+          font-size: 15px;
+          font-weight: 500;
+          color: #333;
+        }
+        
+        .order-radio-group {
+          display: flex;
+          width: 100%;
+          margin-top: 8px;
+        }
+        
+        .order-radio-button {
+          flex: 1;
+          height: auto;
+          padding: 0;
+        }
+        
+        .order-radio-button .ant-radio-button-checked {
+          border-color: #40c4c4;
+          box-shadow: 0 0 0 2px rgba(64, 196, 196, 0.2);
+        }
+        
+        .order-radio-content {
+          display: flex;
+          align-items: center;
+          padding: 12px;
+        }
+        
+        .order-radio-icon {
+          font-size: 24px;
+          margin-right: 12px;
+        }
+        
+        .order-radio-title {
+          font-size: 15px;
+          font-weight: 500;
+          margin-bottom: 4px;
+        }
+        
+        .order-radio-desc {
+          font-size: 12px;
+          color: #999;
+        }
+        
+        .order-input, .order-textarea {
+          border-radius: 8px;
+          padding: 10px 12px;
+          border-color: #e8e8e8;
+        }
+        
+        .order-input:hover, .order-input:focus,
+        .order-textarea:hover, .order-textarea:focus {
+          border-color: #40c4c4;
+          box-shadow: 0 0 0 2px rgba(64, 196, 196, 0.1);
+        }
+        
+        .order-form-actions {
+          margin-top: 24px;
+          display: flex;
+          justify-content: flex-end;
+        }
+      `}</style>
     </div>
   );
 };

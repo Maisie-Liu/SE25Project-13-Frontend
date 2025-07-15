@@ -1,14 +1,19 @@
 import React, { useEffect, useState } from 'react';
-import { Tabs, Table, Tag, Button, Empty, Spin, message, Modal, Input, Typography, Space, Divider } from 'antd';
+import { Tabs, Card, Tag, Button, Empty, Spin, message, Modal, Input, Typography, Space, Divider, Row, Col, Badge } from 'antd';
 import { Link, useNavigate } from 'react-router-dom';
 import axios from '../utils/axios';
 import { useSelector } from 'react-redux';
 import { selectUser } from '../store/slices/authSlice';
-import { ShoppingOutlined, ShopOutlined, InboxOutlined, RightOutlined } from '@ant-design/icons';
+import { 
+  ShoppingOutlined, ShopOutlined, InboxOutlined, RightOutlined, 
+  ClockCircleOutlined, DollarOutlined, EnvironmentOutlined, CommentOutlined,
+  CheckCircleOutlined, SendOutlined, StarOutlined, CloseCircleOutlined, UserOutlined
+} from '@ant-design/icons';
 import './MyOrders.css';
+import { Rate } from 'antd';
 
 const { TabPane } = Tabs;
-const { Title, Paragraph } = Typography;
+const { Title, Paragraph, Text } = Typography;
 
 const MyOrders = () => {
   const navigate = useNavigate();
@@ -21,6 +26,8 @@ const MyOrders = () => {
   const [commentContent, setCommentContent] = useState('');
   const [commentSubmitting, setCommentSubmitting] = useState(false);
   const [commentOrderId, setCommentOrderId] = useState(null);
+  const [commentRating, setCommentRating] = useState(5);
+  const [currentOrder, setCurrentOrder] = useState(null);
 
   const fetchOrders = async (type) => {
     setLoading(true);
@@ -53,6 +60,7 @@ const MyOrders = () => {
       message.error('操作失败');
     }
   };
+  
   const handleDeliverOrder = async (orderId) => {
     try {
       await axios.put(`/orders/${orderId}/deliver`);
@@ -62,6 +70,7 @@ const MyOrders = () => {
       message.error('操作失败');
     }
   };
+  
   const handleConfirmReceive = async (orderId) => {
     try {
       await axios.put(`/orders/${orderId}/receive`);
@@ -71,10 +80,13 @@ const MyOrders = () => {
       message.error('操作失败');
     }
   };
-  const handleOpenComment = (orderId) => {
-    setCommentOrderId(orderId);
+  
+  const handleOpenComment = (order) => {
+    setCommentOrderId(order.id);
+    setCurrentOrder(order);
     setCommentModalVisible(true);
   };
+  
   const handleSubmitComment = async () => {
     if (!commentContent.trim()) {
       message.warning('评价内容不能为空');
@@ -84,91 +96,24 @@ const MyOrders = () => {
     try {
       const order = [...buyerOrders, ...sellerOrders].find(o => o.id === commentOrderId);
       const isBuyer = user && order && user.id === order.buyer?.id;
-      await axios.put(`/orders/${commentOrderId}/comment`, null, { params: { comment: commentContent, isBuyer } });
+      await axios.put(`/orders/${commentOrderId}/comment`, null, { 
+        params: { 
+          comment: commentContent, 
+          isBuyer,
+          rating: commentRating
+        } 
+      });
       message.success('评价成功');
       setCommentModalVisible(false);
       setCommentContent('');
       setCommentOrderId(null);
+      setCommentRating(5);
       fetchOrders(activeTab);
     } catch (e) {
       message.error('评价失败');
     } finally {
       setCommentSubmitting(false);
     }
-  };
-
-  const renderActionButtons = (record) => {
-    if (!user) return null;
-    const { status, buyer, seller, buyerComment, sellerComment } = record;
-    const isBuyer = user.id === buyer?.id;
-    const isSeller = user.id === seller?.id;
-    
-    return (
-      <div className="order-action-buttons">
-        <Button 
-          type="link" 
-          className="order-detail-button" 
-          onClick={() => navigate(`/orders/${record.id}`)}
-        >
-          详情 <RightOutlined />
-        </Button>
-        
-        {isSeller && status === 0 && (
-          <Button 
-            type="primary" 
-            size="small" 
-            className="order-action-button"
-            onClick={() => handleConfirmOrder(record.id)}
-          >
-            确认订单
-          </Button>
-        )}
-        
-        {isSeller && status === 1 && (
-          <Button 
-            type="primary" 
-            size="small" 
-            className="order-action-button"
-            onClick={() => handleDeliverOrder(record.id)}
-          >
-            发货
-          </Button>
-        )}
-        
-        {isSeller && status === 3 && !buyerComment && (
-          <Button 
-            type="primary" 
-            size="small" 
-            className="order-action-button"
-            onClick={() => handleOpenComment(record.id)}
-          >
-            评价买家
-          </Button>
-        )}
-        
-        {isBuyer && status === 2 && (
-          <Button 
-            type="primary" 
-            size="small" 
-            className="order-action-button"
-            onClick={() => handleConfirmReceive(record.id)}
-          >
-            确认收货
-          </Button>
-        )}
-        
-        {isBuyer && status === 3 && !sellerComment && (
-          <Button 
-            type="primary" 
-            size="small" 
-            className="order-action-button"
-            onClick={() => handleOpenComment(record.id)}
-          >
-            评价卖家
-          </Button>
-        )}
-      </div>
-    );
   };
 
   // 判断当前用户是否已评价
@@ -178,74 +123,215 @@ const MyOrders = () => {
     return (isBuyer && order.sellerComment) || (isSeller && order.buyerComment);
   };
 
-  const columns = [
-    {
-      title: '商品信息',
-      dataIndex: 'item',
-      key: 'item',
-      render: (item) => (
-        item ? (
-          <div className="order-item-card">
-            <img 
-              src={item.images && item.images.length > 0 ? item.images[0] : 'https://via.placeholder.com/50x50?text=No+Image'} 
-              alt={item.title}
-              className="order-item-image"
-            />
-            <Link to={`/items/${item.id}`} className="order-item-title">{item.title}</Link>
-          </div>
-        ) : (
-          <span>商品信息缺失</span>
-        )
-      ),
-    },
-    {
-      title: '价格',
-      dataIndex: 'itemPrice',
-      key: 'itemPrice',
-      render: price => <span className="order-price">¥{price}</span>,
-    },
-    {
-      title: '订单状态',
-      dataIndex: 'status',
-      key: 'status',
-      render: (status, record) => {
-        let displayStatus = status;
-        if (status === 3 && hasCommented(user, record)) {
-          displayStatus = 4;
-        }
-        let text = '';
-        let color = '';
-        switch (displayStatus) {
-          case 0:
-            text = '待确认'; color = 'gold'; break;
-          case 1:
-            text = '待发货'; color = 'blue'; break;
-          case 2:
-            text = '待收货'; color = 'orange'; break;
-          case 3:
-            text = '待评价'; color = 'green'; break;
-          case 4:
-            text = '已完成'; color = 'default'; break;
-          case 5:
-            text = '已取消'; color = 'red'; break;
-          default:
-            text = '未知'; color = 'default';
-        }
-        return <Tag color={color} className="order-status-tag">{text}</Tag>;
-      }
-    },
-    {
-      title: '创建时间',
-      dataIndex: 'createTime',
-      key: 'createTime',
-      render: time => new Date(time).toLocaleString(),
-    },
-    {
-      title: '操作',
-      key: 'action',
-      render: (_, record) => renderActionButtons(record),
-    },
-  ];
+  const getStatusInfo = (status, record) => {
+    let displayStatus = status;
+    if (status === 3 && hasCommented(user, record)) {
+      displayStatus = 4;
+    }
+    
+    let text = '';
+    let color = '';
+    let icon = null;
+    
+    switch (displayStatus) {
+      case 0:
+        text = '待确认'; 
+        color = 'gold'; 
+        icon = <ClockCircleOutlined />;
+        break;
+      case 1:
+        text = '待发货'; 
+        color = 'blue'; 
+        icon = <ShoppingOutlined />;
+        break;
+      case 2:
+        text = '待收货'; 
+        color = 'orange'; 
+        icon = <SendOutlined />;
+        break;
+      case 3:
+        text = '待评价'; 
+        color = 'green'; 
+        icon = <CommentOutlined />;
+        break;
+      case 4:
+        text = '已完成'; 
+        color = 'default'; 
+        icon = <CheckCircleOutlined />;
+        break;
+      case 5:
+        text = '已取消'; 
+        color = 'red'; 
+        icon = <CloseCircleOutlined />;
+        break;
+      default:
+        text = '未知'; 
+        color = 'default';
+    }
+    
+    return { text, color, icon };
+  };
+
+  const renderOrderCards = (orders) => {
+    if (!orders || orders.length === 0) {
+      return (
+        <Empty 
+          image={Empty.PRESENTED_IMAGE_SIMPLE} 
+          description={
+            <span className="empty-text">
+              {activeTab === 'buyer' ? '您还没有购买任何商品' : '您还没有卖出任何商品'}
+            </span>
+          }
+        >
+          <Button 
+            type="primary" 
+            onClick={() => navigate(activeTab === 'buyer' ? '/items' : '/publish')}
+            className="empty-action-button"
+          >
+            {activeTab === 'buyer' ? '去浏览商品' : '去发布商品'}
+          </Button>
+        </Empty>
+      );
+    }
+
+    return (
+      <Row gutter={[24, 24]}>
+        {orders.filter(order => order && order.item).map(order => {
+          const { text, color, icon } = getStatusInfo(order.status, order);
+          const isBuyer = user && user.id === (order.buyer?.id || order.buyerId);
+          const isSeller = user && user.id === (order.seller?.id || order.sellerId);
+          
+          return (
+            <Col xs={24} sm={24} md={12} lg={8} key={order.id}>
+              <Card 
+                className="order-card" 
+                hoverable
+                actions={[
+                  <Button 
+                    type="link" 
+                    className="order-detail-link" 
+                    onClick={() => navigate(`/orders/${order.id}`)}
+                  >
+                    查看详情 <RightOutlined />
+                  </Button>,
+                  renderActionButton(order)
+                ]}
+              >
+                <div className="order-card-header">
+                  <div className="order-number">
+                    <Text type="secondary">订单编号: {order.id}</Text>
+                  </div>
+                  <div className="order-status">
+                    <Badge color={color} text={text} />
+                  </div>
+                </div>
+                
+                <div className="order-card-content">
+                  <div className="order-item-info">
+                    <div className="order-item-image-container">
+                      <img 
+                        src={order.item.images && order.item.images.length > 0 ? 
+                          order.item.images[0] : 
+                          'https://via.placeholder.com/100x100?text=No+Image'
+                        } 
+                        alt={order.item.title}
+                        className="order-item-image"
+                      />
+                    </div>
+                    <div className="order-item-details">
+                      <Link to={`/items/${order.item.id}`} className="order-item-title">
+                        {order.item.title}
+                      </Link>
+                      <div className="order-price">
+                        <DollarOutlined /> ¥{order.itemPrice?.toFixed(2)}
+                      </div>
+                      <div className="order-time">
+                        <ClockCircleOutlined /> {new Date(order.createTime).toLocaleString()}
+                      </div>
+                      {order.tradeLocation && (
+                        <div className="order-location">
+                          <EnvironmentOutlined /> {order.tradeLocation}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="order-card-footer">
+                  <div className="order-user-info">
+                    <UserOutlined className="order-user-icon" />
+                    <div className="order-user-name">
+                      {isBuyer ? 
+                        `卖家: ${order.seller?.username || '未知用户'}` : 
+                        `买家: ${order.buyer?.username || '未知用户'}`
+                      }
+                    </div>
+                  </div>
+                </div>
+              </Card>
+            </Col>
+          );
+        })}
+      </Row>
+    );
+  };
+
+  const renderActionButton = (order) => {
+    if (!user) return null;
+    const { status, buyer, seller, buyerComment, sellerComment } = order;
+    const isBuyer = user.id === (buyer?.id || order.buyerId);
+    const isSeller = user.id === (seller?.id || order.sellerId);
+    
+    if (isSeller && status === 0) {
+      return (
+        <Button 
+          type="primary" 
+          className="order-action-button confirm-button"
+          onClick={() => handleConfirmOrder(order.id)}
+        >
+          确认订单
+        </Button>
+      );
+    }
+    
+    if (isSeller && status === 1) {
+      return (
+        <Button 
+          type="primary" 
+          className="order-action-button deliver-button"
+          onClick={() => handleDeliverOrder(order.id)}
+        >
+          发货
+        </Button>
+      );
+    }
+    
+    if (isBuyer && status === 2) {
+      return (
+        <Button 
+          type="primary" 
+          className="order-action-button receive-button"
+          onClick={() => handleConfirmReceive(order.id)}
+        >
+          确认收货
+        </Button>
+      );
+    }
+    
+    if ((isSeller && status === 3 && !buyerComment) || (isBuyer && status === 3 && !sellerComment)) {
+      return (
+        <Button 
+          type="primary" 
+          className="order-action-button comment-button"
+          onClick={() => handleOpenComment(order)}
+        >
+          {isBuyer ? '评价卖家' : '评价买家'}
+        </Button>
+      );
+    }
+    
+    return null;
+  };
 
   return (
     <div className="my-orders-container">
@@ -268,39 +354,13 @@ const MyOrders = () => {
           } 
           key="buyer"
         >
-          <div className="order-table-container">
+          <div className="order-list-container">
             {loading ? (
               <div className="orders-loading">
                 <Spin size="large" tip="加载中..." />
               </div>
             ) : (
-              <Table
-                rowKey="id"
-                columns={columns}
-                dataSource={buyerOrders.filter(order => order && order.item)}
-                locale={{ 
-                  emptyText: (
-                    <div className="empty-orders">
-                      <Empty 
-                        image={Empty.PRESENTED_IMAGE_SIMPLE} 
-                        description="暂无订单记录" 
-                      />
-                      <Button 
-                        type="primary" 
-                        style={{ marginTop: 16 }}
-                        onClick={() => navigate('/items')}
-                      >
-                        去浏览商品
-                      </Button>
-                    </div>
-                  ) 
-                }}
-                pagination={{ 
-                  pageSize: 8, 
-                  showTotal: total => `共 ${total} 条订单`,
-                  showSizeChanger: false
-                }}
-              />
+              renderOrderCards(buyerOrders)
             )}
           </div>
         </TabPane>
@@ -313,46 +373,25 @@ const MyOrders = () => {
           } 
           key="seller"
         >
-          <div className="order-table-container">
+          <div className="order-list-container">
             {loading ? (
               <div className="orders-loading">
                 <Spin size="large" tip="加载中..." />
               </div>
             ) : (
-              <Table
-                rowKey="id"
-                columns={columns}
-                dataSource={sellerOrders.filter(order => order && order.item)}
-                locale={{ 
-                  emptyText: (
-                    <div className="empty-orders">
-                      <Empty 
-                        image={Empty.PRESENTED_IMAGE_SIMPLE} 
-                        description="暂无订单记录" 
-                      />
-                      <Button 
-                        type="primary" 
-                        style={{ marginTop: 16 }}
-                        onClick={() => navigate('/publish')}
-                      >
-                        去发布商品
-                      </Button>
-                    </div>
-                  ) 
-                }}
-                pagination={{ 
-                  pageSize: 8, 
-                  showTotal: total => `共 ${total} 条订单`,
-                  showSizeChanger: false
-                }}
-              />
+              renderOrderCards(sellerOrders)
             )}
           </div>
         </TabPane>
       </Tabs>
       
       <Modal
-        title="订单评价"
+        title={
+          <div className="comment-modal-title">
+            <StarOutlined style={{ marginRight: 8 }} /> 
+            订单评价
+          </div>
+        }
         open={commentModalVisible}
         onOk={handleSubmitComment}
         onCancel={() => setCommentModalVisible(false)}
@@ -360,16 +399,52 @@ const MyOrders = () => {
         okText="提交评价"
         cancelText="取消"
         className="comment-modal"
+        width={500}
+        centered
       >
-        <Paragraph>请对本次交易进行评价，您的反馈将帮助我们改进服务</Paragraph>
-        <Input.TextArea
-          rows={4}
-          value={commentContent}
-          onChange={e => setCommentContent(e.target.value)}
-          placeholder="请输入评价内容，例如：物品描述准确，发货速度快，服务态度好等"
-          maxLength={200}
-          showCount
-        />
+        {currentOrder && (
+          <div className="comment-modal-item">
+            <div className="comment-modal-item-image">
+              <img 
+                src={currentOrder.item?.images && currentOrder.item.images.length > 0 ? 
+                  currentOrder.item.images[0] : 
+                  'https://via.placeholder.com/60x60?text=No+Image'
+                } 
+                alt={currentOrder.item?.title || '商品图片'} 
+              />
+            </div>
+            <div className="comment-modal-item-info">
+              <div className="comment-modal-item-title">
+                {currentOrder.item?.title || '未知商品'}
+              </div>
+              <div className="comment-modal-item-price">
+                ¥{currentOrder.itemPrice?.toFixed(2)}
+              </div>
+            </div>
+          </div>
+        )}
+        
+        <Divider style={{ margin: '16px 0' }} />
+        
+        <div className="comment-form">
+          <div className="comment-rating">
+            <div className="comment-label">评分:</div>
+            <Rate value={commentRating} onChange={setCommentRating} />
+          </div>
+          
+          <div className="comment-input">
+            <div className="comment-label">评价内容:</div>
+            <Input.TextArea
+              rows={4}
+              value={commentContent}
+              onChange={e => setCommentContent(e.target.value)}
+              placeholder="请输入评价内容，例如：物品描述准确，发货速度快，服务态度好等"
+              maxLength={200}
+              showCount
+              className="comment-textarea"
+            />
+          </div>
+        </div>
       </Modal>
     </div>
   );
