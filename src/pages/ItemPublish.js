@@ -144,6 +144,13 @@ const ItemPublish = () => {
     }
   };
   
+  const parentCategories = categories.filter(cat => !cat.parentId);
+  const subCategories = categories.filter(cat => cat.parentId);
+  const groupedCategories = parentCategories.map(parent => {
+    const children = subCategories.filter(sub => sub.parentId === parent.id);
+    return { parent, children };
+  });
+
   return (
     <div className="item-publish-container">
       <Card className="item-publish-card">

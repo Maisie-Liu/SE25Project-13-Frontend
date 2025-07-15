@@ -103,7 +103,7 @@ const MyOrders = () => {
     const isBuyer = user.id === buyer?.id;
     const isSeller = user.id === seller?.id;
     
-    return (
+          return (
       <div className="order-action-buttons">
         <Button 
           type="link" 
@@ -136,36 +136,36 @@ const MyOrders = () => {
         )}
         
         {isSeller && status === 3 && !buyerComment && (
-          <Button 
-            type="primary" 
-            size="small" 
+            <Button 
+              type="primary" 
+              size="small"
             className="order-action-button"
             onClick={() => handleOpenComment(record.id)}
-          >
+            >
             评价买家
-          </Button>
+            </Button>
         )}
         
         {isBuyer && status === 2 && (
-          <Button 
-            type="primary" 
-            size="small" 
+            <Button 
+              type="primary" 
+              size="small"
             className="order-action-button"
             onClick={() => handleConfirmReceive(record.id)}
-          >
-            确认收货
-          </Button>
+            >
+              确认收货
+            </Button>
         )}
         
         {isBuyer && status === 3 && !sellerComment && (
-          <Button 
-            type="primary" 
-            size="small" 
+            <Button 
+              type="primary" 
+              size="small"
             className="order-action-button"
             onClick={() => handleOpenComment(record.id)}
-          >
+            >
             评价卖家
-          </Button>
+            </Button>
         )}
       </div>
     );
@@ -186,13 +186,13 @@ const MyOrders = () => {
       render: (item) => (
         item ? (
           <div className="order-item-card">
-            <img 
-              src={item.images && item.images.length > 0 ? item.images[0] : 'https://via.placeholder.com/50x50?text=No+Image'} 
-              alt={item.title}
+          <img 
+            src={item.images && item.images.length > 0 ? item.images[0] : 'https://via.placeholder.com/50x50?text=No+Image'} 
+            alt={item.title}
               className="order-item-image"
-            />
+          />
             <Link to={`/items/${item.id}`} className="order-item-title">{item.title}</Link>
-          </div>
+        </div>
         ) : (
           <span>商品信息缺失</span>
         )

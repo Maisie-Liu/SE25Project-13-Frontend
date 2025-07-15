@@ -8,15 +8,23 @@ import {
   updateOrderStatus
 } from '../slices/orderSlice';
 
-// 获取用户订单列表
+// 获取用户订单列表（买家+卖家合并）
 export const fetchUserOrders = createAsyncThunk(
   'order/fetchUserOrders',
   async (params, { dispatch, rejectWithValue }) => {
     try {
       dispatch(setOrderLoading(true));
-      const response = await axios.get('/orders/user', { params });
-      dispatch(setOrders(response.data));
-      return response.data;
+      // 分别请求买家和卖家订单
+      const [buyerRes, sellerRes] = await Promise.all([
+        axios.get('/orders/buyer', { params: { pageNum: 1, pageSize: 100 } }),
+        axios.get('/orders/seller', { params: { pageNum: 1, pageSize: 100 } })
+      ]);
+      // 合并订单数据
+      const buyerOrders = buyerRes.data.data?.list || [];
+      const sellerOrders = sellerRes.data.data?.list || [];
+      const allOrders = [...buyerOrders, ...sellerOrders];
+      dispatch(setOrders(allOrders));
+      return allOrders;
     } catch (error) {
       dispatch(setOrderError(error.response?.data?.message || '获取订单列表失败'));
       return rejectWithValue(error.response?.data?.message || '获取订单列表失败');
@@ -190,6 +198,19 @@ export const commentOrder = createAsyncThunk(
     } catch (error) {
       dispatch(setOrderError(error.response?.data?.message || '评价失败'));
       return rejectWithValue(error.response?.data?.message || '评价失败');
+    }
+  }
+); 
+
+// 卖家拒绝订单
+export const rejectOrder = createAsyncThunk(
+  'order/rejectOrder',
+  async ({ orderId, sellerRemark }, { rejectWithValue }) => {
+    try {
+      const response = await axios.put(`/orders/${orderId}/reject`, sellerRemark ? { sellerRemark } : undefined);
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error.response?.data?.message || '拒绝订单失败');
     }
   }
 ); 

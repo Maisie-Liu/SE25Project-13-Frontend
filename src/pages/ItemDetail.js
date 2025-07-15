@@ -133,7 +133,7 @@ const ItemDetail = () => {
     try {
       const orderData = {
         itemId: id,
-        tradeType: values.tradeType,
+        tradeType: 1, // 只允许线下交易
         tradeLocation: values.tradeLocation,
         buyerMessage: values.buyerMessage
       };
@@ -317,33 +317,33 @@ const ItemDetail = () => {
           {/* 物品图片 */}
           <Col xs={24} sm={24} md={12} lg={10}>
             <div className="item-image-container">
-              <Image.PreviewGroup>
+            <Image.PreviewGroup>
                 <div className="main-image-wrapper">
                   {images && images.length > 0 ? (
-                    <img
+                <img
                       src={images[0]}
-                      alt={item.name}
+                  alt={item.name}
                       className="main-item-image"
-                    />
+                />
                   ) : (
                     <div style={{width: '100%', height: '100%', background: '#f5f5f5'}} />
                   )}
-                </div>
+              </div>
                 {/* 只有多于1张图片时才显示缩略图 */}
                 {images && images.length > 1 && (
                   <div className="thumbnail-list">
                     {images.slice(1).map((img, index) => (
                       <div key={index} className="thumbnail-container">
                         <img
-                          src={img}
-                          alt={`${item.name}-${index+1}`}
+                    src={img}
+                    alt={`${item.name}-${index+1}`}
                           className="thumbnail-image"
-                        />
+                  />
                       </div>
-                    ))}
-                  </div>
+                ))}
+              </div>
                 )}
-              </Image.PreviewGroup>
+            </Image.PreviewGroup>
             </div>
           </Col>
           
@@ -351,17 +351,17 @@ const ItemDetail = () => {
           <Col xs={24} sm={24} md={12} lg={14}>
             <div className="item-info-container">
               <div className="item-header">
-                <Title level={2}>{item.name}</Title>
+            <Title level={2}>{item.name}</Title>
                 <div className="item-status-tag">
-                  {item.status === 1 ? (
-                    <Tag color="green">可预订</Tag>
-                  ) : item.status === 2 ? (
-                    <Tag color="orange">已预订</Tag>
-                  ) : item.status === 3 ? (
-                    <Tag color="red">已售出</Tag>
-                  ) : (
-                    <Tag color="default">未上架</Tag>
-                  )}
+                {item.status === 1 ? (
+                  <Tag color="green">可预订</Tag>
+                ) : item.status === 2 ? (
+                  <Tag color="orange">已预订</Tag>
+                ) : item.status === 3 ? (
+                  <Tag color="red">已售出</Tag>
+                ) : (
+                  <Tag color="default">未上架</Tag>
+                )}
                 </div>
               </div>
               
@@ -451,28 +451,28 @@ const ItemDetail = () => {
                 >
                   {isFavorite ? '已收藏' : '收藏'}
                 </Button>
-              </div>
+            </div>
               
               {/* 评论区 - 上移 */}
               <div className="comments-section">
                 <div className="comments-header">
                   <CommentOutlined /> 评论区
-                </div>
-                <CommentForm
-                  value={commentContent}
-                  onChange={setCommentContent}
-                  onSubmit={handleSubmitComment}
-                  submitting={submitting && !replyingId}
-                />
-                <CommentList
-                  comments={comments}
-                  onReply={handleReply}
-                  submitting={submitting && !!replyingId}
-                  replyContent={replyContent}
-                  onChangeReply={setReplyContent}
-                  onSubmitReply={handleSubmitReply}
-                  replyingId={replyingId}
-                />
+            </div>
+            <CommentForm
+              value={commentContent}
+              onChange={setCommentContent}
+              onSubmit={handleSubmitComment}
+              submitting={submitting && !replyingId}
+            />
+            <CommentList
+              comments={comments}
+              onReply={handleReply}
+              submitting={submitting && !!replyingId}
+              replyContent={replyContent}
+              onChangeReply={setReplyContent}
+              onSubmitReply={handleSubmitReply}
+              replyingId={replyingId}
+            />
               </div>
             </div>
           </Col>
@@ -495,7 +495,8 @@ const ItemDetail = () => {
             tradeType: 1, // 默认线下交易
           }}
         >
-          <Form.Item
+          {/* 删除交易方式选择，只保留线下交易 */}
+          {/* <Form.Item
             name="tradeType"
             label="交易方式"
             rules={[{ required: true, message: '请选择交易方式' }]}
@@ -504,8 +505,7 @@ const ItemDetail = () => {
               <Radio value={2}>线上交易</Radio>
               <Radio value={1}>线下交易</Radio>
             </Radio.Group>
-          </Form.Item>
-          
+          </Form.Item> */}
           <Form.Item
             name="tradeLocation"
             label="交易地点"
@@ -516,7 +516,6 @@ const ItemDetail = () => {
               placeholder="请输入交易地点，如：学校图书馆门口" 
             />
           </Form.Item>
-          
           <Form.Item
             name="buyerMessage"
             label="买家留言"
@@ -526,7 +525,6 @@ const ItemDetail = () => {
               placeholder="可以留言给卖家，如：期望的交易时间、特殊要求等" 
             />
           </Form.Item>
-          
           <Form.Item>
             <div style={{ textAlign: 'right' }}>
               <Button 

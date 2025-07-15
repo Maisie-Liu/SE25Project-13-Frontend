@@ -102,32 +102,8 @@ const UserPublicProfile = () => {
 
   // 统计数据逻辑：profile 变化时重新计算
   useEffect(() => {
-    if (profile && profile.user) {
-      const user = profile.user;
-      const items = profile.items || [];
-      const ratings = profile.ratings || [];
-      const sellerRatings = ratings.filter(rating => rating.role === 'SELLER');
-      const buyerRatings = ratings.filter(rating => rating.role === 'BUYER');
-      const availableItems = items.filter(item => item.status === 1);
-      const soldItems = items.filter(item => item.status === 3);
-      const calculateSellerRating = () => {
-        if (sellerRatings.length === 0) return 0;
-        const sum = sellerRatings.reduce((acc, curr) => acc + curr.rating, 0);
-        return (sum / sellerRatings.length).toFixed(1);
-      };
-      const calculateBuyerRating = () => {
-        if (buyerRatings.length === 0) return 0;
-        const sum = buyerRatings.reduce((acc, curr) => acc + curr.rating, 0);
-        return (sum / buyerRatings.length).toFixed(1);
-      };
-      setStats({
-        sellerRating: calculateSellerRating(),
-        buyerRating: calculateBuyerRating(),
-        totalSold: soldItems.length,
-        totalItems: items.length,
-        joinDate: user.createTime,
-        location: user.location || '未知',
-      });
+    if (profile && profile.stats) {
+      setStats(profile.stats);
     }
   }, [profile]);
 
@@ -139,6 +115,11 @@ const UserPublicProfile = () => {
     if (!dateString) return '未知';
     const date = new Date(dateString);
     return date.toLocaleDateString('zh-CN');
+  };
+
+  const renderRating = (rating) => {
+    if (rating === null || rating === undefined) return '暂无评分';
+    return Number(rating).toFixed(1) + ' 分';
   };
 
   if (loading) {
@@ -228,9 +209,21 @@ const UserPublicProfile = () => {
 
   const { user, items = [], ratings = [] } = profile;
   const availableItems = items.filter(item => item.status === 1);
-  const soldItems = items.filter(item => item.status === 3);
+  const soldItems = items.filter(item => item.status !== 1);
   const sellerRatings = ratings.filter(rating => rating.role === 'SELLER');
   const buyerRatings = ratings.filter(rating => rating.role === 'BUYER');
+  const orders = profile.orders || [];
+  const userIdNum = Number(user.id);
+  // 作为卖家收到的评价
+  const sellerComments = orders.filter(
+    o => o.sellerComment && Number(o.sellerId) === userIdNum
+  );
+  // 作为买家收到的评价
+  const buyerComments = orders.filter(
+    o => o.buyerComment && Number(o.buyerId) === userIdNum
+  );
+
+  const totalSold = stats.totalSold ?? soldItems.length;
 
   return (
     <div className="user-public-profile-container">
@@ -254,12 +247,12 @@ const UserPublicProfile = () => {
                   <Card className="stat-card">
                     <Statistic 
                       title="卖家评分" 
-                      value={stats.sellerRating} 
+                      value={renderRating(stats.sellerRating)} 
                       suffix={
                         <Rate 
                           disabled 
                           allowHalf 
-                          value={stats.sellerRating} 
+                          value={stats.sellerRating || 0} 
                           style={{ fontSize: 14, marginLeft: 8 }} 
                         />
                       }
@@ -274,12 +267,12 @@ const UserPublicProfile = () => {
                   <Card className="stat-card">
                     <Statistic 
                       title="买家评分" 
-                      value={stats.buyerRating} 
+                      value={renderRating(stats.buyerRating)} 
                       suffix={
                         <Rate 
                           disabled 
                           allowHalf 
-                          value={stats.buyerRating} 
+                          value={stats.buyerRating || 0} 
                           style={{ fontSize: 14, marginLeft: 8 }} 
                         />
                       }
@@ -294,7 +287,7 @@ const UserPublicProfile = () => {
                   <Card className="stat-card">
                     <Statistic 
                       title="售出物品" 
-                      value={stats.totalSold} 
+                      value={totalSold} 
                       prefix={<CheckCircleOutlined />}
                       valueStyle={{ color: '#1890ff' }}
                     />
@@ -441,96 +434,57 @@ const UserPublicProfile = () => {
             } 
             key="ratings"
           >
-            <Tabs defaultActiveKey="seller" className="ratings-tabs">
-              <TabPane tab="作为卖家的评价" key="seller">
-                {sellerRatings.length > 0 ? (
+            <Tabs defaultActiveKey="seller" className="order-comments-tabs">
+              <TabPane tab="作为卖家收到的评价" key="seller">
+                {sellerComments.length > 0 ? (
                   <List
                     itemLayout="vertical"
-                    dataSource={sellerRatings}
-                    renderItem={rating => (
-                      <Card className="rating-card">
-                        <List.Item>
-                          <div className="rating-header">
-                            <div className="rater-info">
-                              <Avatar src={rating.rater?.avatarUrl} icon={<UserOutlined />} />
-                              <Text strong>{rating.rater?.username || '匿名用户'}</Text>
-                            </div>
-                            <div className="rating-stars">
-                              <Rate disabled value={rating.rating} />
-                              <Text type="secondary">{ratingDescriptions[Math.floor(rating.rating) - 1]}</Text>
-                            </div>
-                          </div>
-                          <div className="rating-content">
-                            <Paragraph>{rating.comment || '该用户未留下评价内容'}</Paragraph>
-                            <div className="rating-item-info">
-                              <Link to={`/items/${rating.item.id}`} className="rating-item-link">
-                                <img 
-                                  src={rating.item.images && rating.item.images.length > 0 ? rating.item.images[0] : 'https://via.placeholder.com/50'} 
-                                  alt={rating.item.name} 
-                                  className="rating-item-image" 
-                                />
-                                <div className="rating-item-details">
-                                  <Text strong>{rating.item.name}</Text>
-                                  <Text type="secondary">¥{rating.item.price}</Text>
-                                </div>
-                              </Link>
-                            </div>
-                          </div>
-                          <div className="rating-footer">
-                            <Text type="secondary">{formatDate(rating.createTime)}</Text>
-                          </div>
-                        </List.Item>
-                      </Card>
-                    )}
-                  />
-                ) : (
-                  <Empty description="暂无卖家评价" />
-                )}
-              </TabPane>
-              
-              <TabPane tab="作为买家的评价" key="buyer">
-                {buyerRatings.length > 0 ? (
-                  <List
-                    itemLayout="vertical"
-                    dataSource={buyerRatings}
-                    renderItem={rating => (
-                      <Card className="rating-card">
-                        <List.Item>
-                          <div className="rating-header">
-                            <div className="rater-info">
-                              <Avatar src={rating.rater?.avatarUrl} icon={<UserOutlined />} />
-                              <Text strong>{rating.rater?.username || '匿名用户'}</Text>
-                            </div>
-                            <div className="rating-stars">
-                              <Rate disabled value={rating.rating} />
-                              <Text type="secondary">{ratingDescriptions[Math.floor(rating.rating) - 1]}</Text>
-                            </div>
-                          </div>
-                          <div className="rating-content">
-                            <Paragraph>{rating.comment || '该用户未留下评价内容'}</Paragraph>
-                            <div className="rating-item-info">
-                              <Link to={`/items/${rating.item.id}`} className="rating-item-link">
-                                <img 
-                                  src={rating.item.images && rating.item.images.length > 0 ? rating.item.images[0] : 'https://via.placeholder.com/50'} 
-                                  alt={rating.item.name} 
-                                  className="rating-item-image" 
-                                />
-                                <div className="rating-item-details">
-                                  <Text strong>{rating.item.name}</Text>
-                                  <Text type="secondary">¥{rating.item.price}</Text>
-                                </div>
-                              </Link>
-                            </div>
-                          </div>
-                          <div className="rating-footer">
-                            <Text type="secondary">{formatDate(rating.createTime)}</Text>
-                          </div>
-                        </List.Item>
-                      </Card>
+                    dataSource={sellerComments}
+                    renderItem={order => (
+                      <List.Item>
+                        <div>
+                          <span>买家：{order.buyerName}</span>
+                          <span style={{ marginLeft: 16 }}>物品：{order.itemName || (order.item && order.item.name)}</span>
+                          <span style={{ marginLeft: 16 }}>金额：¥{order.itemPrice || order.amount}</span>
+                        </div>
+                        <div style={{ marginTop: 8 }}>
+                          <Tag color="orange">买家评价</Tag>
+                          <span>{order.sellerComment}</span>
+                        </div>
+                        <div style={{ color: '#888', marginTop: 4 }}>
+                          {order.updateTime ? new Date(order.updateTime).toLocaleString() : ''}
+                        </div>
+                      </List.Item>
                     )}
                   />
                 ) : (
                   <Empty description="暂无买家评价" />
+                )}
+              </TabPane>
+              <TabPane tab="作为买家收到的评价" key="buyer">
+                {buyerComments.length > 0 ? (
+                  <List
+                    itemLayout="vertical"
+                    dataSource={buyerComments}
+                    renderItem={order => (
+                      <List.Item>
+                        <div>
+                          <span>卖家：{order.sellerName}</span>
+                          <span style={{ marginLeft: 16 }}>物品：{order.itemName || (order.item && order.item.name)}</span>
+                          <span style={{ marginLeft: 16 }}>金额：¥{order.itemPrice || order.amount}</span>
+                        </div>
+                        <div style={{ marginTop: 8 }}>
+                          <Tag color="blue">卖家评价</Tag>
+                          <span>{order.buyerComment}</span>
+                        </div>
+                        <div style={{ color: '#888', marginTop: 4 }}>
+                          {order.updateTime ? new Date(order.updateTime).toLocaleString() : ''}
+                        </div>
+                      </List.Item>
+                    )}
+                  />
+                ) : (
+                  <Empty description="暂无卖家评价" />
                 )}
               </TabPane>
             </Tabs>

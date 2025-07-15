@@ -130,23 +130,22 @@ const Chat = () => {
             itemName: firstMessage.itemName,
             itemImage: firstMessage.itemImage,
             itemPrice: firstMessage.itemPrice,
-            otherUser: otherUser,
-          };
+            otherUser: otherUser
+          });
         } else {
           // 没有消息时，从 chats 列表中查找当前会话
           const chat = chats.find(c => String(c.id) === String(chatId));
           if (chat) {
-            info = {
+            setChatInfo({
               chatId: chat.id,
               itemId: chat.itemId,
               itemName: chat.itemName,
               itemImage: chat.itemImage,
               itemPrice: chat.itemPrice,
               otherUser: chat.otherUser,
-            };
+            });
           }
         }
-        setChatInfo(info);
       } catch (error) {
         console.error('获取聊天数据失败:', error);
         message.error('获取聊天数据失败');

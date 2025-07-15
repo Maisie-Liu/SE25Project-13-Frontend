@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { Card, Descriptions, Button, Steps, Divider, Tag, Spin, Typography, Row, Col, message, Modal, Input, Rate } from 'antd';
-import { fetchOrderById, updateOrder, confirmOrder, deliverOrder, confirmReceive, commentOrder } from '../store/actions/orderActions';
+import { fetchOrderById, updateOrder, confirmOrder, deliverOrder, confirmReceive, commentOrder, cancelOrder, rejectOrder } from '../store/actions/orderActions';
 import { selectCurrentOrder, selectOrderLoading } from '../store/slices/orderSlice';
 import { selectUser } from '../store/slices/authSlice';
 
@@ -35,6 +35,20 @@ const OrderDetail = () => {
   if (order && order.status === 3 && hasCommented) {
     displayStatus = 4;
   }
+
+  // 物品成色映射表
+  const conditionMap = {
+    0: '全新',
+    1: '9成新',
+    2: '8成新',
+    3: '7成新',
+    4: '6成新',
+    5: '5成新',
+    6: '4成新',
+    7: '3成新',
+    8: '2成新',
+    9: '1成新'
+  };
 
   useEffect(() => {
     if (id) {
@@ -136,13 +150,26 @@ const OrderDetail = () => {
     }
   };
 
+  const handleRejectOrder = async () => {
+    try {
+      await dispatch(rejectOrder({ orderId: id })).unwrap();
+      message.success('已拒绝预定，订单已取消');
+      dispatch(fetchOrderById(id));
+    } catch (e) {
+      message.error('操作失败');
+    }
+  };
+
   const renderActionButtons = () => {
     if (!order || !user) return null;
     const status = displayStatus;
     // 状态0：待确定，1：待发货，2：待收货，3：待评价
     if (isSeller) {
       if (status === 0) {
-        return <Button type="primary" onClick={handleConfirmOrder}>确认订单</Button>;
+        return <>
+          <Button type="primary" onClick={handleConfirmOrder} style={{marginRight: 8}}>确认订单</Button>
+          <Button danger onClick={handleRejectOrder}>拒绝预定</Button>
+        </>;
       }
       if (status === 1) {
         return <Button type="primary" onClick={handleDeliverOrder}>发货</Button>;
@@ -204,25 +231,26 @@ const OrderDetail = () => {
                 </Tag>
               </Descriptions.Item>
               <Descriptions.Item label="交易对象">
-                {order.role === 'BUYER' ? order.seller?.username : order.buyer?.username}
+                {isSeller
+                  ? (order.buyerName || '无')
+                  : isBuyer
+                    ? (order.sellerName || '无')
+                    : '无'}
               </Descriptions.Item>
-              <Descriptions.Item label="创建时间">
-                {new Date(order.createdAt).toLocaleString()}
-              </Descriptions.Item>
-              <Descriptions.Item label="更新时间">
-                {new Date(order.updatedAt).toLocaleString()}
-              </Descriptions.Item>
-              <Descriptions.Item label="交易方式">
-                <Tag color={order.tradeType === 2 ? 'gold' : 'blue'}>
-                  {order.tradeType === 2 ? '线上交易' : order.tradeType === 1 ? '线下交易' : '未知'}
-                </Tag>
-              </Descriptions.Item>
+              <Descriptions.Item label="创建时间">{order.createTime ? new Date(order.createTime).toLocaleString() : '无'}</Descriptions.Item>
+              <Descriptions.Item label="更新时间">{order.updateTime ? new Date(order.updateTime).toLocaleString() : '无'}</Descriptions.Item>
+              <Descriptions.Item label="交易地点">{order.tradeLocation ? order.tradeLocation : '无'}</Descriptions.Item>
             </Descriptions>
             
             <Divider />
             
             <Title level={4}>订单进度</Title>
-            {order.tradeType === 2 ? (
+            {order.status === 5 ? (
+              <Steps current={1} status="error">
+                <Step title="待确认" />
+                <Step title="已取消" />
+              </Steps>
+            ) : order.tradeType === 2 ? (
               <Steps 
                 current={displayStatus}
                 status={displayStatus === 5 ? 'error' : displayStatus === 4 ? 'finish' : 'process'}
@@ -237,18 +265,18 @@ const OrderDetail = () => {
                 )}
               </Steps>
             ) : (
-              <Steps 
+            <Steps 
                 current={displayStatus > 1 ? displayStatus - 1 : displayStatus}
                 status={displayStatus === 5 ? 'error' : displayStatus === 4 ? 'finish' : 'process'}
-              >
+            >
                 <Step title="待确认" />
                 <Step title="待收货" />
                 <Step title="待评价" />
                 <Step title="已完成" />
                 {displayStatus === 5 && (
-                  <Step title="订单取消" description="交易终止" />
-                )}
-              </Steps>
+                <Step title="订单取消" description="交易终止" />
+              )}
+            </Steps>
             )}
             
             <Divider />
@@ -271,7 +299,7 @@ const OrderDetail = () => {
                 style={{ width: 100, height: 100, marginRight: 16, objectFit: 'cover' }}
               />
               <div>
-                <Title level={4}>{order.item && order.item.title ? order.item.title : '无标题'}</Title>
+                <Title level={4}>{order.itemName || (order.item && order.item.title) || '无标题'}</Title>
                 <Text type="secondary">{order.item && order.item.category ? order.item.category : ''}</Text>
               </div>
             </div>
@@ -279,11 +307,12 @@ const OrderDetail = () => {
             <Divider />
             
             <Descriptions column={1}>
-              <Descriptions.Item label="物品价格">¥{order.amount}</Descriptions.Item>
-              <Descriptions.Item label="定金金额">¥{order.deposit || 0}</Descriptions.Item>
-              {order.trackingNumber && (
-                <Descriptions.Item label="快递单号">{order.trackingNumber}</Descriptions.Item>
-              )}
+              <Descriptions.Item label="物品价格">¥{order.item && order.item.price ? order.item.price : '无'}</Descriptions.Item>
+              <Descriptions.Item label="物品成色">
+                {order.item && order.item.condition !== undefined && order.item.condition !== null
+                  ? conditionMap[order.item.condition]
+                  : '无'}
+              </Descriptions.Item>
               {order.escrow && (
                 <>
                   <Descriptions.Item label="托管状态">
