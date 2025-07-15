@@ -60,5 +60,5 @@
       "last 1 safari version"
     ]
   },
-  "proxy": "http://p44e6693.natappfree.cc"
+  "proxy": "http://localhost:8080"
 }
