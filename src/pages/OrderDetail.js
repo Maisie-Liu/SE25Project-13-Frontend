@@ -209,19 +209,6 @@ const OrderDetail = () => {
           </Button>
         );
       }
-      if (status === 1) {
-        return (
-          <Button 
-            type="primary" 
-            className={`${btnClasses} deliver-button`}
-            onClick={handleDeliverOrder}
-            icon={<SendOutlined />}
-            size="large"
-          >
-            发货
-          </Button>
-        );
-      }
       if (order.status === 3 && !order.buyerComment && isSeller) {
         return (
           <Button 
@@ -437,17 +424,19 @@ const OrderDetail = () => {
             </div>
             <div className="item-preview">
               <div className="item-image-container">
-                <img 
-                  src={order.item && order.item.images && order.item.images.length > 0 ? order.item.images[0] : 'https://via.placeholder.com/100x100?text=No+Image'} 
-                  alt={order.item && order.item.title ? order.item.title : 'No Title'}
+                <img
+                  src={order.item && order.item.images && order.item.images.length > 0 ? order.item.images[0] : 'https://via.placeholder.com/120x120?text=No+Image'}
+                  alt={order.item && order.item.name ? order.item.name : 'No Title'}
                   className="item-image"
                 />
               </div>
               <div className="item-basic-info">
-                <div className="item-title">{order.item && order.item.title ? order.item.title : '无标题'}</div>
-                {order.item && order.item.category && (
+                <div className="item-title">
+                  {order.item && order.item.name ? order.item.name : '无标题'}
+                </div>
+                {order.item && order.item.categoryName && (
                   <div className="item-category">
-                    <TagOutlined /> {order.item.category.name || order.item.category}
+                    <TagOutlined /> {order.item.categoryName}
                   </div>
                 )}
               </div>
@@ -577,43 +566,6 @@ const OrderDetail = () => {
           />
         </div>
       </Modal>
-
-      {/* 发货弹窗 */}
-      {isSeller && (
-        <Modal
-          title={
-            <div className="modal-title">
-              <CarOutlined className="modal-icon" /> 填写物流信息
-            </div>
-          }
-          open={deliverModalVisible}
-          onOk={handleSubmitDeliver}
-          onCancel={() => setDeliverModalVisible(false)}
-          okText="确认发货"
-          cancelText="取消"
-          className="delivery-modal"
-          width={500}
-          centered
-        >
-          <div className="tracking-section">
-            <div className="tracking-info">
-              <Paragraph className="modal-tip">
-                请填写有效的快递单号，买家将根据此信息跟踪物品物流状态
-              </Paragraph>
-              <div className="tracking-input">
-                <Input
-                  value={trackingNumber}
-                  onChange={e => setTrackingNumber(e.target.value)}
-                  placeholder="请输入快递单号"
-                  prefix={<CarOutlined />}
-                  size="large"
-                  className="tracking-number-input"
-                />
-              </div>
-            </div>
-          </div>
-        </Modal>
-      )}
     </div>
   );
 };
