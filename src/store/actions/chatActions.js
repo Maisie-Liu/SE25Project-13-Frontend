@@ -6,7 +6,7 @@ export const fetchUserChats = createAsyncThunk(
   'chat/fetchUserChats',
   async ({ page = 0, size = 10 } = {}, { rejectWithValue }) => {
     try {
-      const response = await axios.get(`/api/chats?page=${page}&size=${size}`);
+      const response = await axios.get(`/chats?page=${page}&size=${size}`);
       return response.data;
     } catch (error) {
       return rejectWithValue(error.response?.data?.message || '获取聊天会话失败');
@@ -19,7 +19,7 @@ export const fetchChatMessages = createAsyncThunk(
   'chat/fetchChatMessages',
   async ({ chatId, page = 0, size = 20 } = {}, { rejectWithValue }) => {
     try {
-      const response = await axios.get(`/api/chats/${chatId}/messages?page=${page}&size=${size}`);
+      const response = await axios.get(`/chats/${chatId}/messages?page=${page}&size=${size}`);
       return { chatId, messages: response.data };
     } catch (error) {
       return rejectWithValue(error.response?.data?.message || '获取聊天消息失败');
@@ -32,7 +32,7 @@ export const sendChatMessage = createAsyncThunk(
   'chat/sendChatMessage',
   async ({ chatId, content }, { rejectWithValue }) => {
     try {
-      const response = await axios.post(`/api/chats/${chatId}/messages`, { content });
+      const response = await axios.post(`/chats/${chatId}/messages`, { content });
       return { chatId, message: response.data };
     } catch (error) {
       return rejectWithValue(error.response?.data?.message || '发送消息失败');
@@ -45,7 +45,7 @@ export const createChat = createAsyncThunk(
   'chat/createChat',
   async ({ otherUserId, itemId, initialMessage }, { rejectWithValue }) => {
     try {
-      const response = await axios.post('/api/chats', {
+      const response = await axios.post('/chats', {
         otherUserId,
         itemId,
         initialMessage
@@ -62,7 +62,7 @@ export const markChatMessagesAsRead = createAsyncThunk(
   'chat/markChatMessagesAsRead',
   async (chatId, { rejectWithValue }) => {
     try {
-      const response = await axios.put(`/api/chats/${chatId}/read`);
+      const response = await axios.put(`/chats/${chatId}/read`);
       return { chatId };
     } catch (error) {
       console.error(`标记聊天 ${chatId} 的所有消息为已读失败:`, error);
@@ -77,7 +77,7 @@ export const fetchChatUnreadCount = createAsyncThunk(
   'chat/fetchChatUnreadCount',
   async (chatId, { rejectWithValue }) => {
     try {
-      const response = await axios.get(`/api/chats/${chatId}/unread`);
+      const response = await axios.get(`/chats/${chatId}/unread`);
       return { chatId, unreadCount: response.data.unreadCount };
     } catch (error) {
       return rejectWithValue(error.response?.data?.message || '获取未读消息数量失败');
@@ -90,7 +90,7 @@ export const fetchTotalUnreadCount = createAsyncThunk(
   'chat/fetchTotalUnreadCount',
   async (_, { rejectWithValue }) => {
     try {
-      const response = await axios.get('/api/chats/unread/total');
+      const response = await axios.get('/chats/unread/total');
       return response.data.totalUnreadCount;
     } catch (error) {
       return rejectWithValue(error.response?.data?.message || '获取未读消息总数失败');
