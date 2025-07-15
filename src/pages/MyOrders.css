@@ -28,113 +28,269 @@
   margin: 0 10px 0 0;
   font-size: 16px;
   transition: all 0.3s;
+  background-color: #f9f9f9;
+  border: 1px solid #e8e8e8;
+  border-radius: 8px 8px 0 0;
+  position: relative;
+  bottom: -1px;
 }
 
 .my-orders-tabs .ant-tabs-tab-active {
   font-weight: 600;
+  background-color: white;
+  border-bottom-color: white;
+  color: #40c4c4;
+}
+
+.my-orders-tabs .ant-tabs-nav::before {
+  border-bottom: 1px solid #e8e8e8;
+}
+
+.my-orders-tabs .ant-tabs-nav {
+  margin-bottom: 24px;
 }
 
 .my-orders-tabs .ant-tabs-ink-bar {
   height: 3px;
-  background: #00B8A9;
+  background: #40c4c4;
 }
 
-.order-table-container {
-  margin-top: 20px;
-}
-
-.order-item-card {
+/* 订单卡片样式 */
+.order-card {
+  border-radius: 12px;
+  overflow: hidden;
+  transition: all 0.3s;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  height: 100%;
   display: flex;
+  flex-direction: column;
+}
+
+.order-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+}
+
+.order-card .ant-card-body {
+  padding: 16px;
+  flex: 1;
+}
+
+.order-card .ant-card-actions {
+  border-top: 1px solid #f0f0f0;
+  background: #fafafa;
+}
+
+.order-card-header {
+  display: flex;
+  justify-content: space-between;
   align-items: center;
-  padding: 10px 0;
+  margin-bottom: 16px;
+  padding-bottom: 12px;
+  border-bottom: 1px dashed #f0f0f0;
+}
+
+.order-number {
+  font-size: 12px;
+  color: #999;
+}
+
+.order-status .ant-badge-status-text {
+  font-weight: 500;
+  font-size: 14px;
+}
+
+.order-card-content {
+  margin-bottom: 16px;
+}
+
+.order-item-info {
+  display: flex;
+  align-items: flex-start;
+}
+
+.order-item-image-container {
+  width: 100px;
+  height: 100px;
+  border-radius: 8px;
+  overflow: hidden;
+  margin-right: 12px;
+  flex-shrink: 0;
+  position: relative;
+  background: #f5f5f5;
+}
+
+.order-item-image-container::before {
+  content: '';
+  display: block;
+  padding-top: 100%;
 }
 
 .order-item-image {
-  width: 70px;
-  height: 70px;
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
   object-fit: cover;
-  border-radius: 8px;
-  margin-right: 15px;
   transition: transform 0.3s;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 .order-item-image:hover {
   transform: scale(1.05);
 }
 
+.order-item-details {
+  flex: 1;
+  min-width: 0;
+}
+
 .order-item-title {
   font-weight: 500;
+  font-size: 16px;
   color: #333;
-  transition: color 0.3s;
+  margin-bottom: 8px;
+  display: block;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  max-width: 200px;
+  transition: color 0.3s;
 }
 
 .order-item-title:hover {
-  color: #00B8A9;
+  color: #40c4c4;
 }
 
 .order-price {
   font-weight: 600;
   color: #ff4d4f;
+  margin-bottom: 8px;
+  font-size: 15px;
 }
 
-.order-status-tag {
-  padding: 4px 12px;
-  border-radius: 12px;
-  font-weight: 500;
-  display: inline-block;
+.order-time, .order-location {
+  color: #999;
+  font-size: 12px;
+  margin-bottom: 4px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-.order-action-buttons {
+.order-time .anticon, .order-location .anticon, .order-price .anticon {
+  margin-right: 5px;
+}
+
+.order-card-footer {
+  margin-top: auto;
+  padding-top: 12px;
+  border-top: 1px dashed #f0f0f0;
+}
+
+.order-user-info {
   display: flex;
-  gap: 10px;
+  align-items: center;
 }
 
-.order-detail-button {
-  color: #00B8A9;
+.order-user-icon {
+  margin-right: 8px;
+  color: #40c4c4;
+  font-size: 14px;
 }
 
-.order-detail-button:hover {
-  color: #008e83;
+.order-user-name {
+  font-size: 13px;
+  color: #666;
+}
+
+.order-detail-link {
+  color: #40c4c4;
+}
+
+.order-detail-link:hover {
+  color: #38b6b6;
 }
 
 .order-action-button {
+  background: #40c4c4;
+  border-color: #40c4c4;
   border-radius: 20px;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
   transition: all 0.3s;
 }
 
 .order-action-button:hover {
+  background: #38b6b6;
+  border-color: #38b6b6;
   transform: translateY(-2px);
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
 }
 
-.empty-orders {
-  margin: 60px 0;
-  text-align: center;
+.confirm-button {
+  background: #faad14;
+  border-color: #faad14;
 }
 
-.empty-orders .ant-empty-image {
-  height: 120px;
+.confirm-button:hover {
+  background: #e8a010;
+  border-color: #e8a010;
 }
 
-.empty-orders .ant-empty-description {
+.deliver-button {
+  background: #1890ff;
+  border-color: #1890ff;
+}
+
+.deliver-button:hover {
+  background: #0c7ad8;
+  border-color: #0c7ad8;
+}
+
+.receive-button {
+  background: #fa8c16;
+  border-color: #fa8c16;
+}
+
+.receive-button:hover {
+  background: #e87c10;
+  border-color: #e87c10;
+}
+
+.comment-button {
+  background: #52c41a;
+  border-color: #52c41a;
+}
+
+.comment-button:hover {
+  background: #49ad17;
+  border-color: #49ad17;
+}
+
+/* 空状态样式 */
+.empty-text {
   color: #999;
   font-size: 16px;
 }
 
+.empty-action-button {
+  margin-top: 16px;
+  background: #40c4c4;
+  border-color: #40c4c4;
+}
+
+.empty-action-button:hover {
+  background: #38b6b6;
+  border-color: #38b6b6;
+}
+
+/* 评价弹窗样式 */
 .comment-modal .ant-modal-content {
   border-radius: 12px;
   overflow: hidden;
 }
 
 .comment-modal .ant-modal-header {
-  background: #00B8A9;
-  color: white;
+  background: #40c4c4;
+  border-bottom: 1px solid #e8e8e8;
   padding: 16px 24px;
 }
 
@@ -143,32 +299,87 @@
   font-weight: 600;
 }
 
-.comment-modal .ant-input {
+.comment-modal-title {
+  display: flex;
+  align-items: center;
+}
+
+.comment-modal-item {
+  display: flex;
+  align-items: center;
+  margin-top: 8px;
+}
+
+.comment-modal-item-image {
+  width: 60px;
+  height: 60px;
   border-radius: 8px;
-  margin-top: 12px;
+  overflow: hidden;
+  margin-right: 12px;
+  flex-shrink: 0;
+  background: #f5f5f5;
+}
+
+.comment-modal-item-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.comment-modal-item-info {
+  flex: 1;
+}
+
+.comment-modal-item-title {
+  font-weight: 500;
+  font-size: 15px;
+  margin-bottom: 4px;
+  color: #333;
+}
+
+.comment-modal-item-price {
+  font-weight: 600;
+  color: #ff4d4f;
+  font-size: 14px;
+}
+
+.comment-form {
+  margin-top: 16px;
+}
+
+.comment-rating {
+  margin-bottom: 16px;
+}
+
+.comment-label {
+  font-weight: 500;
+  margin-bottom: 8px;
+  color: #333;
+}
+
+.comment-textarea {
+  border-radius: 8px;
+  resize: none;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-  border: 1px solid #eee;
+  border: 1px solid #e8e8e8;
+}
+
+.comment-textarea:hover, .comment-textarea:focus {
+  border-color: #40c4c4;
+  box-shadow: 0 0 0 2px rgba(64, 196, 196, 0.1);
 }
 
 .comment-modal .ant-btn-primary {
-  background: #00B8A9;
-  border-color: #00B8A9;
+  background: #40c4c4;
+  border-color: #40c4c4;
 }
 
 .comment-modal .ant-btn-primary:hover {
-  background: #008e83;
-  border-color: #008e83;
+  background: #38b6b6;
+  border-color: #38b6b6;
 }
 
-.ant-table-row {
-  transition: all 0.3s;
-}
-
-.ant-table-row:hover {
-  background-color: #f0f9ff !important;
-}
-
-/* 自定义加载效果 */
+/* 加载状态 */
 .orders-loading {
   display: flex;
   justify-content: center;
@@ -182,17 +393,29 @@
     padding: 20px 15px;
   }
   
-  .order-item-title {
-    max-width: 120px;
-  }
-  
   .my-orders-tabs .ant-tabs-tab {
     padding: 8px 16px;
     font-size: 14px;
+    margin: 0 5px 0 0;
   }
   
-  .order-item-image {
-    width: 50px;
-    height: 50px;
+  .order-item-image-container {
+    width: 80px;
+    height: 80px;
+  }
+  
+  .order-item-title {
+    font-size: 14px;
+  }
+}
+
+@media (max-width: 576px) {
+  .order-item-image-container {
+    width: 60px;
+    height: 60px;
+  }
+  
+  .order-card .ant-card-body {
+    padding: 12px;
   }
 } 
