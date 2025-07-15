@@ -144,24 +144,44 @@ const Header = () => {
     }
   }, [isAuthenticated, navigate]);
   
+  // 自定义菜单标题渲染函数
+  const renderMenuItem = (label, description) => (
+    <div className="menu-item-content">
+      <div className="menu-item-label">{label}</div>
+      {description && <div className="menu-item-description">{description}</div>}
+    </div>
+  );
+
   // 定义菜单项数组，符合Ant Design v5的要求
   const menuItems = [
     {
       key: 'profile',
-      icon: <UserOutlined />,
-      label: '个人资料',
+      icon: (
+        <div className="user-menu-icon user-menu-profile">
+          <UserOutlined />
+        </div>
+      ),
+      label: renderMenuItem('个人资料', '查看并编辑您的个人信息'),
       onClick: () => navigate('/profile')
     },
     {
       key: 'orders',
-      icon: <ShoppingOutlined />,
-      label: '我的订单',
+      icon: (
+        <div className="user-menu-icon user-menu-orders">
+          <ShoppingOutlined />
+        </div>
+      ),
+      label: renderMenuItem('我的订单', '管理您的交易订单'),
       onClick: () => navigate('/my/orders')
     },
     {
       key: 'items',
-      icon: <AppstoreOutlined />,
-      label: '我的物品',
+      icon: (
+        <div className="user-menu-icon user-menu-items">
+          <AppstoreOutlined />
+        </div>
+      ),
+      label: renderMenuItem('我的物品', '管理您发布的商品'),
       onClick: () => navigate('/my/items')
     },
     {
@@ -169,8 +189,13 @@ const Header = () => {
     },
     {
       key: 'logout',
-      icon: <LogoutOutlined />,
-      label: '退出登录',
+      danger: true,
+      icon: (
+        <div className="user-menu-icon user-menu-logout">
+          <LogoutOutlined />
+        </div>
+      ),
+      label: renderMenuItem('退出登录', '安全退出当前账号'),
       onClick: handleLogout
     }
   ];
@@ -266,7 +291,13 @@ const Header = () => {
                       className="icon-button"
                       onClick={() => navigate('/my/favorites')}
                     />
-                    <Dropdown menu={{ items: menuItems }} placement="bottomRight" arrow>
+                    <Dropdown 
+                      menu={{ items: menuItems }} 
+                      placement="bottomRight" 
+                      arrow={{ pointAtCenter: true }}
+                      overlayClassName="header-dropdown-menu"
+                      trigger={['click']}
+                    >
                       <div className="user-avatar-container">
                         <Avatar 
                           size="default" 

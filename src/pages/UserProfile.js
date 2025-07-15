@@ -343,8 +343,25 @@ const UserProfile = () => {
           <Row gutter={[24, 24]} className="profile-content">
               <Col span={24}>
                 <Card className="comments-card">
-                  <Tabs defaultActiveKey="buyer" className="comments-tabs">
-                    <TabPane tab="作为买家收到的评价" key="buyer">
+                  <div className="comments-header">
+                    <Title level={4}>我的评价记录</Title>
+                    <div className="comments-stats">
+                      <Tag color="#7d989b">总评价: {buyerComments.length + sellerComments.length}</Tag>
+                      <Tag color="#a69b8a">买家评价: {sellerComments.length}</Tag>
+                      <Tag color="#b89795">卖家评价: {buyerComments.length}</Tag>
+                    </div>
+                  </div>
+                  
+                  <Tabs defaultActiveKey="buyer" className="comments-tabs" tabBarStyle={{ marginBottom: 24 }}>
+                    <TabPane 
+                      tab={
+                        <span className="tab-with-tag">
+                          <span className="tab-tag tab-tag-buyer"></span>
+                          作为买家收到的评价
+                        </span>
+                      } 
+                      key="buyer"
+                    >
                       {buyerComments && buyerComments.length > 0 ? (
                         <List
                           className="comments-list"
@@ -354,23 +371,42 @@ const UserProfile = () => {
                             <List.Item className="comment-item">
                               <div className="comment-header">
                                 <div className="comment-user">
-                                  <Avatar src={order.seller?.avatarUrl} icon={<UserOutlined />} />
-                                  <span className="user-name">{order.seller?.username || '匿名卖家'}</span>
+                                  <Avatar src={order.seller?.avatarUrl} icon={<UserOutlined />} size={48} />
+                                  <div className="user-info-block">
+                                    <span className="user-name">{order.seller?.username || '匿名卖家'}</span>
+                                    <span className="user-role">卖家</span>
+                                  </div>
                                 </div>
                                 <div className="comment-order">
-                                  <span className="order-number">订单号：{order.orderNo}</span>
+                                  <div className="order-info">
+                                    <span className="order-label">订单号</span>
+                                    <span className="order-number">{order.orderNo}</span>
+                                  </div>
                                   <span className="comment-time">
                                     {new Date(order.updateTime).toLocaleString()}
                                   </span>
                                 </div>
                               </div>
                               <div className="comment-content">
-                                <Tag color="blue">卖家评价</Tag>
+                                <div className="comment-rating">
+                                  <Tag color="#7d989b" className="rating-tag">卖家评价</Tag>
+                                </div>
                                 <Paragraph className="comment-text">{order.buyerComment}</Paragraph>
                               </div>
-                              <div className="comment-item-info">
-                                <span>物品：<Link to={`/items/${order.item.id}`}>{order.item.title}</Link></span>
-                                <span>交易金额：¥{order.amount}</span>
+                              <div className="comment-item-detail">
+                                <div className="comment-item-image">
+                                  <img 
+                                    src={order.item.images && order.item.images.length > 0 ? order.item.images[0] : 'https://via.placeholder.com/100'} 
+                                    alt={order.item.title} 
+                                  />
+                                </div>
+                                <div className="comment-item-info">
+                                  <Link to={`/items/${order.item.id}`} className="item-title-link">{order.item.title || order.item.name}</Link>
+                                  <div className="transaction-info">
+                                    <span className="transaction-price">交易金额：¥{order.amount}</span>
+                                    <span className="transaction-date">交易日期：{new Date(order.createTime).toLocaleDateString()}</span>
+                                  </div>
+                                </div>
                               </div>
                             </List.Item>
                           )}
@@ -379,11 +415,20 @@ const UserProfile = () => {
                         <div className="empty-comments">
                           <img src="/empty-comment.png" alt="暂无评价" className="empty-image" />
                           <p>暂无卖家对您的评价</p>
+                          <Button type="primary" className="empty-action-btn">去购买商品</Button>
                         </div>
                       )}
                     </TabPane>
                     
-                    <TabPane tab="作为卖家收到的评价" key="seller">
+                    <TabPane 
+                      tab={
+                        <span className="tab-with-tag">
+                          <span className="tab-tag tab-tag-seller"></span>
+                          作为卖家收到的评价
+                        </span>
+                      } 
+                      key="seller"
+                    >
                       {sellerComments && sellerComments.length > 0 ? (
                         <List
                           className="comments-list"
@@ -393,23 +438,42 @@ const UserProfile = () => {
                             <List.Item className="comment-item">
                               <div className="comment-header">
                                 <div className="comment-user">
-                                  <Avatar src={order.buyer?.avatarUrl} icon={<UserOutlined />} />
-                                  <span className="user-name">{order.buyer?.username || '匿名买家'}</span>
+                                  <Avatar src={order.buyer?.avatarUrl} icon={<UserOutlined />} size={48} />
+                                  <div className="user-info-block">
+                                    <span className="user-name">{order.buyer?.username || '匿名买家'}</span>
+                                    <span className="user-role">买家</span>
+                                  </div>
                                 </div>
                                 <div className="comment-order">
-                                  <span className="order-number">订单号：{order.orderNo}</span>
+                                  <div className="order-info">
+                                    <span className="order-label">订单号</span>
+                                    <span className="order-number">{order.orderNo}</span>
+                                  </div>
                                   <span className="comment-time">
                                     {new Date(order.updateTime).toLocaleString()}
                                   </span>
                                 </div>
                               </div>
                               <div className="comment-content">
-                                <Tag color="orange">买家评价</Tag>
+                                <div className="comment-rating">
+                                  <Tag color="#a69b8a" className="rating-tag">买家评价</Tag>
+                                </div>
                                 <Paragraph className="comment-text">{order.sellerComment}</Paragraph>
                               </div>
-                              <div className="comment-item-info">
-                                <span>物品：<Link to={`/items/${order.item.id}`}>{order.item.title}</Link></span>
-                                <span>交易金额：¥{order.amount}</span>
+                              <div className="comment-item-detail">
+                                <div className="comment-item-image">
+                                  <img 
+                                    src={order.item.images && order.item.images.length > 0 ? order.item.images[0] : 'https://via.placeholder.com/100'} 
+                                    alt={order.item.title} 
+                                  />
+                                </div>
+                                <div className="comment-item-info">
+                                  <Link to={`/items/${order.item.id}`} className="item-title-link">{order.item.title || order.item.name}</Link>
+                                  <div className="transaction-info">
+                                    <span className="transaction-price">交易金额：¥{order.amount}</span>
+                                    <span className="transaction-date">交易日期：{new Date(order.createTime).toLocaleDateString()}</span>
+                                  </div>
+                                </div>
                               </div>
                             </List.Item>
                           )}
@@ -418,6 +482,7 @@ const UserProfile = () => {
                         <div className="empty-comments">
                           <img src="/empty-comment.png" alt="暂无评价" className="empty-image" />
                           <p>暂无买家对您的评价</p>
+                          <Button type="primary" className="empty-action-btn">去发布物品</Button>
                         </div>
                       )}
                     </TabPane>

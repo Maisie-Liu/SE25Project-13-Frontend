@@ -599,17 +599,198 @@
 .user-avatar-container {
   display: flex;
   align-items: center;
+  position: relative;
+  cursor: pointer;
+  padding: 6px 12px;
+  border-radius: 30px;
+  transition: all 0.3s ease;
+}
+
+.user-avatar-container:hover {
+  background-color: rgba(255, 255, 255, 0.15);
 }
 
 .user-avatar-container .username {
   margin-left: 8px;
   color: #fff !important;
   font-weight: 500;
+  position: relative;
+  padding-right: 16px;
+}
+
+.user-avatar-container .username::after {
+  content: '';
+  position: absolute;
+  right: 0;
+  top: 50%;
+  width: 8px;
+  height: 8px;
+  margin-top: -2px;
+  border-right: 2px solid #fff;
+  border-bottom: 2px solid #fff;
+  transform: translateY(-50%) rotate(45deg);
+  transition: transform 0.3s;
+}
+
+.user-avatar-container:hover .username::after {
+  transform: translateY(-50%) rotate(-135deg);
 }
 
 .user-avatar {
-  width: 32px;
-  height: 32px;
+  width: 36px;
+  height: 36px;
+  border: 2px solid transparent;
+  transition: all 0.3s ease;
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.1);
+}
+
+.user-avatar:hover {
+  border-color: #fff;
+  transform: scale(1.05);
+  box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.2);
+}
+
+/* 自定义下拉菜单样式 */
+.header-dropdown-menu {
+  background-color: white;
+  border-radius: 12px;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15), 0 0 0 1px rgba(0, 0, 0, 0.05);
+  overflow: hidden;
+  width: 220px;
+  padding: 8px;
+  margin-top: 8px;
+  border: 1px solid #eaeaea;
+  animation: fadeIn 0.2s ease-out;
+  transform-origin: top right;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.header-dropdown-menu .ant-dropdown-menu {
+  box-shadow: none !important;
+  background: transparent !important;
+  border-radius: 8px !important;
+}
+
+/* 菜单项内容样式 */
+.menu-item-content {
+  display: flex;
+  flex-direction: column;
+}
+
+.menu-item-label {
+  font-weight: 500;
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+.menu-item-description {
+  font-size: 12px;
+  color: #8c8c8c;
+  margin-top: 2px;
+  font-weight: normal;
+}
+
+.header-dropdown-menu .ant-dropdown-menu-item {
+  margin: 4px 0;
+  padding: 10px 12px;
+  border-radius: 8px;
+  font-weight: 500;
+  font-size: 14px;
+  color: #333;
+  transition: all 0.2s ease-in-out;
+  position: relative;
+  overflow: hidden;
+}
+
+.header-dropdown-menu .ant-dropdown-menu-item::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 0;
+  height: 3px;
+  background: linear-gradient(90deg, var(--primary-color), transparent);
+  transition: width 0.3s ease;
+}
+
+.header-dropdown-menu .ant-dropdown-menu-item:hover {
+  background-color: #f0f9f8;
+  color: var(--primary-color);
+  padding-left: 16px;
+}
+
+.header-dropdown-menu .ant-dropdown-menu-item:hover::after {
+  width: 100%;
+}
+
+.header-dropdown-menu .ant-dropdown-menu-item .anticon {
+  font-size: 16px;
+  margin-right: 10px;
+}
+
+.header-dropdown-menu .ant-dropdown-menu-item-divider {
+  background-color: #edf1f2;
+  margin: 8px 0;
+}
+
+/* 突出显示登出选项 */
+.header-dropdown-menu .ant-dropdown-menu-item-danger {
+  color: #ff4d4f;
+}
+
+.header-dropdown-menu .ant-dropdown-menu-item-danger:hover {
+  background-color: #fff2f0;
+  color: #ff4d4f;
+}
+
+.header-dropdown-menu .ant-dropdown-menu-item-danger:hover::after {
+  background: linear-gradient(90deg, #ff4d4f, transparent);
+}
+
+/* 个人资料图标样式 */
+.user-menu-icon {
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  margin-right: 10px;
+  transition: all 0.3s ease;
+}
+
+.user-menu-profile {
+  background-color: #e6f7ff;
+  color: #1890ff;
+}
+
+.user-menu-orders {
+  background-color: #f6ffed;
+  color: #52c41a;
+}
+
+.user-menu-items {
+  background-color: #fff7e6;
+  color: #fa8c16;
+}
+
+.user-menu-logout {
+  background-color: #fff1f0;
+  color: #ff4d4f;
+}
+
+.ant-dropdown-menu-item:hover .user-menu-icon {
+  transform: scale(1.1) rotate(5deg);
 }
 
 /* 登录注册按钮调整 */
@@ -1711,24 +1892,27 @@
 
 /* 物品详情页图片区域美化 */
 .item-image-container {
-  min-height: 490px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: flex-start;
+  position: relative;
+  width: 100%;
+  padding-top: 100%;  /* 保持1:1比例 */
   background: #fff;
-  width: 100%;
+  overflow: hidden;
 }
+
 .main-image-wrapper {
+  position: absolute;
+  top: 0;
+  left: 0;
   width: 100%;
-  height: 400px;
+  height: 100%;
   display: flex;
   align-items: center;
   justify-content: center;
 }
+
 .main-item-image {
-  max-width: 100%;
-  max-height: 100%;
+  width: 100%;
+  height: 100%;
   object-fit: contain;
   border-radius: 8px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
@@ -1736,6 +1920,7 @@
   background: #fff;
   transition: border 0.2s;
 }
+
 .thumbnail-list {
   display: flex;
   flex-direction: row;
