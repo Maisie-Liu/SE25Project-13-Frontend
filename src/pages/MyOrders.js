@@ -140,14 +140,14 @@ const MyOrders = () => {
         icon = <ClockCircleOutlined />;
         break;
       case 1:
-        text = '待发货'; 
+        text = '待收货'; 
         color = 'blue'; 
         icon = <ShoppingOutlined />;
         break;
       case 2:
-        text = '待收货'; 
-        color = 'orange'; 
-        icon = <SendOutlined />;
+        text = '已拒绝'; 
+        color = 'red'; 
+        icon = <CloseCircleOutlined />;
         break;
       case 3:
         text = '待评价'; 
@@ -161,7 +161,7 @@ const MyOrders = () => {
         break;
       case 5:
         text = '已取消'; 
-        color = 'red'; 
+        color = 'orange'; 
         icon = <CloseCircleOutlined />;
         break;
       default:

@@ -98,10 +98,10 @@ export const updateOrder = createAsyncThunk(
 // 取消订单
 export const cancelOrder = createAsyncThunk(
   'order/cancelOrder',
-  async (orderId, { dispatch, rejectWithValue }) => {
+  async ({ orderId, reason }, { dispatch, rejectWithValue }) => {
     try {
       dispatch(setOrderLoading(true));
-      const response = await axios.put(`/orders/${orderId}/cancel`);
+      const response = await axios.put(`/orders/${orderId}/cancel`, null, { params: { reason } });
       dispatch(updateOrderStatus({ orderId, status: 'CANCELLED' }));
       return response.data;
     } catch (error) {
