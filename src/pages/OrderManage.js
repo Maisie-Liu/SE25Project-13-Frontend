@@ -11,7 +11,7 @@ import {
 } from '@ant-design/icons';
 import { 
   fetchUserOrders, fetchSellerOrders, updateOrder, 
-  cancelOrder, confirmReceipt, rateOrder 
+  cancelOrder, confirmReceive, rateOrder 
 } from '../store/actions/orderActions';
 import { 
   selectOrders, selectOrderLoading, selectOrderPagination
@@ -76,7 +76,7 @@ const OrderManage = () => {
   const handleCompleteOrder = async (order) => {
     setSubmitting(true);
     try {
-      await dispatch(confirmReceipt(order.id)).unwrap();
+      await dispatch(confirmReceive(order.id)).unwrap();
       message.success('订单已完成');
       if (activeKey === 'buyer') {
         dispatch(fetchUserOrders({ pageNum: 1, pageSize: 10 }));

@@ -8,7 +8,7 @@ import {
   CheckCircleOutlined, CloseCircleOutlined, WalletOutlined, 
   ShoppingCartOutlined, CarOutlined, SmileOutlined
 } from '@ant-design/icons';
-import { fetchOrderById, confirmReceipt } from '../store/actions/orderActions';
+import { fetchOrderById, confirmReceive } from '../store/actions/orderActions';
 import { 
   getEscrowByOrderId, payEscrow, releaseEscrow, refundEscrow 
 } from '../store/actions/escrowActions';
@@ -104,7 +104,7 @@ const EscrowPayment = () => {
   // 确认收货
   const handleConfirmReceipt = () => {
     if (orderId) {
-      dispatch(confirmReceipt(orderId))
+      dispatch(confirmReceive(orderId))
         .then(() => {
           message.success('已确认收货');
           dispatch(fetchOrderById(orderId));

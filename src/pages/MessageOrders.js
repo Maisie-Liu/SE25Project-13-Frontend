@@ -19,7 +19,8 @@ import {
   Tooltip,
   Row,
   Col,
-  Statistic
+  Statistic,
+  Switch
 } from 'antd';
 import { 
   ArrowLeftOutlined, 
@@ -33,7 +34,9 @@ import {
   ShopOutlined,
   FileSearchOutlined,
   UnorderedListOutlined,
-  FieldTimeOutlined
+  FieldTimeOutlined,
+  StarOutlined,
+  ReloadOutlined
 } from '@ant-design/icons';
 import { format, formatDistanceToNow } from 'date-fns';
 import { zhCN } from 'date-fns/locale';
@@ -63,70 +66,94 @@ const MessageOrders = () => {
     total: 0
   });
   const [unreadCount, setUnreadCount] = useState(0);
+  const [autoRefresh, setAutoRefresh] = useState(true);
   
   // 获取订单消息
+  const loadOrderMessages = async () => {
+    setLoading(true);
+    try {
+      console.log('开始获取订单消息，页码:', pagination.current - 1, '每页数量:', pagination.pageSize);
+      const result = await dispatch(fetchOrderMessages(pagination.current - 1, pagination.pageSize));
+      console.log('fetchOrderMessages返回结果:', result);
+      const response = result.payload || result;
+      console.log('处理后的响应数据:', response);
+      
+      // 处理嵌套的响应格式
+      if (response && response.code === 200 && response.data) {
+        console.log('订单消息内容:', response.data);
+        const messages = response.data.list || [];
+        
+        // 对订单消息进行去重，每个订单只保留最新状态的消息
+        const uniqueMessages = getUniqueOrderMessages(messages, currentUserId);
+        console.log('去重后的订单消息:', uniqueMessages);
+        
+        setOrderMessages(uniqueMessages);
+        
+        // 调试：输出所有订单状态值
+        console.log('所有订单状态值:', uniqueMessages.map(msg => msg.status));
+        
+        setPagination({
+          ...pagination,
+          total: response.data.total || 0
+        });
+        console.log('更新分页信息，总数:', response.data.total);
+      } else {
+        console.error('响应数据格式不正确:', response);
+        message.error('获取数据格式错误');
+      }
+      
+      // 获取未读消息数量
+      const unreadResult = await dispatch(fetchUnreadMessagesByTypeCount('ORDER'));
+      const unreadResponse = unreadResult.payload || unreadResult;
+      if (unreadResponse && unreadResponse.data !== undefined) {
+        setUnreadCount(unreadResponse.data);
+      }
+    } catch (error) {
+      console.error('获取订单消息失败:', error);
+      message.error('获取订单消息失败');
+    } finally {
+      setLoading(false);
+    }
+  };
+  
   useEffect(() => {
-    const loadOrderMessages = async () => {
-      setLoading(true);
-      try {
-        console.log('开始获取订单消息，页码:', pagination.current - 1, '每页数量:', pagination.pageSize);
-        const result = await dispatch(fetchOrderMessages(pagination.current - 1, pagination.pageSize));
-        console.log('fetchOrderMessages返回结果:', result);
-        const response = result.payload || result;
-        console.log('处理后的响应数据:', response);
-        
-        // 处理嵌套的响应格式
-        if (response && response.code === 200 && response.data) {
-          console.log('订单消息内容:', response.data);
-          const messages = response.data.list || [];
-          
-          // 对订单消息进行去重，每个订单只保留最新状态的消息
-          const uniqueMessages = getUniqueOrderMessages(messages, currentUserId);
-          console.log('去重后的订单消息:', uniqueMessages);
-          
-          setOrderMessages(uniqueMessages);
-          
-          // 调试：输出所有订单状态值
-          console.log('所有订单状态值:', uniqueMessages.map(msg => msg.status));
-          
-          setPagination({
-            ...pagination,
-            total: response.data.total || 0
-          });
-          console.log('更新分页信息，总数:', response.data.total);
-        } else {
-          console.error('响应数据格式不正确:', response);
-          message.error('获取数据格式错误');
-        }
-        
-        // 获取未读消息数量
-        const unreadResult = await dispatch(fetchUnreadMessagesByTypeCount('ORDER'));
-        const unreadResponse = unreadResult.payload || unreadResult;
-        if (unreadResponse && unreadResponse.data !== undefined) {
-          setUnreadCount(unreadResponse.data);
-        }
-      } catch (error) {
-        console.error('获取订单消息失败:', error);
-        message.error('获取订单消息失败');
-      } finally {
-        setLoading(false);
+    loadOrderMessages();
+    
+    // 设置定时刷新
+    let refreshInterval;
+    if (autoRefresh) {
+      refreshInterval = setInterval(() => {
+        loadOrderMessages();
+      }, 10000); // 10秒刷新一次
+    }
+    
+    return () => {
+      if (refreshInterval) {
+        clearInterval(refreshInterval);
       }
     };
-    
-    loadOrderMessages();
-  }, [dispatch, pagination.current, pagination.pageSize, currentUserId]);
+  }, [dispatch, pagination.current, pagination.pageSize, currentUserId, autoRefresh]);
+
+  // 切换自动刷新
+  const toggleAutoRefresh = () => {
+    setAutoRefresh(prev => !prev);
+  };
   
   // 对订单消息进行去重，每个订单只保留最新状态的消息
   const getUniqueOrderMessages = (messages, userId) => {    
     // 创建一个Map，按订单ID分组
     const orderMap = new Map();
     
-    // 遍历所有消息
-    messages.forEach(message => {
+    // 首先按照创建时间排序消息（从新到旧）
+    const sortedMessages = [...messages].sort((a, b) => 
+      new Date(b.createdAt) - new Date(a.createdAt)
+    );
+    
+    // 遍历所有消息，为每个订单保留最新的消息
+    sortedMessages.forEach(message => {
       const orderId = message.orderId;
       
-      // 不再过滤接收者，而是纯粹基于时间获取每个订单的最新消息
-      if (!orderMap.has(orderId) || new Date(message.createdAt) > new Date(orderMap.get(orderId).createdAt)) {
+      if (!orderMap.has(orderId)) {
         orderMap.set(orderId, message);
       }
     });
@@ -187,13 +214,19 @@ const MessageOrders = () => {
     
     // 按状态筛选
     if (filter === 'created') {
-      filtered = filtered.filter(msg => msg.status && msg.status.toLowerCase() === 'created');
+      filtered = filtered.filter(msg => 
+        msg.status && (msg.status.toLowerCase() === 'created' || msg.status.toLowerCase() === 'pending')
+      );
     } else if (filter === 'paid') {
       filtered = filtered.filter(msg => 
         msg.status && (msg.status.toLowerCase() === 'paid' || msg.status.toLowerCase() === 'confirmed')
       );
-    } else if (filter === 'shipping') {
-      filtered = filtered.filter(msg => msg.status && msg.status.toLowerCase() === 'shipping');
+    }     else if (filter === 'shipping') {
+      filtered = filtered.filter(msg => 
+        msg.status && (msg.status.toLowerCase() === 'shipping' || 
+                      msg.status.toLowerCase() === 'delivered' || 
+                      msg.status.toLowerCase() === 'received')
+      );
     } else if (filter === 'completed') {
       filtered = filtered.filter(msg => msg.status && msg.status.toLowerCase() === 'completed');
     }
@@ -221,12 +254,15 @@ const MessageOrders = () => {
     const statusLower = status ? status.toLowerCase() : '';
     switch (statusLower) {
       case 'created':
+      case 'pending':
         return <ClockCircleOutlined style={{ color: '#1890ff' }} />;
-      case 'paid':
       case 'confirmed':
-        return <DollarCircleOutlined style={{ color: '#52c41a' }} />;
-      case 'shipping':
+      case 'paid':
         return <CarOutlined style={{ color: '#faad14' }} />;
+      case 'shipping':
+      case 'delivered':
+      case 'received':
+        return <StarOutlined style={{ color: '#722ed1' }} />;
       case 'completed':
         return <CheckCircleOutlined style={{ color: '#52c41a' }} />;
       default:
@@ -238,14 +274,21 @@ const MessageOrders = () => {
     const statusLower = status ? status.toLowerCase() : '';
     switch (statusLower) {
       case 'created':
+      case 'pending':
         return '#1890ff';
-      case 'paid':
       case 'confirmed':
-        return '#52c41a';
-      case 'shipping':
+      case 'paid':
         return '#faad14';
+      case 'shipping':
+      case 'delivered':
+      case 'received':
+        return '#722ed1';
       case 'completed':
         return '#52c41a';
+      case 'cancelled':
+        return '#fa8c16'; // 橙色
+      case 'rejected':
+        return '#f5222d'; // 红色
       default:
         return '#1890ff';
     }
@@ -255,14 +298,21 @@ const MessageOrders = () => {
     const statusLower = status ? status.toLowerCase() : '';
     switch (statusLower) {
       case 'created':
-        return '已创建';
-      case 'paid':
+      case 'pending':
+        return '待确认';
       case 'confirmed':
-        return '已支付';
+      case 'paid':
+        return '待收货';
       case 'shipping':
-        return '运送中';
+      case 'delivered':
+      case 'received':
+        return '待评价';
       case 'completed':
         return '已完成';
+      case 'cancelled':
+        return '已取消';
+      case 'rejected':
+        return '已拒绝';
       default:
         return status || '未知状态';
     }
@@ -272,14 +322,21 @@ const MessageOrders = () => {
     const statusLower = status ? status.toLowerCase() : '';
     switch (statusLower) {
       case 'created':
-        return '订单已创建，等待支付';
-      case 'paid':
+      case 'pending':
+        return '订单已创建，等待卖家确认';
       case 'confirmed':
-        return '买家已支付，请准备发货';
+      case 'paid':
+        return '卖家已确认订单，等待买家收货';
       case 'shipping':
-        return '物品正在配送中';
+      case 'delivered':
+      case 'received':
+        return '买家已确认收货，等待评价';
       case 'completed':
         return '交易已完成';
+      case 'cancelled':
+        return '订单已被取消';
+      case 'rejected':
+        return '订单已被拒绝';
       default:
         return '订单状态更新';
     }
@@ -289,14 +346,20 @@ const MessageOrders = () => {
     const statusLower = status ? status.toLowerCase() : '';
     switch (statusLower) {
       case 'created':
+      case 'pending':
         return 0;
-      case 'paid':
       case 'confirmed':
+      case 'paid':
         return 1;
       case 'shipping':
+      case 'delivered':
+      case 'received':
         return 2;
       case 'completed':
         return 3;
+      case 'rejected':
+      case 'cancelled':
+        return 1; // 特殊处理：被拒绝或取消的订单显示在第二步
       default:
         return 0;
     }
@@ -381,23 +444,42 @@ const MessageOrders = () => {
               <Radio.Button value="all">全部</Radio.Button>
               <Radio.Button value="unread">未读</Radio.Button>
               <Radio.Button value="read">已读</Radio.Button>
-              <Radio.Button value="created">待支付</Radio.Button>
-              <Radio.Button value="paid">已支付</Radio.Button>
-              <Radio.Button value="shipping">运送中</Radio.Button>
+              <Radio.Button value="created">待确认</Radio.Button>
+              <Radio.Button value="paid">待收货</Radio.Button>
+              <Radio.Button value="shipping">待评价</Radio.Button>
               <Radio.Button value="completed">已完成</Radio.Button>
+              <Radio.Button value="cancelled">已取消</Radio.Button>
+              <Radio.Button value="rejected">已拒绝</Radio.Button>
             </Radio.Group>
           </Space>
           
-          <Tooltip title="将所有消息标记为已读">
-            <Button 
-              type="primary" 
-              style={{ marginLeft: '10px' }}
-              disabled={unreadCount === 0}
-              onClick={markAllAsRead}
-            >
-              全部标为已读
-            </Button>
-          </Tooltip>
+          <Space style={{ marginLeft: '10px' }}>
+            <Tooltip title="刷新消息">
+              <Button 
+                type="primary" 
+                icon={<ReloadOutlined />} 
+                onClick={loadOrderMessages}
+                loading={loading}
+              />
+            </Tooltip>
+            
+            <Tooltip title={autoRefresh ? "关闭自动刷新" : "开启自动刷新"}>
+              <div style={{ display: 'flex', alignItems: 'center' }}>
+                <span style={{ marginRight: '5px' }}>自动刷新</span>
+                <Switch checked={autoRefresh} onChange={toggleAutoRefresh} />
+              </div>
+            </Tooltip>
+            
+            <Tooltip title="将所有消息标记为已读">
+              <Button 
+                type="primary" 
+                disabled={unreadCount === 0}
+                onClick={markAllAsRead}
+              >
+                全部标为已读
+              </Button>
+            </Tooltip>
+          </Space>
         </div>
         
         <Search 
@@ -425,6 +507,7 @@ const MessageOrders = () => {
                   hoverable
                   onClick={() => !item.read && markAsRead(item.id)}
                 >
+                  {console.log(`渲染订单 ${item.orderId} 消息, 状态: ${item.status}, 显示文本: ${getStatusText(item.status)}, 步骤: ${getStepNumber(item.status)}`)}
                   <div className="order-message-header">
                     <div className="order-message-title">
                       <Badge 
@@ -479,16 +562,28 @@ const MessageOrders = () => {
                       </Text>
                       
                       <div className="order-message-steps">
-                        <Steps 
-                          current={getStepNumber(item.status)}
-                          size="small"
-                          labelPlacement="vertical"
-                        >
-                          <Step title="创建订单" />
-                          <Step title="买家付款" />
-                          <Step title="运送中" />
-                          <Step title="交易完成" />
-                        </Steps>
+                        {item.status && (item.status.toLowerCase() === 'rejected' || item.status.toLowerCase() === 'cancelled') ? (
+                          <Steps 
+                            current={1}
+                            status={item.status.toLowerCase() === 'rejected' ? 'error' : 'warning'}
+                            size="small"
+                            labelPlacement="vertical"
+                          >
+                            <Step title="待确认" />
+                            <Step title={item.status.toLowerCase() === 'rejected' ? '已拒绝' : '已取消'} />
+                          </Steps>
+                        ) : (
+                          <Steps 
+                            current={getStepNumber(item.status)}
+                            size="small"
+                            labelPlacement="vertical"
+                          >
+                            <Step title="待确认" />
+                            <Step title="待收货" />
+                            <Step title="待评价" />
+                            <Step title="已完成" />
+                          </Steps>
+                        )}
                       </div>
                     </div>
                   </div>
