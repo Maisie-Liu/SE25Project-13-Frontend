@@ -28,7 +28,7 @@ const MyItems = () => {
     dispatch(updateItemStatus({ id, status }))
       .then(() => {
         message.success(`物品已${status === 'ON_SALE' ? '上架' : '下架'}`);
-        dispatch(fetchMyItems());
+        dispatch(fetchMyItems({ pageNum: currentPage, pageSize }));
       })
       .catch(() => {
         message.error('操作失败，请重试');
@@ -187,6 +187,7 @@ const MyItems = () => {
           onChange: (page, size) => {
             setCurrentPage(page);
             setPageSize(size);
+            dispatch(fetchMyItems({ pageNum: page, pageSize: size }));
           },
           showSizeChanger: true,
         }}
