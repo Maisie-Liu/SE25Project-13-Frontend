@@ -132,17 +132,13 @@ const Header = () => {
     }
   };
   
-  const handleLogout = () => {
-    dispatch(logout());
-    // 不再 navigate('/login')
+  const handleLogout = async () => {
+    // 等待 logout 完成再跳转
+    await dispatch(logout());
+    // 清理本地 token，防止异步请求带旧 token
+    localStorage.removeItem('token');
+    navigate('/login', { replace: true });
   };
-  
-  // 在Header组件内部添加如下useEffect
-  useEffect(() => {
-    if (!isAuthenticated) {
-      navigate('/login');
-    }
-  }, [isAuthenticated, navigate]);
   
   // 自定义菜单标题渲染函数
   const renderMenuItem = (label, description) => (
