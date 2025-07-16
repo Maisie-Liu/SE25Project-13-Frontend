@@ -484,6 +484,32 @@ const UserPublicProfile = () => {
                 />
                 <Text type="secondary">共发布 {availableItems.length + soldItems.length} 个</Text>
               </Card>
+
+              {/* 信誉分 */}
+              <Card className="stat-card">
+                <div className="stat-icon reputation-icon">
+                  <LikeOutlined />
+                </div>
+                <Statistic 
+                  title="信誉分" 
+                  value={stats.reputationScore != null ? stats.reputationScore : '暂无'} 
+                  valueStyle={{ color: '#4caf50', fontWeight: 600 }}
+                  suffix={
+                    stats.reputationScore != null && (
+                      <Tag color={
+                        stats.reputationScore >= 90 ? 'green' :
+                        stats.reputationScore >= 70 ? 'blue' :
+                        stats.reputationScore >= 50 ? 'orange' : 'red'
+                      } style={{ marginLeft: 8 }}>
+                        {stats.reputationScore >= 90 ? '优秀' :
+                         stats.reputationScore >= 70 ? '良好' :
+                         stats.reputationScore >= 50 ? '一般' : '较差'}
+                      </Tag>
+                    )
+                  }
+                />
+                <Text type="secondary">信誉分越高，交易信誉越好</Text>
+              </Card>
             </div>
           </Card>
           

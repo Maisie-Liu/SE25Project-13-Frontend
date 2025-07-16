@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { 
   Card, Descriptions, Button, Steps, Divider, Tag, Spin, Typography, 
-  Row, Col, message, Modal, Input, Rate, Avatar, Space, Badge, Tooltip 
+  Row, Col, message, Modal, Input, Rate, Avatar, Space, Badge, Tooltip, Select 
 } from 'antd';
 import { 
   ArrowLeftOutlined, CheckCircleOutlined, ClockCircleOutlined, 
@@ -11,7 +11,7 @@ import {
   SendOutlined, StarOutlined, EnvironmentOutlined, FileTextOutlined,
   PhoneOutlined, StarFilled, CarOutlined, CopyOutlined, CloseCircleOutlined, QuestionCircleOutlined
 } from '@ant-design/icons';
-import { fetchOrderById, updateOrder, confirmOrder, deliverOrder, confirmReceive, commentOrder } from '../store/actions/orderActions';
+import { fetchOrderById, updateOrder, confirmOrder, deliverOrder, confirmReceive, commentOrder, cancelOrder, rejectOrder } from '../store/actions/orderActions';
 import { selectCurrentOrder, selectOrderLoading } from '../store/slices/orderSlice';
 import { selectUser } from '../store/slices/authSlice';
 import './OrderDetail.css';
@@ -32,6 +32,11 @@ const OrderDetail = () => {
   const [commentContent, setCommentContent] = useState('');
   const [commentSubmitting, setCommentSubmitting] = useState(false);
   const [rating, setRating] = useState(5);
+
+  const [cancelModalVisible, setCancelModalVisible] = useState(false);
+  const [cancelReason, setCancelReason] = useState('');
+  const [customCancelReason, setCustomCancelReason] = useState('');
+  const [cancelSubmitting, setCancelSubmitting] = useState(false);
 
   const isBuyer = user && order && user.id === (order.buyer?.id || order.buyerId);
   const isSeller = user && order && user.id === (order.seller?.id || order.sellerId);
@@ -138,6 +143,30 @@ const OrderDetail = () => {
     }
   };
 
+  const handleCancelOrder = () => {
+    setCancelModalVisible(true);
+    setCancelReason('');
+    setCustomCancelReason('');
+  };
+  const handleSubmitCancelOrder = async () => {
+    if (!cancelReason && !customCancelReason.trim()) {
+      message.warning('请选择或填写终止原因');
+      return;
+    }
+    setCancelSubmitting(true);
+    try {
+      const reason = cancelReason === '其他' ? customCancelReason : cancelReason;
+      await dispatch(rejectOrder({ orderId: id, sellerRemark: reason })).unwrap();
+      message.success('订单已终止');
+      setCancelModalVisible(false);
+      dispatch(fetchOrderById(id));
+    } catch (e) {
+      message.error('终止订单失败');
+    } finally {
+      setCancelSubmitting(false);
+    }
+  };
+
   const copyToClipboard = (text) => {
     navigator.clipboard.writeText(text).then(
       () => message.success('已复制到剪贴板'),
@@ -145,9 +174,44 @@ const OrderDetail = () => {
     );
   };
 
+  if (loading || !order) {
+    return (
+      <div className="order-detail-loading">
+        <Spin size="large" tip="加载订单信息..." />
+      </div>
+    );
+  }
+
+  // 新增：进度条节点结构与渲染逻辑调整（必须在 order 存在后再执行）
+  const mainSteps = [
+    { title: '待确认' },
+    { title: '待收货' },
+    { title: '待评价' },
+    { title: '已完成' }
+  ];
+  const terminateStep = { title: '订单终止', description: '交易终止' };
+
+  let stepsToShow = mainSteps;
+  let currentStep = 0;
+  let stepsStatus = 'process';
+  if (order.status === 2 || order.status === 5) {
+    stepsToShow = [mainSteps[0], mainSteps[1], terminateStep];
+    currentStep = 2;
+    stepsStatus = 'error';
+  } else if (order.status === 0) {
+    currentStep = 0;
+  } else if (order.status === 1) {
+    currentStep = 1;
+  } else if (order.status === 3) {
+    currentStep = 2;
+  } else if (order.status === 4) {
+    currentStep = 3;
+    stepsStatus = 'finish';
+  }
+
+  // 主状态显示
   const getStatusInfo = (status) => {
     let icon, color, text;
-    
     switch(status) {
       case 0:
         icon = <ClockCircleOutlined />;
@@ -156,13 +220,13 @@ const OrderDetail = () => {
         break;
       case 1:
         icon = <ShoppingOutlined />;
-        color = 'blue';
-        text = '待发货';
-        break;
-      case 2:
-        icon = <CarOutlined />;
         color = 'orange';
         text = '待收货';
+        break;
+      case 2:
+        icon = <CloseCircleOutlined />;
+        color = 'red';
+        text = '已拒绝';
         break;
       case 3:
         icon = <StarOutlined />;
@@ -176,7 +240,7 @@ const OrderDetail = () => {
         break;
       case 5:
         icon = <CloseCircleOutlined />;
-        color = 'red';
+        color = 'orange';
         text = '已取消';
         break;
       default:
@@ -184,20 +248,40 @@ const OrderDetail = () => {
         color = 'default';
         text = '未知状态';
     }
-    
     return { icon, color, text };
   };
+
+  // 终止原因选项与后端保持一致
+  const buyerCancelReasons = [
+    '临时有事',
+    '不需要该商品了',
+    '价格不合适',
+    '描述不符',
+    '与卖家协商一致取消',
+    '其他'
+  ];
+  const sellerCancelReasons = [
+    '临时有事',
+    '不想卖了',
+    '无法交易',
+    '价格不合适',
+    '描述不符',
+    '与买家协商一致取消',
+    '商品已售出',
+    '买家长时间未响应',
+    '买家要求取消',
+    '其他'
+  ];
 
   const renderActionButtons = () => {
     if (!order || !user) return null;
     const status = displayStatus;
-    // 状态0：待确定，1：待发货，2：待收货，3：待评价
-    
     const btnClasses = "action-button";
-    
-    if (isSeller) {
-      if (status === 0) {
-        return (
+    const canCancel = status !== 2 && status !== 4 && status !== 5;
+    return (
+      <>
+        {/* 原有操作按钮 */}
+        {isSeller && status === 0 && (
           <Button 
             type="primary" 
             className={`${btnClasses} confirm-button`}
@@ -207,23 +291,8 @@ const OrderDetail = () => {
           >
             确认订单
           </Button>
-        );
-      }
-      if (status === 1) {
-        return (
-          <Button 
-            type="primary" 
-            className={`${btnClasses} deliver-button`}
-            onClick={handleDeliverOrder}
-            icon={<SendOutlined />}
-            size="large"
-          >
-            发货
-          </Button>
-        );
-      }
-      if (order.status === 3 && !order.buyerComment && isSeller) {
-        return (
+        )}
+        {isSeller && order.status === 3 && !order.buyerComment && (
           <Button 
             type="primary" 
             className={`${btnClasses} comment-button`}
@@ -233,13 +302,8 @@ const OrderDetail = () => {
           >
             评价买家
           </Button>
-        );
-      }
-    }
-    
-    if (isBuyer) {
-      if (status === 2) {
-        return (
+        )}
+        {isBuyer && status === 1 && (
           <Button 
             type="primary" 
             className={`${btnClasses} receive-button`}
@@ -249,10 +313,8 @@ const OrderDetail = () => {
           >
             确认收货
           </Button>
-        );
-      }
-      if (order.status === 3 && !order.sellerComment && isBuyer) {
-        return (
+        )}
+        {isBuyer && order.status === 3 && !order.sellerComment && (
           <Button 
             type="primary" 
             className={`${btnClasses} comment-button`}
@@ -262,20 +324,55 @@ const OrderDetail = () => {
           >
             评价卖家
           </Button>
-        );
-      }
-    }
-    
-    return null;
-  };
-
-  if (loading || !order) {
-    return (
-      <div className="order-detail-loading">
-        <Spin size="large" tip="加载订单信息..." />
-      </div>
+        )}
+        {/* 新增：双方都可终止订单 */}
+        {canCancel && (
+          <Button 
+            danger
+            className={`${btnClasses} cancel-button`}
+            onClick={handleCancelOrder}
+            icon={<CloseCircleOutlined />}
+            size="large"
+            style={{ marginLeft: 12 }}
+          >
+            终止订单
+          </Button>
+        )}
+        {/* 终止订单弹窗 */}
+        <Modal
+          title="请选择终止订单原因"
+          open={cancelModalVisible}
+          onOk={handleSubmitCancelOrder}
+          onCancel={() => setCancelModalVisible(false)}
+          confirmLoading={cancelSubmitting}
+          okText="提交"
+          cancelText="取消"
+          destroyOnClose
+        >
+          <Select
+            style={{ width: '100%', marginBottom: 16 }}
+            placeholder="请选择原因"
+            value={cancelReason || undefined}
+            onChange={setCancelReason}
+          >
+            {(isBuyer ? buyerCancelReasons : sellerCancelReasons).map(reason => (
+              <Select.Option key={reason} value={reason}>{reason}</Select.Option>
+            ))}
+          </Select>
+          {cancelReason === '其他' && (
+            <Input.TextArea
+              rows={3}
+              placeholder="请填写具体原因"
+              value={customCancelReason}
+              onChange={e => setCustomCancelReason(e.target.value)}
+              maxLength={100}
+              showCount
+            />
+          )}
+        </Modal>
+      </>
     );
-  }
+  };
 
   const { icon, color, text } = getStatusInfo(displayStatus);
 
@@ -289,7 +386,7 @@ const OrderDetail = () => {
         >
           返回订单列表
         </Button>
-        <Title level={2}>订单详情</Title>
+      <Title level={2}>订单详情</Title>
         <div className="order-status-badge">
           <Badge color={color} text={text} />
         </div>
@@ -316,39 +413,18 @@ const OrderDetail = () => {
                 <ClockCircleOutlined /> 订单进度
               </div>
               <div className="order-progress-steps">
-                {order.tradeType === 2 ? (
-                  <Steps 
-                    current={displayStatus}
-                    status={displayStatus === 5 ? 'error' : displayStatus === 4 ? 'finish' : 'process'}
-                    progressDot
-                    className="custom-steps"
-                  >
-                    <Step title="待确认" />
-                    <Step title="待发货" />
-                    <Step title="待收货" />
-                    <Step title="待评价" />
-                    <Step title="已完成" />
-                    {displayStatus === 5 && (
-                      <Step title="订单取消" description="交易终止" />
-                    )}
-                  </Steps>
-                ) : (
-                  <Steps 
-                    current={displayStatus > 1 ? displayStatus - 1 : displayStatus}
-                    status={displayStatus === 5 ? 'error' : displayStatus === 4 ? 'finish' : 'process'}
-                    progressDot
-                    className="custom-steps"
-                  >
-                    <Step title="待确认" />
-                    <Step title="待收货" />
-                    <Step title="待评价" />
-                    <Step title="已完成" />
-                    {displayStatus === 5 && (
-                      <Step title="订单取消" description="交易终止" />
-                    )}
-                  </Steps>
-                )}
-              </div>
+                {/* 删除托管信息、快递单号、托管支付按钮、托管状态、交易哈希等线上交易相关内容 */}
+              <Steps 
+                current={currentStep}
+                status={stepsStatus}
+                progressDot
+                className="custom-steps"
+              >
+                {stepsToShow.map((step, idx) => (
+                  <Step key={idx} title={step.title} description={step.description} />
+                ))}
+              </Steps>
+            </div>
             </div>
             
             <div className="order-details-section">
@@ -371,8 +447,8 @@ const OrderDetail = () => {
                     <div className="detail-label">交易对象</div>
                     <div className="detail-value simple-value">
                       {isBuyer ? 
-                        <span className="counterpart-name">卖家: {order.seller?.username || '未知用户'}</span> : 
-                        <span className="counterpart-name">买家: {order.buyer?.username || '未知用户'}</span>
+                        <span className="counterpart-name">卖家: {order.sellerName || '未知用户'}</span> : 
+                        <span className="counterpart-name">买家: {order.buyerName || '未知用户'}</span>
                       }
                     </div>
                   </div>
@@ -393,9 +469,7 @@ const OrderDetail = () => {
                   <div className="detail-item">
                     <div className="detail-label">交易方式</div>
                     <div className="detail-value">
-                      <Tag color={order.tradeType === 2 ? 'gold' : 'blue'} className="trade-type-tag">
-                        {order.tradeType === 2 ? '线上交易' : order.tradeType === 1 ? '线下交易' : '未知'}
-                      </Tag>
+                      <Tag color="blue" className="trade-type-tag">线下交易</Tag>
                     </div>
                   </div>
                 </Col>
@@ -437,16 +511,19 @@ const OrderDetail = () => {
             </div>
             <div className="item-preview">
               <div className="item-image-container">
-                <img 
-                  src={order.item && order.item.images && order.item.images.length > 0 ? order.item.images[0] : 'https://via.placeholder.com/100x100?text=No+Image'} 
-                  alt={order.item && order.item.title ? order.item.title : 'No Title'}
+              <img 
+                src={order.item && order.item.images && order.item.images.length > 0 ? order.item.images[0] : 'https://via.placeholder.com/100x100?text=No+Image'} 
+                alt={order.item && order.item.title ? order.item.title : 'No Title'}
                   className="item-image"
                 />
               </div>
-              <div className="item-basic-info">
-                <div className="item-title">{order.item && order.item.title ? order.item.title : '无标题'}</div>
+              {/* 标题放到图片下方 */}
+              <div className="item-basic-info" style={{ textAlign: 'center', marginTop: 12 }}>
+                <div className="item-title" style={{ fontWeight: 'bold', fontSize: 18 }}>
+                  {order.item && order.item.title ? order.item.title : '无标题'}
+                </div>
                 {order.item && order.item.category && (
-                  <div className="item-category">
+                  <div className="item-category" style={{ marginTop: 4 }}>
                     <TagOutlined /> {order.item.category.name || order.item.category}
                   </div>
                 )}
@@ -460,78 +537,10 @@ const OrderDetail = () => {
                 <span className="price-label">物品价格</span>
                 <span className="price-value">¥{order.itemPrice?.toFixed(2)}</span>
               </div>
-              {order.trackingNumber && (
-                <div className="tracking-section">
-                  <div className="section-title small">
-                    <CarOutlined /> 物流信息
-                  </div>
-                  <div className="tracking-number-container">
-                    <div className="tracking-label">快递单号</div>
-                    <div className="tracking-value">
-                      {order.trackingNumber}
-                      <Tooltip title="复制单号">
-                        <CopyOutlined 
-                          className="copy-icon" 
-                          onClick={() => copyToClipboard(order.trackingNumber)} 
-                        />
-                      </Tooltip>
-                    </div>
-                  </div>
-                </div>
-              )}
-              {order.escrow && (
-                <div className="escrow-section">
-                  <div className="section-title small">
-                    <DollarOutlined /> 托管信息
-                  </div>
-                  <div className="escrow-status">
-                    <span className="escrow-label">托管状态</span>
-                    <Tag color={
-                      order.escrow.status === 'PENDING' ? 'gold' : 
-                      order.escrow.status === 'LOCKED' ? 'blue' : 
-                      order.escrow.status === 'RELEASED' ? 'green' : 
-                      'red'
-                    }>
-                      {
-                        order.escrow.status === 'PENDING' ? '等待中' : 
-                        order.escrow.status === 'LOCKED' ? '已锁定' : 
-                        order.escrow.status === 'RELEASED' ? '已释放' : 
-                        '已退回'
-                      }
-                    </Tag>
-                  </div>
-                  <div className="transaction-hash">
-                    <span className="hash-label">交易哈希</span>
-                    <div className="hash-value">
-                      <Tooltip title="完整哈希值">
-                        <span className="hash-text">{order.escrow.transactionHash.slice(0, 20)}...</span>
-                      </Tooltip>
-                      <Tooltip title="复制哈希值">
-                        <CopyOutlined 
-                          className="copy-icon" 
-                          onClick={() => copyToClipboard(order.escrow.transactionHash)} 
-                        />
-                      </Tooltip>
-                    </div>
-                  </div>
-                </div>
-              )}
+              {/* 删除托管信息、快递单号、托管支付按钮、托管状态、交易哈希等线上交易相关内容 */}
             </div>
             
-            {order.status === 0 && order.role === 'BUYER' && (
-              <div className="payment-action">
-                <Button 
-                  type="primary" 
-                  block
-                  size="large"
-                  className="payment-button"
-                  icon={<DollarOutlined />}
-                  onClick={() => navigate(`/escrow/${id}`)}
-                >
-                  前往支付
-                </Button>
-              </div>
-            )}
+            {/* 删除展示托管信息、快递单号、托管支付按钮等相关的 JSX 片段 */}
           </Card>
         </Col>
       </Row>
@@ -566,54 +575,17 @@ const OrderDetail = () => {
         
         <div className="comment-section">
           <div className="comment-label">评价内容</div>
-          <Input.TextArea
-            rows={4}
-            value={commentContent}
-            onChange={e => setCommentContent(e.target.value)}
+        <Input.TextArea
+          rows={4}
+          value={commentContent}
+          onChange={e => setCommentContent(e.target.value)}
             placeholder="请输入评价内容，例如商品质量、服务态度等"
             className="comment-textarea"
             maxLength={200}
             showCount
-          />
+        />
         </div>
       </Modal>
-
-      {/* 发货弹窗 */}
-      {isSeller && (
-        <Modal
-          title={
-            <div className="modal-title">
-              <CarOutlined className="modal-icon" /> 填写物流信息
-            </div>
-          }
-          open={deliverModalVisible}
-          onOk={handleSubmitDeliver}
-          onCancel={() => setDeliverModalVisible(false)}
-          okText="确认发货"
-          cancelText="取消"
-          className="delivery-modal"
-          width={500}
-          centered
-        >
-          <div className="tracking-section">
-            <div className="tracking-info">
-              <Paragraph className="modal-tip">
-                请填写有效的快递单号，买家将根据此信息跟踪物品物流状态
-              </Paragraph>
-              <div className="tracking-input">
-                <Input
-                  value={trackingNumber}
-                  onChange={e => setTrackingNumber(e.target.value)}
-                  placeholder="请输入快递单号"
-                  prefix={<CarOutlined />}
-                  size="large"
-                  className="tracking-number-input"
-                />
-              </div>
-            </div>
-          </div>
-        </Modal>
-      )}
     </div>
   );
 };
