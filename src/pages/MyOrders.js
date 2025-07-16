@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Tabs, Card, Tag, Button, Empty, Spin, message, Modal, Input, Typography, Space, Divider, Row, Col, Badge } from 'antd';
 import { Link, useNavigate } from 'react-router-dom';
 import axios from '../utils/axios';
-import { useSelector } from 'react-redux';
+import { useSelector, useDispatch } from 'react-redux';
 import { selectUser } from '../store/slices/authSlice';
 import { 
   ShoppingOutlined, ShopOutlined, InboxOutlined, RightOutlined, 
@@ -11,6 +11,7 @@ import {
 } from '@ant-design/icons';
 import './MyOrders.css';
 import { Rate } from 'antd';
+import { confirmReceive } from '../store/actions/orderActions';
 
 const { TabPane } = Tabs;
 const { Title, Paragraph, Text } = Typography;
@@ -28,6 +29,7 @@ const MyOrders = () => {
   const [commentOrderId, setCommentOrderId] = useState(null);
   const [commentRating, setCommentRating] = useState(5);
   const [currentOrder, setCurrentOrder] = useState(null);
+  const dispatch = useDispatch();
 
   const fetchOrders = async (type) => {
     setLoading(true);
@@ -73,11 +75,21 @@ const MyOrders = () => {
   
   const handleConfirmReceive = async (orderId) => {
     try {
-      await axios.put(`/orders/${orderId}/receive`);
+      // 使用redux action进行确认收货
+      await dispatch(confirmReceive(orderId)).unwrap();
       message.success('确认收货成功');
+      
+      // 重新获取订单列表
       fetchOrders(activeTab);
+      
+      // 通知用户可以评价
+      Modal.success({
+        title: '确认收货成功',
+        content: '您已确认收货，现在可以对卖家进行评价了！',
+        okText: '我知道了'
+      });
     } catch (e) {
-      message.error('操作失败');
+      message.error('操作失败: ' + (e.message || '未知错误'));
     }
   };
   
@@ -140,7 +152,7 @@ const MyOrders = () => {
         icon = <ClockCircleOutlined />;
         break;
       case 1:
-        text = '待发货'; 
+        text = '待收货'; 
         color = 'blue'; 
         icon = <ShoppingOutlined />;
         break;

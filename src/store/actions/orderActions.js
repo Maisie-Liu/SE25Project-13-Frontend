@@ -112,13 +112,29 @@ export const cancelOrder = createAsyncThunk(
 );
 
 // 确认收货
-export const confirmReceipt = createAsyncThunk(
-  'order/confirmReceipt',
+export const confirmReceive = createAsyncThunk(
+  'order/confirmReceive',
   async (orderId, { dispatch, rejectWithValue }) => {
     try {
       dispatch(setOrderLoading(true));
-      const response = await axios.put(`/orders/${orderId}/confirm`);
-      dispatch(updateOrderStatus({ orderId, status: 'COMPLETED' }));
+      const response = await axios.put(`/orders/${orderId}/receive`);
+      
+      // 添加延迟，确保后端消息生成完成
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
+      // 尝试刷新订单消息
+      try {
+        dispatch({ type: 'FETCH_ORDER_MESSAGES_REQUEST' });
+        const messagesResponse = await axios.get('/messages/orders', { params: { page: 0, size: 20 } });
+        dispatch({
+          type: 'FETCH_ORDER_MESSAGES_SUCCESS',
+          payload: messagesResponse.data
+        });
+        console.log("订单消息已刷新:", messagesResponse.data);
+      } catch (msgError) {
+        console.error("刷新订单消息失败:", msgError);
+      }
+      
       return response.data;
     } catch (error) {
       dispatch(setOrderError(error.response?.data?.message || '确认收货失败'));
@@ -168,21 +184,6 @@ export const deliverOrder = createAsyncThunk(
     } catch (error) {
       dispatch(setOrderError(error.response?.data?.message || '发货失败'));
       return rejectWithValue(error.response?.data?.message || '发货失败');
-    }
-  }
-);
-
-// 买家确认收货
-export const confirmReceive = createAsyncThunk(
-  'order/confirmReceive',
-  async (orderId, { dispatch, rejectWithValue }) => {
-    try {
-      dispatch(setOrderLoading(true));
-      const response = await axios.put(`/orders/${orderId}/receive`);
-      return response.data;
-    } catch (error) {
-      dispatch(setOrderError(error.response?.data?.message || '确认收货失败'));
-      return rejectWithValue(error.response?.data?.message || '确认收货失败');
     }
   }
 );

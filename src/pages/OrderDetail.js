@@ -109,9 +109,18 @@ const OrderDetail = () => {
     try {
       await dispatch(confirmReceive(id)).unwrap();
       message.success('确认收货成功');
+      
+      // 重新加载订单详情
       dispatch(fetchOrderById(id));
+      
+      // 显示提示，告知用户可以评价订单
+      Modal.success({
+        title: '确认收货成功',
+        content: '您已确认收货，现在可以对卖家进行评价了！',
+        okText: '我知道了'
+      });
     } catch (e) {
-      message.error('操作失败');
+      message.error('操作失败: ' + (e.message || '未知错误'));
     }
   };
 
@@ -293,6 +302,7 @@ const OrderDetail = () => {
           </Button>
         )}
         {isSeller && order.status === 3 && !order.buyerComment && (
+
           <Button 
             type="primary" 
             className={`${btnClasses} comment-button`}
