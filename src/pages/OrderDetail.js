@@ -11,7 +11,7 @@ import {
   SendOutlined, StarOutlined, EnvironmentOutlined, FileTextOutlined,
   PhoneOutlined, StarFilled, CarOutlined, CopyOutlined, CloseCircleOutlined, QuestionCircleOutlined
 } from '@ant-design/icons';
-import { fetchOrderById, updateOrder, confirmOrder, deliverOrder, confirmReceive, commentOrder } from '../store/actions/orderActions';
+import { fetchOrderById, updateOrder, confirmOrder, confirmReceive, commentOrder } from '../store/actions/orderActions';
 import { selectCurrentOrder, selectOrderLoading } from '../store/slices/orderSlice';
 import { selectUser } from '../store/slices/authSlice';
 import './OrderDetail.css';
@@ -104,9 +104,18 @@ const OrderDetail = () => {
     try {
       await dispatch(confirmReceive(id)).unwrap();
       message.success('确认收货成功');
+      
+      // 重新加载订单详情
       dispatch(fetchOrderById(id));
+      
+      // 显示提示，告知用户可以评价订单
+      Modal.success({
+        title: '确认收货成功',
+        content: '您已确认收货，现在可以对卖家进行评价了！',
+        okText: '我知道了'
+      });
     } catch (e) {
-      message.error('操作失败');
+      message.error('操作失败: ' + (e.message || '未知错误'));
     }
   };
 
@@ -157,7 +166,7 @@ const OrderDetail = () => {
       case 1:
         icon = <ShoppingOutlined />;
         color = 'blue';
-        text = '待发货';
+        text = '待收货';  // 修改为"待收货"
         break;
       case 2:
         icon = <CarOutlined />;
@@ -209,18 +218,9 @@ const OrderDetail = () => {
           </Button>
         );
       }
+      // 由于线上交易功能已砍掉，不再显示发货按钮
       if (status === 1) {
-        return (
-          <Button 
-            type="primary" 
-            className={`${btnClasses} deliver-button`}
-            onClick={handleDeliverOrder}
-            icon={<SendOutlined />}
-            size="large"
-          >
-            发货
-          </Button>
-        );
+        return null;
       }
       if (order.status === 3 && !order.buyerComment && isSeller) {
         return (
@@ -324,7 +324,6 @@ const OrderDetail = () => {
                     className="custom-steps"
                   >
                     <Step title="待确认" />
-                    <Step title="待发货" />
                     <Step title="待收货" />
                     <Step title="待评价" />
                     <Step title="已完成" />
@@ -577,43 +576,6 @@ const OrderDetail = () => {
           />
         </div>
       </Modal>
-
-      {/* 发货弹窗 */}
-      {isSeller && (
-        <Modal
-          title={
-            <div className="modal-title">
-              <CarOutlined className="modal-icon" /> 填写物流信息
-            </div>
-          }
-          open={deliverModalVisible}
-          onOk={handleSubmitDeliver}
-          onCancel={() => setDeliverModalVisible(false)}
-          okText="确认发货"
-          cancelText="取消"
-          className="delivery-modal"
-          width={500}
-          centered
-        >
-          <div className="tracking-section">
-            <div className="tracking-info">
-              <Paragraph className="modal-tip">
-                请填写有效的快递单号，买家将根据此信息跟踪物品物流状态
-              </Paragraph>
-              <div className="tracking-input">
-                <Input
-                  value={trackingNumber}
-                  onChange={e => setTrackingNumber(e.target.value)}
-                  placeholder="请输入快递单号"
-                  prefix={<CarOutlined />}
-                  size="large"
-                  className="tracking-number-input"
-                />
-              </div>
-            </div>
-          </div>
-        </Modal>
-      )}
     </div>
   );
 };

@@ -409,7 +409,7 @@ const MessageChats = () => {
       })).unwrap();
       
       console.log('发送消息成功:', newMessage, '到聊天:', selectedChatId);
-      setNewMessage('');
+    setNewMessage('');
       
       // 重新获取未读消息数量
       await dispatch(fetchTotalUnreadCount());
@@ -697,10 +697,10 @@ const MessageChats = () => {
                   <Button icon={<SmileOutlined />} />
                 </div>
                 <div style={{ display: 'flex', alignItems: 'flex-end' }}>
-                  <TextArea 
-                    placeholder="输入消息..." 
-                    autoSize={{ minRows: 2, maxRows: 4 }}
-                    value={newMessage}
+                <TextArea
+                  placeholder="输入消息..."
+                  autoSize={{ minRows: 2, maxRows: 4 }}
+                  value={newMessage}
                     onChange={(e) => setNewMessage(e.target.value)}
                     onPressEnter={(e) => {
                       if (!e.shiftKey) {
@@ -709,7 +709,7 @@ const MessageChats = () => {
                       }
                     }}
                     style={{ flex: 1, marginRight: '12px' }}
-                  />
+                />
                   <Button 
                     type="primary" 
                     icon={<SendOutlined />} 
