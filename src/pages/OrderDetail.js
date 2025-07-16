@@ -3,7 +3,8 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { 
   Card, Descriptions, Button, Steps, Divider, Tag, Spin, Typography, 
-  Row, Col, message, Modal, Input, Rate, Avatar, Space, Badge, Tooltip, Select 
+  Row, Col, message, Modal, Input, Rate, Avatar, Space, Badge, Tooltip, Select,
+  Alert
 } from 'antd';
 import { 
   ArrowLeftOutlined, CheckCircleOutlined, ClockCircleOutlined, 
@@ -191,22 +192,31 @@ const OrderDetail = () => {
     );
   }
 
-  // 新增：进度条节点结构与渲染逻辑调整（必须在 order 存在后再执行）
+  // 进度条节点结构与渲染逻辑调整（必须在 order 存在后再执行）
   const mainSteps = [
     { title: '待确认' },
     { title: '待收货' },
     { title: '待评价' },
     { title: '已完成' }
   ];
-  const terminateStep = { title: '订单终止', description: '交易终止' };
+  
+  // 分别定义两种终止状态的步骤
+  const cancelStep = { title: '已取消', description: '订单已取消' };
+  const rejectStep = { title: '已拒绝', description: '订单已被拒绝' };
 
   let stepsToShow = mainSteps;
   let currentStep = 0;
   let stepsStatus = 'process';
-  if (order.status === 2 || order.status === 5) {
-    stepsToShow = [mainSteps[0], mainSteps[1], terminateStep];
-    currentStep = 2;
+  
+  // 根据订单状态调整步骤显示
+  if (order.status === 2) { // 已拒绝
+    stepsToShow = [mainSteps[0], rejectStep];
+    currentStep = 1;
     stepsStatus = 'error';
+  } else if (order.status === 5) { // 已取消
+    stepsToShow = [mainSteps[0], cancelStep];
+    currentStep = 1;
+    stepsStatus = 'warning';
   } else if (order.status === 0) {
     currentStep = 0;
   } else if (order.status === 1) {
@@ -249,7 +259,7 @@ const OrderDetail = () => {
         break;
       case 5:
         icon = <CloseCircleOutlined />;
-        color = 'orange';
+        color = 'warning';
         text = '已取消';
         break;
       default:
@@ -398,7 +408,14 @@ const OrderDetail = () => {
         </Button>
       <Title level={2}>订单详情</Title>
         <div className="order-status-badge">
-          <Badge color={color} text={text} />
+          <Badge 
+            color={color} 
+            text={
+              <span style={{ fontSize: '16px', fontWeight: '500' }}>
+                {icon} {text}
+              </span>
+            } 
+          />
         </div>
       </div>
       
@@ -420,21 +437,50 @@ const OrderDetail = () => {
             
             <div className="order-progress-section">
               <div className="section-title">
-                <ClockCircleOutlined /> 订单进度
+                <ClockCircleOutlined /> 订单状态更新
               </div>
               <div className="order-progress-steps">
-                {/* 删除托管信息、快递单号、托管支付按钮、托管状态、交易哈希等线上交易相关内容 */}
-              <Steps 
-                current={currentStep}
-                status={stepsStatus}
-                progressDot
-                className="custom-steps"
-              >
-                {stepsToShow.map((step, idx) => (
-                  <Step key={idx} title={step.title} description={step.description} />
-                ))}
-              </Steps>
-            </div>
+                {/* 当订单被拒绝或取消时显示特殊样式 */}
+                {order.status === 2 || order.status === 5 ? (
+                  <div className="order-terminated-status">
+                    <Alert
+                      message={order.status === 2 ? "订单已被拒绝" : "订单已被取消"}
+                      description={
+                        <div>
+                          <p>状态更新时间: {new Date(order.updateTime).toLocaleString()}</p>
+                          {order.sellerRemark && (
+                            <p>终止原因: {order.sellerRemark}</p>
+                          )}
+                        </div>
+                      }
+                      type={order.status === 2 ? "error" : "warning"}
+                      showIcon
+                      style={{ marginBottom: 16 }}
+                    />
+                    <Steps 
+                      current={currentStep}
+                      status={stepsStatus}
+                      progressDot
+                      className="custom-steps terminated-steps"
+                    >
+                      {stepsToShow.map((step, idx) => (
+                        <Step key={idx} title={step.title} description={step.description} />
+                      ))}
+                    </Steps>
+                  </div>
+                ) : (
+                  <Steps 
+                    current={currentStep}
+                    status={stepsStatus}
+                    progressDot
+                    className="custom-steps"
+                  >
+                    {stepsToShow.map((step, idx) => (
+                      <Step key={idx} title={step.title} description={step.description} />
+                    ))}
+                  </Steps>
+                )}
+              </div>
             </div>
             
             <div className="order-details-section">

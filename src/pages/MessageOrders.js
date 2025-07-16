@@ -285,6 +285,10 @@ const MessageOrders = () => {
         return '#722ed1';
       case 'completed':
         return '#52c41a';
+      case 'cancelled':
+        return '#fa8c16'; // 橙色
+      case 'rejected':
+        return '#f5222d'; // 红色
       default:
         return '#1890ff';
     }
@@ -305,6 +309,10 @@ const MessageOrders = () => {
         return '待评价';
       case 'completed':
         return '已完成';
+      case 'cancelled':
+        return '已取消';
+      case 'rejected':
+        return '已拒绝';
       default:
         return status || '未知状态';
     }
@@ -325,6 +333,10 @@ const MessageOrders = () => {
         return '买家已确认收货，等待评价';
       case 'completed':
         return '交易已完成';
+      case 'cancelled':
+        return '订单已被取消';
+      case 'rejected':
+        return '订单已被拒绝';
       default:
         return '订单状态更新';
     }
@@ -345,6 +357,9 @@ const MessageOrders = () => {
         return 2;
       case 'completed':
         return 3;
+      case 'rejected':
+      case 'cancelled':
+        return 1; // 特殊处理：被拒绝或取消的订单显示在第二步
       default:
         return 0;
     }
@@ -433,6 +448,8 @@ const MessageOrders = () => {
               <Radio.Button value="paid">待收货</Radio.Button>
               <Radio.Button value="shipping">待评价</Radio.Button>
               <Radio.Button value="completed">已完成</Radio.Button>
+              <Radio.Button value="cancelled">已取消</Radio.Button>
+              <Radio.Button value="rejected">已拒绝</Radio.Button>
             </Radio.Group>
           </Space>
           
@@ -545,16 +562,28 @@ const MessageOrders = () => {
                       </Text>
                       
                       <div className="order-message-steps">
-                        <Steps 
-                          current={getStepNumber(item.status)}
-                          size="small"
-                          labelPlacement="vertical"
-                        >
-                          <Step title="待确认" />
-                          <Step title="待收货" />
-                          <Step title="待评价" />
-                          <Step title="已完成" />
-                        </Steps>
+                        {item.status && (item.status.toLowerCase() === 'rejected' || item.status.toLowerCase() === 'cancelled') ? (
+                          <Steps 
+                            current={1}
+                            status={item.status.toLowerCase() === 'rejected' ? 'error' : 'warning'}
+                            size="small"
+                            labelPlacement="vertical"
+                          >
+                            <Step title="待确认" />
+                            <Step title={item.status.toLowerCase() === 'rejected' ? '已拒绝' : '已取消'} />
+                          </Steps>
+                        ) : (
+                          <Steps 
+                            current={getStepNumber(item.status)}
+                            size="small"
+                            labelPlacement="vertical"
+                          >
+                            <Step title="待确认" />
+                            <Step title="待收货" />
+                            <Step title="待评价" />
+                            <Step title="已完成" />
+                          </Steps>
+                        )}
                       </div>
                     </div>
                   </div>

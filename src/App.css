@@ -1783,6 +1783,44 @@
   margin-top: 15px;
 }
 
+/* 订单状态步骤样式 */
+.order-message-steps .ant-steps-item-process .ant-steps-item-icon {
+  background: #40c4c4;
+  border-color: #40c4c4;
+}
+
+.order-message-steps .ant-steps-item-finish .ant-steps-item-icon {
+  border-color: #40c4c4;
+}
+
+.order-message-steps .ant-steps-item-finish .ant-steps-item-icon .ant-steps-icon {
+  color: #40c4c4;
+}
+
+.order-message-steps .ant-steps-item-finish .ant-steps-item-tail::after {
+  background-color: #40c4c4;
+}
+
+/* 错误状态（已拒绝）步骤样式 */
+.order-message-steps .ant-steps-error .ant-steps-item-icon {
+  background-color: #ff4d4f;
+  border-color: #ff4d4f;
+}
+
+.order-message-steps .ant-steps-error .ant-steps-item-icon .ant-steps-icon {
+  color: #fff;
+}
+
+/* 警告状态（已取消）步骤样式 */
+.order-message-steps .ant-steps-warning .ant-steps-item-icon {
+  background-color: #faad14;
+  border-color: #faad14;
+}
+
+.order-message-steps .ant-steps-warning .ant-steps-item-icon .ant-steps-icon {
+  color: #fff;
+}
+
 .order-message-footer {
   margin-top: 15px;
   display: flex;

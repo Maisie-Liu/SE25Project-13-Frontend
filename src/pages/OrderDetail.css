@@ -140,6 +140,29 @@
   background-color: #40c4c4;
 }
 
+/* 终止订单的步骤样式 */
+.order-terminated-status {
+  margin-top: 16px;
+}
+
+.terminated-steps .ant-steps-item-process .ant-steps-item-icon {
+  background: #ff4d4f;
+  border-color: #ff4d4f;
+}
+
+.terminated-steps.ant-steps-error .ant-steps-item-tail::after {
+  background-color: #ff4d4f;
+}
+
+.terminated-steps.ant-steps-warning .ant-steps-item-tail::after {
+  background-color: #faad14;
+}
+
+.order-terminated-status .ant-alert {
+  margin-bottom: 24px;
+  border-radius: 8px;
+}
+
 /* 订单详情区域 */
 .order-details-section {
   margin-bottom: 24px;

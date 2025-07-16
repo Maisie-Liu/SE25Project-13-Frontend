@@ -157,9 +157,9 @@ const MyOrders = () => {
         icon = <ShoppingOutlined />;
         break;
       case 2:
-        text = '待收货'; 
-        color = 'orange'; 
-        icon = <SendOutlined />;
+        text = '已拒绝'; 
+        color = 'red'; 
+        icon = <CloseCircleOutlined />;
         break;
       case 3:
         text = '待评价'; 
