@@ -144,27 +144,20 @@ const OrderManage = () => {
   // 渲染订单状态标签
   const renderStatusTag = (status) => {
     const statusMap = {
-      1: { color: 'blue', text: '待确认' },
-      2: { color: 'green', text: '已确认' },
-      3: { color: 'red', text: '已拒绝' },
-      4: { color: 'orange', text: '已取消' },
-      5: { color: 'purple', text: '已完成' }
+      0: { color: 'gold', text: '待确认' },
+      1: { color: 'blue', text: '待收货' },
+      2: { color: 'red', text: '已拒绝' },
+      3: { color: 'green', text: '待评价' },
+      4: { color: 'default', text: '已完成' },
+      5: { color: 'orange', text: '已取消' }
     };
-    
     const statusInfo = statusMap[status] || { color: 'default', text: '未知状态' };
     return <Tag color={statusInfo.color}>{statusInfo.text}</Tag>;
   };
-  
-  // 渲染交易方式
-  const renderTradeType = (type) => {
-    switch (type) {
-      case 1:
-        return <Tag>线下交易</Tag>;
-      case 2:
-        return <Tag color="gold">线上交易</Tag>;
-      default:
-        return <Tag>未知</Tag>;
-    }
+
+  // 渲染交易方式，始终显示线下交易
+  const renderTradeType = () => {
+    return <Tag>线下交易</Tag>;
   };
   
   // 买家订单列表列定义
@@ -439,7 +432,7 @@ const OrderManage = () => {
               <Descriptions.Item label="交易金额">¥{currentOrder.itemPrice?.toFixed(2)}</Descriptions.Item>
               <Descriptions.Item label="买家">{currentOrder.buyerName}</Descriptions.Item>
               <Descriptions.Item label="卖家">{currentOrder.sellerName}</Descriptions.Item>
-              <Descriptions.Item label="交易方式">{renderTradeType(currentOrder.tradeType)}</Descriptions.Item>
+              <Descriptions.Item label="交易方式">{renderTradeType()}</Descriptions.Item>
               <Descriptions.Item label="交易地点">{currentOrder.tradeLocation || '未指定'}</Descriptions.Item>
               <Descriptions.Item label="订单状态">{renderStatusTag(currentOrder.status)}</Descriptions.Item>
               <Descriptions.Item label="创建时间">{currentOrder.createTime}</Descriptions.Item>

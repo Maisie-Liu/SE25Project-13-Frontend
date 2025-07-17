@@ -173,7 +173,7 @@ const MyOrders = () => {
         break;
       case 5:
         text = '已取消'; 
-        color = 'red'; 
+        color = 'orange'; 
         icon = <CloseCircleOutlined />;
         break;
       default:
