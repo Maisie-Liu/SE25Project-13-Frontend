@@ -551,6 +551,9 @@ const MessageOrders = () => {
                           <Text type="secondary" style={{ marginLeft: '10px' }}>
                             买家: {item.buyerName || '未知买家'}
                           </Text>
+                          <Text type="secondary" style={{ marginLeft: '10px' }}>
+                            卖家: {item.sellerName || '未知卖家'}
+                          </Text>
                         </div>
                       </div>
                     </div>

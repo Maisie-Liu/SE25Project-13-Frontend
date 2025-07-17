@@ -8,7 +8,7 @@ import {
 import { 
   ShoppingCartOutlined, HeartOutlined, HeartFilled, 
   EnvironmentOutlined, CommentOutlined, ShareAltOutlined,
-  UserOutlined, ClockCircleOutlined, SafetyOutlined
+  UserOutlined, ClockCircleOutlined, SafetyOutlined, MessageOutlined
 } from '@ant-design/icons';
 import { fetchItemById, updateUserProfileInterest } from '../store/actions/itemActions';
 import { createOrder } from '../store/actions/orderActions';
@@ -456,6 +456,30 @@ const ItemDetail = () => {
                   disabled={favoriteLoading}
                 >
                   {isFavorite ? '已收藏' : '收藏'}
+                </Button>
+                
+                <Button
+                  type="default"
+                  icon={<MessageOutlined />}
+                  onClick={handleGoToChat}
+                  disabled={item.userId === user?.id}
+                  style={{
+                    marginLeft: 12,
+                    height: 42,
+                    borderRadius: 24,
+                    fontSize: 15,
+                    padding: '0 40px',
+                    border: '1.5px solid #26c6c6',
+                    color: '#26c6c6',
+                    background: '#fff',
+                    fontWeight: 400,
+                    boxShadow: 'none',
+                    display: 'flex',
+                    alignItems: 'center',
+                  }}
+                  className="chat-seller-button"
+                >
+                  私聊卖家
                 </Button>
             </div>
               

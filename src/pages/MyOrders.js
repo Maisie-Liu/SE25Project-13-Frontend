@@ -274,8 +274,8 @@ const MyOrders = () => {
                     <UserOutlined className="order-user-icon" />
                     <div className="order-user-name">
                       {isBuyer ? 
-                        `卖家: ${order.seller?.username || '未知用户'}` : 
-                        `买家: ${order.buyer?.username || '未知用户'}`
+                        `卖家: ${order.sellerName || '未知用户'}` :
+                        `买家: ${order.buyerName || '未知用户'}`
                       }
                     </div>
                   </div>

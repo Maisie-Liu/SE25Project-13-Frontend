@@ -154,7 +154,7 @@ const Chat = () => {
     if (chatId && currentUser) {
       fetchChatData();
     }
-  }, [chatId, currentUser, dispatch, chats]);
+  }, [chatId, currentUser, dispatch]);
 
   useEffect(() => {
     if (userId && itemId && currentUser) {

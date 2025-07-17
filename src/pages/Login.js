@@ -3,7 +3,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import { Form, Input, Button, Typography, Alert, Row, Col, Checkbox } from 'antd';
 import { UserOutlined, LockOutlined, ShoppingOutlined, SafetyOutlined, TeamOutlined, CommentOutlined } from '@ant-design/icons';
-import { login } from '../store/actions/authActions';
+import { login, fetchCurrentUser } from '../store/actions/authActions';
 import { selectIsAuthenticated, selectAuthLoading, selectAuthError, clearError } from '../store/slices/authSlice';
 import styled from 'styled-components';
 import './Login.css';
@@ -254,9 +254,10 @@ const Login = () => {
   // 如果已经登录，重定向到首页
   useEffect(() => {
     if (isAuthenticated) {
+      dispatch(fetchCurrentUser());
       navigate('/');
     }
-  }, [isAuthenticated, navigate]);
+  }, [isAuthenticated, navigate, dispatch]);
 
   // 清除错误信息
   useEffect(() => {
