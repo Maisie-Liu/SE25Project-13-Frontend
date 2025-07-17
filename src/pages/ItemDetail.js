@@ -20,6 +20,7 @@ import CommentList from '../components/comment/CommentList';
 import CommentForm from '../components/comment/CommentForm';
 import axios from '../utils/axios';
 import ConditionTag from '../components/condition/ConditionTag';
+import './ItemDetail.css';
 
 const { Title, Text, Paragraph } = Typography;
 const { TextArea } = Input;
@@ -312,7 +313,7 @@ const ItemDetail = () => {
   const images = item.imageUrls && item.imageUrls.length > 0 ? item.imageUrls : item.images;
   
   return (
-    <div className="container" style={{ padding: '20px 0' }}>
+    <div className="container item-detail-container">
       <Card className="item-detail-card">
         <Row gutter={[32, 24]}>
           {/* 物品图片 */}
@@ -325,17 +326,16 @@ const ItemDetail = () => {
                       src={images[mainIndex]}
                       alt={item.name}
                       className="main-item-image"
-                />
+                    />
                   ) : (
-                    <div style={{width: '100%', height: '100%', background: '#f5f5f5', position: 'absolute', top: 0, left: 0}} />
+                    <div className="no-image-placeholder" />
                   )}
                 </div>
               </Image.PreviewGroup>
             </div>
-            
-            {/* 缩略图 - 移到外部，不影响主图容器比例 */}
+            {/* 缩略图 */}
             {images && images.length > 1 && (
-              <div className="thumbnail-list" style={{marginTop: '20px'}}>
+              <div className="thumbnail-list">
                 {images.map((img, index) => (
                   <div
                     key={index}
@@ -352,41 +352,35 @@ const ItemDetail = () => {
               </div>
             )}
           </Col>
-          
           {/* 物品信息 */}
           <Col xs={24} sm={24} md={12} lg={14}>
             <div className="item-info-container">
               <div className="item-header">
-            <Title level={2}>{item.name}</Title>
+                <Title level={2} className="item-title">{item.name}</Title>
                 <div className="item-status-tag">
-                {item.status === 1 ? (
-                  <Tag color="green">可预订</Tag>
-                ) : item.status === 2 ? (
-                  <Tag color="orange">已预订</Tag>
-                ) : item.status === 3 ? (
-                  <Tag color="red">已售出</Tag>
-                ) : (
-                  <Tag color="default">未上架</Tag>
-                )}
+                  {item.status === 1 ? (
+                    <Tag color="green">可预订</Tag>
+                  ) : item.status === 2 ? (
+                    <Tag color="orange">已预订</Tag>
+                  ) : item.status === 3 ? (
+                    <Tag color="red">已售出</Tag>
+                  ) : (
+                    <Tag color="default">未上架</Tag>
+                  )}
                 </div>
               </div>
-              
               <div className="item-price-section">
-                <Title level={3} type="danger">
-                  ￥{item.price?.toFixed(2)}
-                </Title>
+                <Title level={3} type="danger" className="item-price">￥{item.price?.toFixed(2)}</Title>
               </div>
-              
               {/* 物品描述 */}
               <div className="item-description-card">
                 <div className="item-description-header">
                   <SafetyOutlined /> 物品描述
                 </div>
-                <Paragraph style={{ whiteSpace: 'pre-wrap', fontSize: 15, padding: '12px' }}>
+                <Paragraph className="item-description">
                   {item.description || '暂无描述'}
                 </Paragraph>
               </div>
-              
               <div className="item-meta-info">
                 <Row gutter={[16, 16]}>
                   <Col span={12}>
@@ -417,25 +411,21 @@ const ItemDetail = () => {
                   </Col>
                 </Row>
               </div>
-              
-              <div className="item-seller-info">
-                <div className="seller-avatar" onClick={() => navigate(`/users/${item.userId}`)} style={{ cursor: 'pointer' }}>
-                  <Avatar size="small" icon={<UserOutlined />} src={item.userAvatar} />
+              <Card className="item-seller-card">
+                <div className="item-seller-info">
+                  <div className="seller-avatar" onClick={() => navigate(`/users/${item.userId}`)}>
+                    <Avatar size="small" icon={<UserOutlined />} src={item.userAvatar} />
+                  </div>
+                  <div className="seller-details">
+                    <span className="seller-name" onClick={() => navigate(`/users/${item.userId}`)}>
+                      {item.username}
+                    </span>
+                    <span className="publish-time">
+                      <ClockCircleOutlined /> {formatTime(item.createTime)}
+                    </span>
+                  </div>
                 </div>
-                <div className="seller-details">
-                  <span 
-                    className="seller-name" 
-                    onClick={() => navigate(`/users/${item.userId}`)} 
-                    style={{ cursor: 'pointer' }}
-                  >
-                    {item.username}
-                  </span>
-                  <span className="publish-time">
-                    <ClockCircleOutlined /> {formatTime(item.createTime)}
-                  </span>
-                </div>
-              </div>
-              
+              </Card>
               <div className="item-actions">
                 <Button 
                   type="primary" 
@@ -482,27 +472,28 @@ const ItemDetail = () => {
                   私聊卖家
                 </Button>
             </div>
-              
-              {/* 评论区 - 上移 */}
+              {/* 评论区 */}
               <div className="comments-section">
                 <div className="comments-header">
                   <CommentOutlined /> 评论区
-            </div>
-            <CommentForm
-              value={commentContent}
-              onChange={setCommentContent}
-              onSubmit={handleSubmitComment}
-              submitting={submitting && !replyingId}
-            />
-            <CommentList
-              comments={comments}
-              onReply={handleReply}
-              submitting={submitting && !!replyingId}
-              replyContent={replyContent}
-              onChangeReply={setReplyContent}
-              onSubmitReply={handleSubmitReply}
-              replyingId={replyingId}
-            />
+                </div>
+                <div className="comments-bg">
+                  <CommentForm
+                    value={commentContent}
+                    onChange={setCommentContent}
+                    onSubmit={handleSubmitComment}
+                    submitting={submitting && !replyingId}
+                  />
+                  <CommentList
+                    comments={comments}
+                    onReply={handleReply}
+                    submitting={submitting && !!replyingId}
+                    replyContent={replyContent}
+                    onChangeReply={setReplyContent}
+                    onSubmitReply={handleSubmitReply}
+                    replyingId={replyingId}
+                  />
+                </div>
               </div>
             </div>
           </Col>
@@ -582,6 +573,7 @@ const ItemDetail = () => {
             name="tradeLocation"
             label={<span className="order-form-label">交易地点</span>}
             rules={[{ required: true, message: '请输入交易地点' }]}
+            className="vertical-form-item"
           >
             <Input 
               prefix={<EnvironmentOutlined style={{ color: '#40c4c4' }} />} 
@@ -592,6 +584,7 @@ const ItemDetail = () => {
           <Form.Item
             name="buyerMessage"
             label={<span className="order-form-label">买家留言</span>}
+            className="vertical-form-item"
           >
             <TextArea 
               rows={3} 

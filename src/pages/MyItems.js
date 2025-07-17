@@ -1,9 +1,14 @@
 import React, { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { Table, Button, Tag, Popconfirm, message, Spin, Empty } from 'antd';
+import { Table, Button, Tag, message, Spin, Empty, Card, Row, Col, List } from 'antd';
+import { Popconfirm } from 'antd';
+import { Typography } from 'antd';
 import { Link, useNavigate } from 'react-router-dom';
 import { fetchMyItems, deleteItem, updateItemStatus } from '../store/actions/itemActions';
 import { selectItems, selectItemLoading } from '../store/slices/itemSlice';
+import './MyItems.css';
+import { HeartFilled, ShoppingCartOutlined } from '@ant-design/icons';
+const { Paragraph, Text } = Typography;
 
 const MyItems = () => {
   const dispatch = useDispatch();
@@ -177,20 +182,140 @@ const MyItems = () => {
           发布新物品
         </Button>
       </div>
-      
-      <Table 
-        columns={columns} 
-        dataSource={sortedItems.map(item => ({ ...item, key: item.id }))} 
-        pagination={{
-          current: currentPage,
-          pageSize: pageSize,
-          onChange: (page, size) => {
-            setCurrentPage(page);
-            setPageSize(size);
-            dispatch(fetchMyItems({ pageNum: page, pageSize: size }));
-          },
-          showSizeChanger: true,
+      <List
+        className="my-items-list"
+        grid={{
+          gutter: 16,
+          xs: 1,
+          sm: 2,
+          md: 3,
+          lg: 4,
+          xl: 4,
+          xxl: 5,
         }}
+        dataSource={sortedItems}
+        renderItem={item => (
+          <List.Item className="my-item-list-item">
+            <Card
+              hoverable
+              cover={
+                <div
+                  className="item-image-container"
+                  style={{
+                    position: 'relative',
+                    width: '100%',
+                    paddingTop: '100%',
+                    overflow: 'hidden',
+                    background: '#f0f0f0',
+                  }}
+                >
+                  {item.images && item.images.length > 0 ? (
+                    <img
+                      alt={item.name}
+                      src={item.images[0]}
+                      style={{
+                        position: 'absolute',
+                        top: 0,
+                        left: 0,
+                        width: '100%',
+                        height: '100%',
+                        objectFit: 'cover',
+                      }}
+                    />
+                  ) : (
+                    <div
+                      style={{
+                        position: 'absolute',
+                        top: 0,
+                        left: 0,
+                        width: '100%',
+                        height: '100%',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        color: '#999',
+                        fontSize: '14px',
+                      }}
+                    >暂无图片</div>
+                  )}
+                </div>
+              }
+              actions={[
+                <Button
+                  type="text"
+                  icon={<ShoppingCartOutlined />}
+                  onClick={() => navigate(`/items/${item.id}`)}
+                >
+                  查看
+                </Button>,
+                (item.status !== 2 && item.status !== 'SOLD') && (
+                  <Button type="text" onClick={() => navigate(`/items/edit/${item.id}`)}>
+                    编辑
+                  </Button>
+                ),
+                (item.status === 'ON_SALE' || item.status === 1) && (
+                  <Popconfirm
+                    title="确定要下架该物品吗？"
+                    onConfirm={() => handleStatusChange(item.id, 'OFF_SHELF')}
+                    okText="确定"
+                    cancelText="取消"
+                  >
+                    <Button type="text" danger>
+                      下架
+                    </Button>
+                  </Popconfirm>
+                ),
+                (item.status === 'OFF_SHELF' || item.status === 0) && (
+                  <Popconfirm
+                    title="确定要上架该物品吗？"
+                    onConfirm={() => handleStatusChange(item.id, 'ON_SALE')}
+                    okText="确定"
+                    cancelText="取消"
+                  >
+                    <Button type="text" style={{ color: '#52c41a' }}>
+                      上架
+                    </Button>
+                  </Popconfirm>
+                ),
+              ].filter(Boolean)}
+            >
+              <Card.Meta
+                title={
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <Link to={`/items/${item.id}`} style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      {item.name}
+                    </Link>
+                    {(() => {
+                      switch (item.status) {
+                        case 1:
+                          return <Tag color="green">在售</Tag>;
+                        case 2:
+                          return <Tag color="red">已售出</Tag>;
+                        case 0:
+                          return <Tag color="default">已下架</Tag>;
+                        default:
+                          return <Tag color="default">未知</Tag>;
+                      }
+                    })()}
+                  </div>
+                }
+                description={
+                  <div>
+                    <Paragraph ellipsis={{ rows: 2 }} style={{ marginBottom: 8, height: '40px' }}>
+                      {item.description || '暂无描述'}
+                    </Paragraph>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <Text strong style={{ color: '#ff4d4f', fontSize: '16px' }}>¥{item.price}</Text>
+                      <Text type="secondary" style={{ fontSize: '12px' }}>
+                        {item.createTime ? new Date(item.createTime).toLocaleDateString() : ''}
+                      </Text>
+                    </div>
+                  </div>
+                }
+              />
+            </Card>
+          </List.Item>
+        )}
       />
     </div>
   );

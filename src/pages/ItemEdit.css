@@ -1,0 +1,218 @@
+/* 编辑物品页美化样式，完全复用发布页 */
+.item-edit-container {
+  max-width: 900px;
+  margin: 30px auto;
+  padding: 0 20px;
+}
+.item-edit-card {
+  border-radius: 12px;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
+  overflow: hidden;
+  background: #fff;
+  padding: 32px 32px 24px 32px;
+  box-sizing: border-box;
+  max-width: 760px;
+  margin: 0 auto;
+  width: 100%;
+}
+.item-edit-header {
+  padding: 0 0 20px 0;
+  border-bottom: 1px solid #f0f0f0;
+  margin-bottom: 24px;
+}
+.item-edit-header h2 {
+  font-size: 24px;
+  color: #333;
+  margin-bottom: 8px;
+}
+.item-edit-header p {
+  color: #666;
+  font-size: 14px;
+}
+.item-form-section {
+  margin-bottom: 30px;
+  width: 100%;
+  box-sizing: border-box;
+}
+.section-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 16px;
+  font-weight: 600;
+  margin-bottom: 16px;
+  color: #333;
+  padding-left: 10px;
+  border-left: 3px solid #00B8A9;
+}
+.upload-section {
+  background-color: #f9f9f9;
+  border-radius: 8px;
+  padding: 20px;
+  margin-bottom: 24px;
+  width: 100%;
+  box-sizing: border-box;
+}
+.upload-tip {
+  margin-top: 8px;
+  color: #999;
+  font-size: 13px;
+}
+.form-item-label {
+  font-weight: 500;
+}
+.form-actions {
+  display: flex;
+  justify-content: center;
+  gap: 24px;
+  margin-top: 30px;
+  padding-top: 20px;
+  border-top: 1px solid #f0f0f0;
+}
+.cancel-button {
+  margin-right: 16px;
+}
+.submit-button {
+  min-width: 120px;
+}
+.custom-upload-button {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  border: 1px dashed #d9d9d9;
+  border-radius: 8px;
+  background-color: #fafafa;
+  width: 100px;
+  height: 100px;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+.custom-upload-button:hover {
+  border-color: #00B8A9;
+}
+.custom-upload-icon {
+  font-size: 24px;
+  color: #999;
+  margin-bottom: 8px;
+}
+.upload-text {
+  color: #666;
+  font-size: 13px;
+}
+.ant-form {
+  background: #fff;
+  border-radius: 14px;
+  padding: 32px 32px 12px 32px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+  width: 100%;
+  box-sizing: border-box;
+}
+.ant-form-item-label > label {
+  font-size: 15px;
+  font-weight: 500;
+  color: #333;
+}
+.ant-input, .ant-input-number, .ant-select-selector {
+  border-radius: 8px !important;
+  min-height: 40px;
+  font-size: 15px;
+}
+.ant-input:focus, .ant-input-number:focus, .ant-select-focused .ant-select-selector {
+  border-color: #26c6c6 !important;
+  box-shadow: 0 0 0 2px rgba(38,198,198,0.08);
+}
+.ant-upload-list-picture-card-container {
+  border-radius: 8px;
+}
+.ant-upload.ant-upload-select-picture-card {
+  border-radius: 8px;
+  background: #fafafa;
+  border: 1.5px dashed #d9d9d9;
+  transition: border 0.2s;
+}
+.ant-upload.ant-upload-select-picture-card:hover {
+  border-color: #00B8A9;
+}
+.ant-btn-primary {
+  background: #26c6c6;
+  border-color: #26c6c6;
+  border-radius: 24px;
+  font-size: 16px;
+  font-weight: 500;
+  padding: 0 32px;
+  height: 44px;
+}
+.ant-btn-primary:hover {
+  background: #1bb3b3;
+  border-color: #1bb3b3;
+}
+.ant-btn {
+  border-radius: 24px;
+  font-size: 16px;
+  font-weight: 500;
+  height: 44px;
+}
+.ant-form-item:last-child {
+  display: flex;
+  justify-content: flex-end;
+  gap: 16px;
+  margin-top: 32px;
+}
+.ant-row {
+  margin-bottom: 0 !important;
+}
+.ant-form-item {
+  margin-bottom: 18px !important;
+}
+/* 表单项label和输入框左对齐 */
+.ant-form-item-label {
+  text-align: left !important;
+  padding-right: 0 !important;
+  min-width: 90px;
+}
+.ant-form-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+.ant-form-item-control {
+  flex: 1;
+}
+/* 竖直表单项左对齐 */
+.vertical-form-item, .vertical-form-item .ant-form-item {
+  flex-direction: column !important;
+  align-items: flex-start !important;
+  width: 100%;
+}
+.vertical-form-item .ant-form-item-label {
+  text-align: left !important;
+  padding-bottom: 4px;
+  min-width: 0;
+  width: 100%;
+}
+.vertical-form-item .ant-form-item-control {
+  width: 100%;
+}
+.vertical-form-item textarea,
+.vertical-form-item .ant-input,
+.vertical-form-item .ant-input-number,
+.vertical-form-item .ant-select,
+.vertical-form-item .ant-input-affix-wrapper {
+  width: 100% !important;
+  min-width: 0;
+  box-sizing: border-box;
+}
+@media (max-width: 700px) {
+  .item-edit-container {
+    padding: 0 6px 0 6px;
+  }
+  .item-edit-card {
+    max-width: 100%;
+    padding: 8px;
+  }
+  .form-actions {
+    flex-direction: column;
+    gap: 12px;
+  }
+} 
