@@ -12,7 +12,8 @@ import {
   FacebookOutlined,
   TwitterOutlined,
   InstagramOutlined,
-  LinkedinOutlined
+  LinkedinOutlined,
+  GlobalOutlined
 } from '@ant-design/icons';
 
 const { Footer: AntFooter } = Layout;
@@ -201,14 +202,31 @@ const SectionTitle = styled(Title)`
 `;
 
 const BottomLink = styled(RouterLink)`
+  margin: 0 10px;
   color: #718096;
-  margin: 0 16px;
-  transition: all 0.3s;
-  text-decoration: none;
+  font-size: 14px;
   
   &:hover {
-    color: #00B8A9;
+    color: var(--primary-color);
+    text-decoration: underline;
   }
+`;
+
+// 增强版网站地图链接样式
+const SitemapBottomLink = styled(BottomLink)`
+  color: var(--primary-color);
+  font-weight: 500;
+  position: relative;
+  padding: 2px 10px;
+  background-color: rgba(0, 184, 169, 0.1);
+  border-radius: 12px;
+  
+  &:hover {
+    background-color: rgba(0, 184, 169, 0.2);
+    box-shadow: 0 2px 6px rgba(0, 184, 169, 0.15);
+  }
+  
+  transition: all 0.3s ease;
 `;
 
 const Footer = () => {
@@ -345,7 +363,9 @@ const Footer = () => {
           <div style={{ marginTop: 10 }}>
             <BottomLink to="/privacy">隐私政策</BottomLink>
             <BottomLink to="/terms">服务条款</BottomLink>
-            <BottomLink to="/sitemap">网站地图</BottomLink>
+            <SitemapBottomLink to="/sitemap">
+              <GlobalOutlined style={{ marginRight: 4 }} /> 网站地图
+            </SitemapBottomLink>
           </div>
         </div>
       </div>

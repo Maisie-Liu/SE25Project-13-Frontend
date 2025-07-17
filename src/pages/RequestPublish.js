@@ -12,15 +12,66 @@ import {
   Typography,
   Row,
   Col,
-  Divider
+  Divider,
+  Alert
 } from 'antd';
 import { fetchBuyRequestDetail, createBuyRequest, updateBuyRequest } from '../store/actions/buyRequestActions';
 import ConditionSelect from "../components/condition/ConditionSelect";
 import {selectCategories} from "../store/slices/categorySlice";
 import {fetchCategories} from "../store/actions/categoryActions";
+import { InfoCircleOutlined, ArrowLeftOutlined } from '@ant-design/icons';
+import styled from 'styled-components';
 const { Title } = Typography;
 const { Option } = Select;
 const { TextArea } = Input;
+
+const PublishHeaderCard = styled(Card)`
+  background: linear-gradient(135deg, #f0f7ff 0%, #e6f7f5 100%);
+  border-radius: 14px;
+  box-shadow: 0 4px 16px rgba(0,184,169,0.08);
+  margin-bottom: 24px;
+  border: none;
+`;
+
+const PublishFormCard = styled(Card)`
+  border-radius: 14px;
+  box-shadow: 0 2px 12px rgba(0,184,169,0.08);
+  background: linear-gradient(120deg, #f8fffe 60%, #e6f7f5 100%);
+  border: none;
+`;
+
+const StyledButton = styled(Button)`
+  background: linear-gradient(90deg, #00b8a9, #0dd8c8);
+  border: none;
+  border-radius: 8px !important;
+  font-weight: 600;
+  height: 48px;
+  width: 180px;
+  font-size: 16px;
+  &:hover, &:focus {
+    background: linear-gradient(90deg, #0dd8c8, #00b8a9);
+    color: #fff;
+  }
+`;
+
+const BackButton = styled(Button)`
+  margin-top: 16px;
+  border-radius: 8px !important;
+  color: #00b8a9;
+  font-weight: 500;
+  background: none;
+  border: none;
+  &:hover {
+    color: #0dd8c8;
+    background: #f0f7ff;
+  }
+`;
+
+const StyledFormItem = styled(Form.Item)`
+  .ant-input, .ant-input-number, .ant-select-selector, textarea {
+    border-radius: 8px !important;
+  }
+`;
 
 const RequestPublish = () => {
   const navigate = useNavigate();
@@ -40,7 +91,6 @@ const RequestPublish = () => {
   useEffect(() => {
     dispatch(fetchCategories());
   }, [dispatch]);
-
 
   useEffect(() => {
     if (id && detail) {
@@ -86,8 +136,22 @@ const RequestPublish = () => {
 
   return (
     <div className="container" style={{ maxWidth: '800px', margin: '0 auto' }}>
-      <Card bordered={false} className="publish-card">
-        <Title level={2} className="text-center">{id ? '编辑求购信息' : '发布求购信息'}</Title>
+      <PublishHeaderCard bordered={false}>
+        <Title level={2} className="text-center" style={{ letterSpacing: 2 }}>
+          {id ? '编辑求购信息' : '发布求购信息'}
+        </Title>
+        <Alert
+          type="info"
+          showIcon
+          icon={<InfoCircleOutlined style={{ color: '#00b8a9' }} />}
+          message="发布须知"
+          description={<div style={{ fontSize: 14 }}>
+            请详细描述您的求购需求，填写真实有效的联系方式。禁止发布与校园交易无关、违法违规、虚假等信息。
+          </div>}
+          style={{ margin: '18px auto 0', maxWidth: 600, background: 'rgba(0,184,169,0.05)', border: 'none', borderRadius: 8 }}
+        />
+      </PublishHeaderCard>
+      <PublishFormCard bordered={false}>
         <Divider />
         <Form
           form={form}
@@ -102,18 +166,18 @@ const RequestPublish = () => {
         >
           <Row gutter={24}>
             <Col xs={24} md={24}>
-              <Form.Item
+              <StyledFormItem
                 name="title"
-                label="求购标题"
+                label={<span>求购标题 <span style={{ color: '#ff4d4f' }}>*</span></span>}
                 rules={[{ required: true, message: '请输入求购标题' }]}
               >
                 <Input placeholder="请输入求购标题，例如：求购 MacBook Pro 2021款" maxLength={50} />
-              </Form.Item>
+              </StyledFormItem>
             </Col>
             <Col xs={24} md={12}>
-              <Form.Item
+              <StyledFormItem
                   name="categoryId"
-                  label="物品分类"
+                  label={<span>物品分类 <span style={{ color: '#ff4d4f' }}>*</span></span>}
                   rules={[{ required: true, message: '请选择物品分类' }]}
                   className="form-item-label"
               >
@@ -126,22 +190,22 @@ const RequestPublish = () => {
                       ))
                   )}
                 </Select>
-              </Form.Item>
+              </StyledFormItem>
             </Col>
             <Col xs={24} md={12}>
-              <Form.Item
+              <StyledFormItem
                   name="condition"
-                  label="新旧程度"
+                  label={<span>新旧程度 <span style={{ color: '#ff4d4f' }}>*</span></span>}
                   rules={[{ required: true, message: '请选择新旧程度' }]}
                   className="form-item-label"
               >
                 <ConditionSelect />
-              </Form.Item>
+              </StyledFormItem>
             </Col>
             <Col xs={24} md={12}>
-              <Form.Item
+              <StyledFormItem
                 name="price"
-                label="预期价格"
+                label={<span>预期价格 <span style={{ color: '#ff4d4f' }}>*</span></span>}
                 rules={[{ required: true, message: '请输入预期价格' }]}
               >
                 <InputNumber
@@ -152,24 +216,24 @@ const RequestPublish = () => {
                   formatter={value => `¥ ${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
                   parser={value => value.replace(/¥\s?|(,*)/g, '')}
                 />
-              </Form.Item>
+              </StyledFormItem>
             </Col>
             <Col xs={24} md={12}>
-              <Form.Item
+              <StyledFormItem
                 name="negotiable"
-                label="价格是否可议"
+                label={<span>价格是否可议 <span style={{ color: '#ff4d4f' }}>*</span></span>}
                 rules={[{ required: true, message: '请选择价格是否可议' }]}
               >
                 <Select placeholder="请选择">
                   <Option value={true}>可议价</Option>
                   <Option value={false}>不可议价</Option>
                 </Select>
-              </Form.Item>
+              </StyledFormItem>
             </Col>
             <Col xs={24}>
-              <Form.Item
+              <StyledFormItem
                 name="description"
-                label="求购详情"
+                label={<span>求购详情 <span style={{ color: '#ff4d4f' }}>*</span></span>}
                 rules={[{ required: true, message: '请输入求购详情' }]}
               >
                 <TextArea
@@ -178,41 +242,39 @@ const RequestPublish = () => {
                   maxLength={500}
                   showCount
                 />
-              </Form.Item>
+              </StyledFormItem>
             </Col>
             <Col xs={24}>
-              <Form.Item
+              <StyledFormItem
                 name="contact"
-                label="联系方式"
+                label={<span>联系方式 <span style={{ color: '#ff4d4f' }}>*</span></span>}
                 rules={[{ required: true, message: '请提供联系方式' }]}
               >
                 <Input placeholder="请输入您的联系方式，例如：微信、QQ或手机号" />
-              </Form.Item>
+              </StyledFormItem>
             </Col>
           </Row>
           <Form.Item style={{ marginTop: '24px' }}>
             <div style={{ textAlign: 'center' }}>
-              <Button
+              <StyledButton
                 type="primary"
                 htmlType="submit"
                 size="large"
-                style={{ width: '180px', height: '48px' }}
                 loading={loading}
               >
                 {id ? '保存修改' : '发布求购信息'}
-              </Button>
+              </StyledButton>
               <br />
-              <Button
-                type="link"
-                style={{ marginTop: '16px' }}
+              <BackButton
+                icon={<ArrowLeftOutlined />}
                 onClick={() => navigate(-1)}
               >
                 返回上一页
-              </Button>
+              </BackButton>
             </div>
           </Form.Item>
         </Form>
-      </Card>
+      </PublishFormCard>
     </div>
   );
 };

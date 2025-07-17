@@ -27,7 +27,8 @@ import {
   AppstoreOutlined,
   QuestionCircleOutlined,
   SearchOutlined,
-  CommentOutlined
+  CommentOutlined,
+  GlobalOutlined
 } from '@ant-design/icons';
 import { selectIsAuthenticated, selectUser } from '../../store/slices/authSlice';
 import { logout } from '../../store/actions/authActions';
@@ -73,6 +74,39 @@ const LogoText = styled.span`
   position: relative;
   display: inline-block;
   letter-spacing: 1px;
+`;
+
+// 删除网站地图按钮样式
+// 添加网站地图按钮样式
+const SitemapButton = styled(Button)`
+  &.sitemap-nav-btn {
+    position: relative;
+    background: linear-gradient(90deg, rgba(0,184,169,0.1), rgba(0,184,169,0.05));
+    border-radius: 8px;
+    margin-left: 8px;
+    border: 1px dashed var(--primary-color);
+    
+    &::after {
+      content: 'NEW';
+      position: absolute;
+      top: -8px;
+      right: -8px;
+      background: #ff4d4f;
+      color: white;
+      font-size: 10px;
+      padding: 2px 4px;
+      border-radius: 4px;
+      font-weight: bold;
+    }
+    
+    &:hover {
+      background: linear-gradient(90deg, rgba(0,184,169,0.2), rgba(0,184,169,0.1));
+      transform: translateY(-2px);
+      box-shadow: 0 2px 6px rgba(0, 184, 169, 0.2);
+    }
+    
+    transition: all 0.3s ease;
+  }
 `;
 
 const Header = () => {
@@ -224,9 +258,9 @@ const Header = () => {
                 allowClear
                 enterButton={<SearchOutlined style={{ fontSize: '18px' }} />}
                 size="large"
+                onSearch={handleSearch}
                 value={headerSearch}
                 onChange={e => setHeaderSearch(e.target.value)}
-                onSearch={handleSearch}
                 className="header-search-box"
                 style={{ width: '100%' }}
               />
@@ -267,6 +301,7 @@ const Header = () => {
               <Button type="link" onClick={() => navigate('/help')} className="nav-button">
                 <QuestionCircleOutlined /> 服务中心
               </Button>
+              {/* 删除网站地图入口按钮 */}
             </div>
             
             <div className="header-actions">
