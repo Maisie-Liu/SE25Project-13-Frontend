@@ -91,7 +91,7 @@ const UserPublicProfile = () => {
   const [showAllBuyerRatings, setShowAllBuyerRatings] = useState(false);
   
   // 每个区域展示的数量限制
-  const ITEMS_LIMIT = 4;
+  const ITEMS_LIMIT = 3; // 修改为3个
   const RATINGS_LIMIT = 2;
   
   // 随机封面图，采用莫兰迪色调
@@ -373,7 +373,7 @@ const UserPublicProfile = () => {
         ></div>
         
         <div className="profile-info-wrapper">
-          <Row align="middle">
+          <Row align="middle" gutter={[16, 0]}>
             <Col xs={24} sm={8} md={6} className="avatar-col">
               <div className="avatar-wrapper">
                 <Avatar 
@@ -407,6 +407,9 @@ const UserPublicProfile = () => {
                   </Tooltip>
                 )}
               </Title>
+              
+              {/* 移除之前添加的信誉分标签 */}
+              
               <Text className="user-joindate">
                 <CalendarOutlined /> 注册于 {formatDate(stats.joinDate)}
               </Text>
@@ -415,6 +418,51 @@ const UserPublicProfile = () => {
                 <CheckCircleOutlined /> 交易活跃用户
               </div>
             </Col>
+            
+            {/* 添加信誉分卡片到头像右侧 */}
+            <Col xs={24} sm={16} md={6} className="reputation-col">
+              <Card className="reputation-side-card">
+                <div className="reputation-header">
+                  <LikeOutlined className="reputation-icon-large" />
+                  <span>信誉评分</span>
+                </div>
+                
+                <div className="reputation-score">
+                  {stats.reputationScore != null ? (
+                    <span className={`score-value score-${
+                      stats.reputationScore >= 90 ? 'excellent' :
+                      stats.reputationScore >= 70 ? 'good' :
+                      stats.reputationScore >= 50 ? 'average' : 'poor'
+                    }`}>
+                      {stats.reputationScore}
+                    </span>
+                  ) : (
+                    <span className="score-value score-none">暂无</span>
+                  )}
+                </div>
+                
+                {stats.reputationScore != null && (
+                  <div className="reputation-level-tag">
+                    <Tag color={
+                      stats.reputationScore >= 90 ? 'success' :
+                      stats.reputationScore >= 70 ? 'processing' :
+                      stats.reputationScore >= 50 ? 'warning' : 'error'
+                    }>
+                      {stats.reputationScore >= 90 ? '优秀' :
+                       stats.reputationScore >= 70 ? '良好' :
+                       stats.reputationScore >= 50 ? '一般' : '较差'}
+                    </Tag>
+                  </div>
+                )}
+                
+                <div className="reputation-description">
+                  <Text type="secondary">信誉分越高，交易信誉越好</Text>
+                </div>
+              </Card>
+            </Col>
+            
+            {/* 其他内容列 */}
+            <Col xs={24} sm={24} md={12}></Col>
           </Row>
         </div>
       </Card>
@@ -485,31 +533,7 @@ const UserPublicProfile = () => {
                 <Text type="secondary">共发布 {availableItems.length + soldItems.length} 个</Text>
               </Card>
 
-              {/* 信誉分 */}
-              <Card className="stat-card">
-                <div className="stat-icon reputation-icon">
-                  <LikeOutlined />
-                </div>
-                <Statistic 
-                  title="信誉分" 
-                  value={stats.reputationScore != null ? stats.reputationScore : '暂无'} 
-                  valueStyle={{ color: '#4caf50', fontWeight: 600 }}
-                  suffix={
-                    stats.reputationScore != null && (
-                      <Tag color={
-                        stats.reputationScore >= 90 ? 'green' :
-                        stats.reputationScore >= 70 ? 'blue' :
-                        stats.reputationScore >= 50 ? 'orange' : 'red'
-                      } style={{ marginLeft: 8 }}>
-                        {stats.reputationScore >= 90 ? '优秀' :
-                         stats.reputationScore >= 70 ? '良好' :
-                         stats.reputationScore >= 50 ? '一般' : '较差'}
-                      </Tag>
-                    )
-                  }
-                />
-                <Text type="secondary">信誉分越高，交易信誉越好</Text>
-              </Card>
+              {/* 移除信誉分卡片，已移至头像旁边 */}
             </div>
           </Card>
           
@@ -635,70 +659,91 @@ const UserPublicProfile = () => {
                 <TabPane 
                   tab={
                     <span className="tab-with-tag">
-                      <span className="tab-tag tab-tag-seller"></span>
-                      作为卖家的评价
+                      <span className="tab-tag tab-tag-active"></span>
+                      卖家评价
                     </span>
                   } 
                   key="seller"
                 >
                   {sellerComments.length > 0 ? (
                     <List
-                      itemLayout="vertical"
                       dataSource={sellerComments}
-                      renderItem={order => (
-                        <List.Item>
-                          <div>
-                            <span>买家：{order.buyerName}</span>
-                            <span style={{ marginLeft: 16 }}>物品：{order.itemName || (order.item && order.item.name)}</span>
-                            <span style={{ marginLeft: 16 }}>金额：¥{order.itemPrice || order.amount}</span>
+                      renderItem={comment => (
+                        <List.Item key={comment.id}>
+                          <List.Item.Meta
+                            avatar={
+                              <Avatar 
+                                src={comment.buyerAvatarUrl} 
+                                icon={<UserOutlined />} 
+                                alt={comment.buyerUsername} 
+                              />
+                            }
+                            title={comment.buyerUsername}
+                            description={
+                              <div className="comment-content">
+                                <Rate 
+                                  disabled 
+                                  allowHalf 
+                                  value={comment.sellerRating} 
+                                  style={{ fontSize: 14 }} 
+                                />
+                                <Text type="secondary">{comment.sellerComment}</Text>
                           </div>
-                          <div style={{ marginTop: 8 }}>
-                            <Tag color="orange">买家评价</Tag>
-                            <span>{order.sellerComment}</span>
-                          </div>
-                          <div style={{ color: '#888', marginTop: 4 }}>
-                            {order.updateTime ? new Date(order.updateTime).toLocaleString() : ''}
-                          </div>
+                            }
+                          />
                         </List.Item>
                       )}
                     />
                   ) : (
-                    <Empty description="暂无卖家评价" />
+                    <Empty 
+                      description="暂无卖家评价" 
+                      image={<CommentOutlined style={{ fontSize: 64, color: '#d9d9d9' }} />}
+                    />
                   )}
                 </TabPane>
-                
                 <TabPane 
                   tab={
                     <span className="tab-with-tag">
                       <span className="tab-tag tab-tag-buyer"></span>
-                      作为买家的评价
+                      买家评价
                     </span>
                   } 
                   key="buyer"
                 >
                   {buyerComments.length > 0 ? (
                     <List
-                      itemLayout="vertical"
                       dataSource={buyerComments}
-                      renderItem={order => (
-                        <List.Item>
-                          <div>
-                            <span>卖家：{order.sellerName}</span>
-                            <span style={{ marginLeft: 16 }}>物品：{order.itemName || (order.item && order.item.name)}</span>
-                            <span style={{ marginLeft: 16 }}>金额：¥{order.itemPrice || order.amount}</span>
+                      renderItem={comment => (
+                        <List.Item key={comment.id}>
+                          <List.Item.Meta
+                            avatar={
+                              <Avatar 
+                                src={comment.sellerAvatarUrl} 
+                                icon={<UserOutlined />} 
+                                alt={comment.sellerUsername} 
+                              />
+                            }
+                            title={comment.sellerUsername}
+                            description={
+                              <div className="comment-content">
+                                <Rate 
+                                  disabled 
+                                  allowHalf 
+                                  value={comment.buyerRating} 
+                                  style={{ fontSize: 14 }} 
+                                />
+                                <Text type="secondary">{comment.buyerComment}</Text>
                           </div>
-                          <div style={{ marginTop: 8 }}>
-                            <Tag color="blue">卖家评价</Tag>
-                            <span>{order.buyerComment}</span>
-                          </div>
-                          <div style={{ color: '#888', marginTop: 4 }}>
-                            {order.updateTime ? new Date(order.updateTime).toLocaleString() : ''}
-                          </div>
+                            }
+                          />
                         </List.Item>
                       )}
                     />
                   ) : (
-                    <Empty description="暂无买家评价" />
+                    <Empty 
+                      description="暂无买家评价" 
+                      image={<CommentOutlined style={{ fontSize: 64, color: '#d9d9d9' }} />}
+                    />
                   )}
                 </TabPane>
               </Tabs>

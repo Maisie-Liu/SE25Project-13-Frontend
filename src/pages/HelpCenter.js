@@ -7,7 +7,8 @@ import {
   DollarOutlined,
   SolutionOutlined,
   MessageOutlined,
-  RocketOutlined
+  RocketOutlined,
+  StarOutlined
 } from '@ant-design/icons';
 
 const { Content } = Layout;
@@ -44,8 +45,9 @@ const HelpCenter = () => {
         <Paragraph>
           1. 在商品详情页点击"立即购买"按钮<br/>
           2. 确认订单信息和配送地址<br/>
-          3. 选择支付方式并完成支付<br/>
-          4. 等待卖家发货
+          3. 提交订单<br/>
+          4. 与卖家协商线下交易方式<br/>
+          5. 完成线下交易后，确认交易完成
         </Paragraph>
       )
     }
@@ -87,7 +89,8 @@ const HelpCenter = () => {
           2. 撰写详细、准确的商品描述<br/>
           3. 选择合适的分类和关键词<br/>
           4. 定期更新或刷新您的物品<br/>
-          5. 合理定价以吸引更多潜在买家
+          5. 合理定价以吸引更多潜在买家<br/>
+          6. 保持良好的信誉分，提高买家信任度
         </Paragraph>
       )
     }
@@ -100,7 +103,7 @@ const HelpCenter = () => {
       label: '交易安全提示',
       children: (
         <Paragraph>
-          1. 尽量使用平台提供的托管交易功能<br/>
+          1. 优先选择与高信誉分用户交易<br/>
           2. 面交时选择安全、公共的场所<br/>
           3. 保留所有交易聊天记录<br/>
           4. 收到物品后及时确认并完成交易<br/>
@@ -114,23 +117,24 @@ const HelpCenter = () => {
       children: (
         <Paragraph>
           1. 价格明显低于市场价的商品要谨慎<br/>
-          2. 卖家要求在平台外完成交易<br/>
-          3. 卖家催促快速付款或使用不安全的支付方式<br/>
+          2. 卖家要求使用不安全的交易方式<br/>
+          3. 卖家催促快速交易或不愿见面<br/>
           4. 卖家无法提供额外的物品照片或信息<br/>
-          5. 卖家个人信息模糊或不一致
+          5. 卖家个人信息模糊或不一致<br/>
+          6. 卖家信誉分过低或账号注册时间过短
         </Paragraph>
       )
     },
     {
       key: '3',
-      label: '如何使用托管交易',
+      label: '线下交易安全指南',
       children: (
         <Paragraph>
-          1. 在下单时选择"托管交易"选项<br/>
-          2. 买家将款项支付给平台托管<br/>
-          3. 卖家发货后上传物流信息<br/>
-          4. 买家收到物品并确认无误后，平台将款项释放给卖家<br/>
-          5. 如有纠纷，可申请平台介入调解
+          1. 选择人流量大的公共场所进行交易，如学校食堂、图书馆等<br/>
+          2. 尽量在白天进行交易<br/>
+          3. 可以带朋友一起前往<br/>
+          4. 仔细检查物品后再完成交易<br/>
+          5. 交易完成后在平台确认订单完成
         </Paragraph>
       )
     }
@@ -174,6 +178,60 @@ const HelpCenter = () => {
           3. 查看所有收藏的物品<br/>
           4. 点击物品可查看详情<br/>
           5. 点击取消收藏图标可移除收藏
+        </Paragraph>
+      )
+    }
+  ];
+
+  // 信誉分系统折叠面板项
+  const reputationGuideItems = [
+    {
+      key: '1',
+      label: '什么是信誉分',
+      children: (
+        <Paragraph>
+          信誉分是平台对用户交易行为的综合评价指标，初始为100分，最高为150分，最低为0分。信誉分越高，表示用户越可信赖，有助于提高交易成功率和物品曝光度。
+        </Paragraph>
+      )
+    },
+    {
+      key: '2',
+      label: '信誉分如何计算',
+      children: (
+        <Paragraph>
+          信誉分主要基于以下几个方面计算：<br/>
+          1. 交易完成率：成功完成的交易比例<br/>
+          2. 用户评价：其他用户给予的评分（1-5星）<br/>
+          3. 平台活跃度：定期登录和使用平台<br/>
+          4. 违规行为：违反平台规则会扣减信誉分<br/>
+          5. 账户历史：账户使用时长和交易历史
+        </Paragraph>
+      )
+    },
+    {
+      key: '3',
+      label: '如何提高信誉分',
+      children: (
+        <Paragraph>
+          1. 诚信交易，按约定完成交易<br/>
+          2. 及时回复买家/卖家的咨询<br/>
+          3. 物品描述真实准确<br/>
+          4. 保持良好的沟通态度<br/>
+          5. 定期使用平台<br/>
+          6. 获得正面评价
+        </Paragraph>
+      )
+    },
+    {
+      key: '4',
+      label: '信誉分异议处理',
+      children: (
+        <Paragraph>
+          如果您对收到的评价或信誉分变动有异议，可以：<br/>
+          1. 进入"个人中心"→"信誉评分"<br/>
+          2. 找到有异议的评价，点击"申诉"按钮<br/>
+          3. 填写申诉理由并提交<br/>
+          4. 平台客服会在3个工作日内审核并回复
         </Paragraph>
       )
     }
@@ -289,11 +347,11 @@ const HelpCenter = () => {
               <Card 
                 hoverable 
                 className="guide-card"
-                onClick={() => document.getElementById('contact-us').scrollIntoView({ behavior: 'smooth' })}
+                onClick={() => document.getElementById('reputation-guide').scrollIntoView({ behavior: 'smooth' })}
               >
-                <MessageOutlined style={{ fontSize: 24, color: 'var(--primary-color)', marginBottom: 8 }} />
-                <div className="guide-title">联系客服</div>
-                <div className="guide-desc">遇到问题？联系我们的客服团队</div>
+                <StarOutlined style={{ fontSize: 24, color: 'var(--primary-color)', marginBottom: 8 }} />
+                <div className="guide-title">信誉分系统</div>
+                <div className="guide-desc">了解信誉分的计算和提升方法</div>
               </Card>
             </Col>
             <Col xs={24} sm={12} md={8}>
@@ -340,6 +398,14 @@ const HelpCenter = () => {
           </Title>
           <Divider />
           <Collapse defaultActiveKey={['1']} expandIconPosition="end" items={accountGuideItems} />
+        </div>
+
+        <div id="reputation-guide">
+          <Title level={3} style={{ marginTop: 40 }}>
+            <StarOutlined /> 信誉分系统
+          </Title>
+          <Divider />
+          <Collapse defaultActiveKey={['1']} expandIconPosition="end" items={reputationGuideItems} />
         </div>
 
         <div id="faq">

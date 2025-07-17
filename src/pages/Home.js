@@ -47,7 +47,8 @@ import {
   ShoppingCartOutlined,
   MessageOutlined,
   CloseOutlined,
-  AppstoreOutlined
+  AppstoreOutlined,
+  GlobalOutlined
 } from '@ant-design/icons';
 import { fetchItems, fetchRecommendedItems, fetchHotItems, fetchRecommendedItemsPage } from '../store/actions/itemActions';
 import { 
@@ -62,6 +63,7 @@ import { fetchCategories } from '../store/actions/categoryActions';
 import { formatPrice, DEFAULT_IMAGE } from '../utils/helpers';
 import axios from '../utils/axios';
 import ConditionTag from '../components/condition/ConditionTag';
+import styled from 'styled-components';
 
 const { Title, Text, Paragraph } = Typography;
 const { Search } = Input;
@@ -75,6 +77,138 @@ const announcements = [
   { id: 4, title: '五一假期客服安排', link: '/notice/2' },
   { id: 5, title: '新版本功能介绍', link: '/news/1' }
 ];
+
+// 悬浮网站地图导航按钮样式
+const FloatingSitemapButton = styled.button`
+  position: fixed;
+  bottom: 200px; /* 位置上移，更远离发布按钮 */
+  right: 20px;
+  width: 60px; /* 放大按钮尺寸 */
+  height: 60px; /* 放大按钮尺寸 */
+  border-radius: 8px; /* 改为方形圆角，与发布按钮区分 */
+  background: linear-gradient(135deg, #4A90E2, #5C6BC0); /* 蓝色系渐变，与发布按钮形成对比 */
+  color: #fff;
+  border: none;
+  box-shadow: 0 3px 10px rgba(74, 144, 226, 0.3);
+  display: flex;
+  flex-direction: column; /* 改为纵向布局 */
+  align-items: center;
+  justify-content: center;
+  font-size: 24px; /* 放大图标 */
+  cursor: pointer;
+  z-index: 990;
+  transition: all 0.3s;
+  padding: 0;
+  
+  &:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 5px 15px rgba(74, 144, 226, 0.4);
+  }
+  
+  &:active {
+    transform: translateY(1px);
+  }
+  
+  /* 添加小文字 */
+  &::after {
+    content: '地图';
+    font-size: 12px; /* 稍微放大文字 */
+    margin-top: 3px;
+    font-weight: 500;
+  }
+`;
+
+// 添加首次访问引导提示
+const FirstTimeGuide = styled.div`
+  position: fixed;
+  bottom: 270px; /* 调整位置 */
+  right: 25px;
+  background: rgba(0, 0, 0, 0.7);
+  color: white;
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-size: 12px;
+  max-width: 180px;
+  text-align: center;
+  z-index: 991;
+  animation: bounce 2s infinite;
+  transform-origin: bottom center;
+  
+  @keyframes bounce {
+    0%, 100% {
+      transform: translateY(0);
+    }
+    50% {
+      transform: translateY(-10px);
+    }
+  }
+  
+  &::after {
+    content: '';
+    position: absolute;
+    bottom: -8px;
+    right: 20px;
+    width: 0;
+    height: 0;
+    border-left: 8px solid transparent;
+    border-right: 8px solid transparent;
+    border-top: 8px solid rgba(0, 0, 0, 0.7);
+  }
+`;
+
+// 网站地图悬浮卡片样式
+const SitemapFloatingCard = styled.div`
+  position: fixed;
+  right: 20px;
+  bottom: 260px; /* 位置上移 */
+  width: 280px; /* 稍微加宽 */
+  z-index: 989;
+  transform: translateX(${props => props.visible ? '0' : '300px'});
+  opacity: ${props => props.visible ? '1' : '0'};
+  transition: all 0.3s ease;
+  box-shadow: 0 5px 25px rgba(0, 0, 0, 0.15);
+  border-radius: 12px;
+  overflow: hidden;
+`;
+
+// 添加工具提示样式
+const SitemapTooltip = styled.div`
+  position: absolute;
+  top: -40px;
+  right: 0;
+  background: rgba(0, 0, 0, 0.7);
+  color: white;
+  padding: 5px 10px;
+  border-radius: 4px;
+  font-size: 12px;
+  white-space: nowrap;
+  opacity: 0;
+  transform: translateY(10px);
+  pointer-events: none;
+  transition: all 0.3s ease;
+  
+  &::after {
+    content: '';
+    position: absolute;
+    bottom: -5px;
+    right: 18px;
+    width: 0;
+    height: 0;
+    border-left: 5px solid transparent;
+    border-right: 5px solid transparent;
+    border-top: 5px solid rgba(0, 0, 0, 0.7);
+  }
+`;
+
+// 浮动效果容器
+const FloatingButtonWrapper = styled.div`
+  position: relative;
+  
+  &:hover ${SitemapTooltip} {
+    opacity: 1;
+    transform: translateY(0);
+  }
+`;
 
 const Home = () => {
   const dispatch = useDispatch();
@@ -98,12 +232,33 @@ const Home = () => {
   const categoryLoading = useSelector(selectCategoryLoading);
   const [recPageNum, setRecPageNum] = useState(1);
   const recPageSize = 4;
+  // 添加网站地图悬浮卡片状态
+  const [showSitemapCard, setShowSitemapCard] = useState(false);
+  const sitemapCardRef = useRef(null);
+  // 添加首次访问引导状态
+  const [showGuide, setShowGuide] = useState(true);
 
   // 加载最新物品和推荐物品
   useEffect(() => {
     dispatch(fetchItems({ pageNum: 1, pageSize: 8, sort: 'createTime', order: 'desc' }));
     // dispatch(fetchRecommendedItems({ pageNum: 1, pageSize: 4 }));
   }, [dispatch]);
+
+  // 检查是否首次访问，控制引导提示的显示
+  useEffect(() => {
+    const hasSeenGuide = localStorage.getItem('hasSeenSitemapGuide');
+    if (hasSeenGuide) {
+      setShowGuide(false);
+    } else {
+      // 5秒后自动隐藏引导提示
+      const timer = setTimeout(() => {
+        setShowGuide(false);
+        localStorage.setItem('hasSeenSitemapGuide', 'true');
+      }, 5000);
+      
+      return () => clearTimeout(timer);
+    }
+  }, []);
 
   useEffect(() => {
     const loadHotItems = async () => {
@@ -158,13 +313,23 @@ const Home = () => {
       ) {
         setShowPublishMenu(false);
       }
+      
+      // 处理点击外部关闭网站地图卡片
+      if (
+        showSitemapCard &&
+        sitemapCardRef.current &&
+        !sitemapCardRef.current.contains(event.target) &&
+        !event.target.closest('.sitemap-floating-btn')
+      ) {
+        setShowSitemapCard(false);
+      }
     };
     
     document.addEventListener('mousedown', handleClickOutside);
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
-  }, [showPublishMenu]);
+  }, [showPublishMenu, showSitemapCard]);
 
   // 处理搜索
   const handleSearch = (value) => {
@@ -184,6 +349,11 @@ const Home = () => {
   const handleRequestItem = () => {
     navigate('/publish-request');
     setShowPublishMenu(false);
+  };
+  
+  // 网站地图卡片切换
+  const toggleSitemapCard = () => {
+    setShowSitemapCard(!showSitemapCard);
   };
 
   // 渲染物品卡片
@@ -258,6 +428,7 @@ const Home = () => {
         >
           <PlusOutlined />
         </button>
+        
         <div 
           ref={menuRef}
           className={`floating-publish-menu ${showPublishMenu ? 'active' : ''}`}
@@ -276,9 +447,126 @@ const Home = () => {
           </div>
         </div>
       </div>
+      
+      {/* 添加浮动网站地图按钮和卡片 */}
+      <FloatingButtonWrapper>
+        <FloatingSitemapButton 
+          onClick={toggleSitemapCard} 
+          className="sitemap-floating-btn"
+        >
+          <GlobalOutlined />
+        </FloatingSitemapButton>
+        <SitemapTooltip>网站地图</SitemapTooltip>
+      </FloatingButtonWrapper>
+      
+      {/* 首次访问引导提示 */}
+      {showGuide && (
+        <FirstTimeGuide onClick={() => {
+          setShowGuide(false);
+          setShowSitemapCard(true);
+          localStorage.setItem('hasSeenSitemapGuide', 'true');
+        }}>
+          点击这里查看网站地图，快速找到所有功能！
+        </FirstTimeGuide>
+      )}
+      
+      {/* 网站地图悬浮卡片 */}
+      <SitemapFloatingCard visible={showSitemapCard} ref={sitemapCardRef}>
+        <Card
+          title={<><GlobalOutlined /> 网站地图</>}
+          extra={<CloseOutlined onClick={() => setShowSitemapCard(false)} style={{ cursor: 'pointer' }} />}
+          style={{ width: '100%', boxShadow: 'none' }}
+          headStyle={{ background: 'linear-gradient(90deg, #4A90E2, #5C6BC0)', color: 'white' }}
+        >
+          <div>
+            <Title level={5} style={{ marginBottom: 8 }}>找不到你需要的功能？</Title>
+            <Text type="secondary">
+              网站地图可以帮助你快速找到所有功能和页面，就像实体商场的导航图一样。
+            </Text>
+            <div style={{ marginTop: 12 }}>
+              <Button 
+                type="primary" 
+                block
+                onClick={() => navigate('/sitemap')}
+                style={{ 
+                  background: 'linear-gradient(90deg, #4A90E2, #5C6BC0)',
+                  border: 'none',
+                  marginTop: 8
+                }}
+              >
+                查看完整网站地图
+              </Button>
+            </div>
+            
+            {/* 添加快速链接 */}
+            <div style={{ marginTop: 16 }}>
+              <Text strong style={{ display: 'block', marginBottom: 8 }}>常用功能：</Text>
+              <Space wrap>
+                <Button size="small" onClick={() => navigate('/items/publish')}>发布物品</Button>
+                <Button size="small" onClick={() => navigate('/my/orders')}>我的订单</Button>
+                <Button size="small" onClick={() => navigate('/my/favorites')}>我的收藏</Button>
+              </Space>
+            </div>
+          </div>
+        </Card>
+      </SitemapFloatingCard>
 
       {/* 主体内容区 - 咸鱼风格布局 */}
       <div className="container">
+        {/* 修改主页引导提示样式 */}
+        <Row style={{ marginBottom: 16 }}>
+          <Col span={24}>
+            <Card 
+              bordered={false}
+              className="xianyu-section"
+              style={{ 
+                background: 'linear-gradient(to right, rgba(0, 184, 169, 0.05), rgba(0, 184, 169, 0.02))',
+                borderRadius: 8,
+                overflow: 'hidden',
+                marginBottom: 16
+              }}
+              bodyStyle={{ padding: '12px 16px' }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <Space align="center">
+                  <GlobalOutlined style={{ fontSize: 18, color: '#00B8A9' }} />
+                  <span style={{ color: '#333', fontSize: '14px' }}>
+                    找不到需要的功能？试试
+                    <Button 
+                      type="link" 
+                      onClick={() => navigate('/sitemap')} 
+                      style={{ 
+                        padding: '0 4px', 
+                        fontSize: '14px',
+                        color: '#00B8A9',
+                        fontWeight: 'bold'
+                      }}
+                    >
+                      网站地图
+                    </Button>
+                  </span>
+                </Space>
+                <Button 
+                  size="small" 
+                  type="primary" 
+                  ghost
+                  icon={<GlobalOutlined />}
+                  onClick={() => setShowSitemapCard(true)}
+                  style={{ 
+                    borderColor: '#00B8A9', 
+                    color: '#00B8A9',
+                    display: 'flex',
+                    alignItems: 'center',
+                    height: '28px'
+                  }}
+                >
+                  查看
+                </Button>
+              </div>
+            </Card>
+          </Col>
+        </Row>
+        
         <Row gutter={[16, 24]}>
           {/* 左侧分类导航 */}
           <Col xs={24} md={6} lg={5} xl={4}>
@@ -483,6 +771,8 @@ const Home = () => {
           </Col>
         </Row>
       </div>
+      
+      {/* 移除底部的网站地图卡片 */}
     </>
   );
 };
