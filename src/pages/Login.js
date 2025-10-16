@@ -293,7 +293,7 @@ const Login = () => {
             <LogoText>交物通</LogoText>
           </LogoContainer>
           
-          <WelcomeText level={2}>欢迎来到校园二手交易平台</WelcomeText>
+          <WelcomeText level={2}>欢迎来到校园二手交易平台test ci/cd</WelcomeText>
           <SubText>让闲置物品流通起来，让校园生活更加便利</SubText>
           
           <FeatureItem className="platform-feature">
