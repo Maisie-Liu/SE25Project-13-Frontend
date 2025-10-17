@@ -393,7 +393,7 @@ const Login = () => {
             <Divider />
             
             <div style={{ textAlign: 'center' }}>
-              <Text>还没有账号？</Text> <RegisterLink to="/register">立即注册</RegisterLink>
+              <Text>test还没有账号？</Text> <RegisterLink to="/register">立即注册</RegisterLink>
             </div>
           </FormContainer>
         </RightPanel>
